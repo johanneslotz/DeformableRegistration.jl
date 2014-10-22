@@ -1,0 +1,40 @@
+        - using Images
+        - using ImageRegistration.Transformation
+        - 
+        - function maskedSsdDistance(referenceImage::Image,templateImage::Image,
+        -                            transformedGrid::Array{Float64,1},
+        -                            mask::Array{Float64,1};
+        -                            doDerivative=false,doHessian=false)
+        - 
+        -     # interpolation of the template image at transformed grid points
+       36     transformedImage, dY_transformedImage, dX_transformedImage =
+        -       linearImageInterpolationAtGridWithDerivative(templateImage,transformedGrid)
+        - 
+       36     dY_transformedImage = mask[:] .* dY_transformedImage[:]
+       36     dX_transformedImage = mask[:] .* dX_transformedImage[:]
+        - 
+        -     # measure the ssd distance
+       36     N = prod(size(referenceImage))
+       36     h = prod(pixelspacing(referenceImage))
+       36     residual = Array{Float64,N}
+       36     residual = mask[:] .* (transformedImage[:] .- referenceImage.data[:])
+       36 	  functionValue = 0.5 .* h .* residual' * residual
+        - 
+        -     # check if only the distance is wanted
+       36     if(~doDerivative)
+       35 	      return functionValue
+        -     end
+        - 
+        -     # rearrange the image derivative
+        1     dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0,N])
+        - 
+        - 
+        -     # first derivative
+        1     dFunctionValue    = h .* dTransformedImage' * residual
+        - 
+        -     # approximate second derivative
+        1     d2FunctionValue   = h .* dTransformedImage' * dTransformedImage
+        - 
+        1     return functionValue,dFunctionValue,d2FunctionValue
+        - end
+        - 
