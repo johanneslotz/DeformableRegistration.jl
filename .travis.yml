@@ -1,0 +1,21 @@
+language: cpp
+compiler:
+  - clang
+env:
+  matrix: 
+    - JULIAVERSION="juliareleases" 
+before_install:
+  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
+  - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
+  - sudo apt-get update -qq -y
+  - sudo apt-get install libpcre3-dev julia -y
+  - sudo apt-get install python-matplotlib
+script:
+  - julia --version
+  - julia -e 'Pkg.clone("https://github.com/JuliaLang/IterativeSolvers.jl")'
+  - julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
+  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("ImageRegistration"))`); Pkg.pin("ImageRegistration"); Pkg.resolve()'
+  - julia -e 'using ImageRegistration; @assert isdefined(:ImageRegistration); @assert typeof(ImageRegistration) === Module'
+  - julia --code-coverage ./test/runtests.jl
+after_success:
+- julia -e 'cd(Pkg.dir("ImageRegistration")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
