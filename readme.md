@@ -25,4 +25,4 @@ Besides the mentioned packages the **ImageRegistration** module itself consists 
 
 * **.Visualization**
 
-There are still some open issues in the bug tracker. Code contributions of additional features and optimizations are very welcome.
+There are still some open issues in the bug tracker. Code contributions of additional features, bugfixes and optimizations are very welcome.
