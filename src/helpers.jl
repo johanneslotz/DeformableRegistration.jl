@@ -1,3 +1,4 @@
+# helpers to make addition/multiplication of distance and regularizer possible
 function *(factor,JTuple)
     return factor.*JTuple[1],factor.*JTuple[2],factor.*JTuple[3]
 end
