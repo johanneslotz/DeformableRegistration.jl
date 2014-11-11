@@ -99,7 +99,8 @@ end
 
 function calculateHessianStaggered(dTransformedImage, sizeOfReferenceImage, pixelSpacing)
   drstg = cen2stg( [dTransformedImage[1]; dTransformedImage[2]] , sizeOfReferenceImage)
-  dTransformedImage = spdiagm((drstg[1:size(drstg,1)/2],drstg[size(drstg,1)/2+1:end]),[0,size(drstg,1)/2])
+  mYstg = (sizeOfReferenceImage[1]+1)*sizeOfReferenceImage[2]; mXstg = sizeOfReferenceImage[1]*(sizeOfReferenceImage[2]+1)
+  dTransformedImage = spdiagm((drstg[1:mXstg],drstg[mXstg+1:end]),[0,mXstg])
   d2FunctionValue   = pixelSpacing .* dTransformedImage' * dTransformedImage
   return d2FunctionValue
 end
