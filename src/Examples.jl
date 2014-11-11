@@ -26,6 +26,11 @@ function registerImagesParametric(referenceImage,templateImage;
         centeredGrid = getCellCenteredGrid(R)
         T = restrictResolutionToLevel(templateImage,level)
 
+        # output
+        if(output)
+          println("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
+        end
+
         # define objective function
         Jfunc(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param))
         JfuncWithDerivative(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param),parametricOnly=true,doDerivative=true,doHessian=true)
@@ -70,22 +75,27 @@ function registerImagesNonparametric(referenceImage,templateImage;
             deformedGrid = interpolateDeformationFieldAtGrid(deformationField,imageSize,spatialDomain,referenceGrid) + referenceGrid
         end
 
-    # update imageSize
-    imageSize = [size(R)[1],size(R)[2]]
+        # update imageSize
+        imageSize = [size(R)[1],size(R)[2]]
 
-    # centered to staggered grid
-    referenceGrid = cen2stg(referenceGrid,imageSize)
-    deformedGrid = cen2stg(deformedGrid,imageSize)
+        # centered to staggered grid
+        referenceGrid = cen2stg(referenceGrid,imageSize)
+        deformedGrid = cen2stg(deformedGrid,imageSize)
 
-    # define objective function
-    regulizerMatrix = createElasticOperatorStaggered(pixelspacing(R),imageSize)
-    Jfunc(grid) = cen2stg(ssdDistance(R,T,stg2cen(grid,imageSize)),R) +
-                  alpha * regularizer(grid-referenceGrid,regulizerMatrix)
-    JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),doDerivative=true,doHessian=true),R) +
-                                alpha * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
+        # output
+        if(output)
+          println("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
+        end
 
-    # gauss newton method
-    deformedGrid = optimizeGaussNewton(Jfunc,JfuncWithDerivative,deformedGrid,output=output)
+        # define objective function
+        regulizerMatrix = createElasticOperatorStaggered(pixelspacing(R),imageSize)
+        Jfunc(grid) = cen2stg(ssdDistance(R,T,stg2cen(grid,imageSize)),R) +
+                      alpha * regularizer(grid-referenceGrid,regulizerMatrix)
+        JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),doDerivative=true,doHessian=true),R) +
+                                    alpha * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
+
+        # gauss newton method
+        deformedGrid = optimizeGaussNewton(Jfunc,JfuncWithDerivative,deformedGrid,output=output)
 
     end
 
