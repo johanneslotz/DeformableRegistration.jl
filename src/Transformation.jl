@@ -306,9 +306,7 @@ function linearImageInterpolationAtGridWithDerivative(image::Image,transformedGr
 
     end
 
-    return reshape(transformedImage,height(image),width(image)),
-           reshape(dY_transformedImage,height(image),width(image)),
-           reshape(dX_transformedImage,height(image),width(image))
+    return transformedImage,dY_transformedImage,dX_transformedImage
 
 end
 

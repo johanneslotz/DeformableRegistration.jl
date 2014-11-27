@@ -3,7 +3,7 @@ module Distance
 using Images
 using ImageRegistration.Transformation
 
-export ssdDistance,maskedSsdDistance, ngfDistance
+export ssdDistance, ssdDistanceMatrixFree, maskedSsdDistance, ngfDistance
 export calculateHessianStaggered
 
 include("distances/ssdDistance.jl")
