@@ -34,7 +34,7 @@ function optimizeGaussNewton(Jfunc::Function,
 		    end
 
         # armijo line search method
-        stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,dJ,y,dy,printFailedLineSearch=output)
+        stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy,printFailedLineSearch=output)
         if(LSfailed)
             break
         end
@@ -65,23 +65,24 @@ function optimizeGaussNewton(Jfunc::Function,
 
 end
 
-function ArmijoLineSearch(J,   # objective function
-                          dJ,  # gradient of the objective funtion
-                          y,   # old variables
-                          dy;  # search direction
-                          tolLS = 1e-4,
+function ArmijoLineSearch(Jfunc::Function,         # objective function
+                          Jc::Float64,             # Jc = Jfunc(y)
+                          dJ::Array{Float64,1},    # gradient of the objective funtion
+                          y::Array{Float64,1},     # old variables
+                          dy::Array{Float64,1};    # search direction
+                          tolLS::Float64 = 1e-4,
                           printFailedLineSearch = false)
 
-    stepLength = 1.0; LSiter = 1; LSfailed = false; Jc = J(y)[1]
+    stepLength = 1.0; LSiter = 1; LSfailed = false;
 
-    while( (J(y+stepLength*dy)[1]) >= (Jc + (stepLength.*tolLS.*dJ'*dy)[1]) )
+    while( (Jfunc(y+stepLength*dy)[1]) >= (Jc + (stepLength.*tolLS.*dJ'*dy)[1]) )
 
         if(stepLength < 1e-5)
             LSfailed = true
             break
         end
 
-        stepLength = stepLength / 2
+        stepLength = 0.5 * stepLength
         LSiter = LSiter + 1
 
     end

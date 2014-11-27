@@ -119,13 +119,14 @@ function transformGridAffine(grid,affineParameters)
     return transformGridAffine(transformationMatrix,grid,translationParameters)
 end
 
-function transformGridAffine(transformationMatrix,gridOrg,translationParameters)
-    grid = copy(gridOrg)
-    grid=reshape(grid,int(size(grid,1)/2),2)
-    for i=1:int(size(grid,1))
-        grid[i,:] = (transformationMatrix*grid[i,:]'+translationParameters)'
+function transformGridAffine(transformationMatrix::Matrix,gridOrg::Array{Float64,1},translationParameters::Array{Float64,1})
+    N = int(size(gridOrg,1)/2)
+    grid = zeros(2*N)
+    @simd for i=1:N
+        @inbounds grid[i]   = transformationMatrix[1,1]*gridOrg[i]+transformationMatrix[1,2]*gridOrg[N+i]+translationParameters[1]
+        @inbounds grid[N+i] = transformationMatrix[2,1]*gridOrg[i]+transformationMatrix[2,2]*gridOrg[N+i]+translationParameters[2]
     end
-    return grid[:]
+    return grid
 end
 
 function interpolateDeformationFieldAtGrid(deformationField::Array{Float64,2}, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1})
