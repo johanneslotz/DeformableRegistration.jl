@@ -2,6 +2,9 @@
 
 [![Build Status](https://magnum.travis-ci.com/johanneslotz/ImageRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq&branch=master)](https://magnum.travis-ci.com/johanneslotz/ImageRegistration.jl)
 
+[![Build Status](https://codeship.com/projects/18d294d0-6693-0132-bc46-2613b90b713a/status?branch=master)](https://codeship.com/projects/18d294d0-6693-0132-bc46-2613b90b713a/)
+
+
 A first step towards an image registration package written in Julia. 
 
 Some of the code is inspired by the [FAIR](http://www.mic.uni-luebeck.de/de/people/jan-modersitzki/software/fair.html)  software package by Jan Modersitzki. ImageRegistration.jl relies on the Julia packages
