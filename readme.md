@@ -1,9 +1,7 @@
 # Image Registration
 
 [![Build Status](https://magnum.travis-ci.com/johanneslotz/ImageRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq&branch=master)](https://magnum.travis-ci.com/johanneslotz/ImageRegistration.jl)
-
-[![Build Status](https://codeship.com/projects/18d294d0-6693-0132-bc46-2613b90b713a/status?branch=master)](https://codeship.com/projects/18d294d0-6693-0132-bc46-2613b90b713a/)
-
+[![wercker status](https://app.wercker.com/status/6e79cb4e56aefa2c386d4f14cd2e3a0f/m "wercker status")](https://app.wercker.com/project/bykey/6e79cb4e56aefa2c386d4f14cd2e3a0f)
 
 A first step towards an image registration package written in Julia. 
 
