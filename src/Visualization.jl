@@ -28,7 +28,7 @@ end
 
 function showGrid(spatialDomain,gridSize,centeredGrid;
                   deformationField=zeros(2*prod(gridSize)),
-                  affineParameters=[1,0,0,0,1,0],
+                  affineParameters=[1.0,0,0,0,1,0.0],
                   showPoints=false, showIndices=false,
                   numberOfGridLinesX = 20, numberOfGridLinesY = 20, gridColor="red")
 
@@ -96,7 +96,7 @@ end
 
 function visualizeResults(referenceImage,templateImage;
                           deformationField=zeros(2*prod(size(referenceImage))),
-                          affineParameters=[1,0,0,0,1,0],
+                          affineParameters=[1.0,0,0,0,1,0],
                           numberOfGridLinesX = 10, numberOfGridLinesY = 10)
 
     subplot(2,3,1)
@@ -118,7 +118,7 @@ function visualizeResults(referenceImage,templateImage;
              numberOfGridLinesX=numberOfGridLinesX,numberOfGridLinesY=numberOfGridLinesY)
     title("y (def. Grid)")
     subplot(2,3,5)
-    transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
+    transformedGrid = transformGridAffine(centeredGrid[:],affineParameters) + deformationField
     transformedTemplate = linearImageInterpolationAtGrid(templateImage,transformedGrid)
     showImage(transformedTemplate,spatialDomain=referenceImage["spatialdomain"])
     title("Template[y]")
