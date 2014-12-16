@@ -88,16 +88,18 @@ function restrictResolutionToLevel(image,level)
     restrictedImage = copy(image)
     maxlevel = 0;
     for l=1:level
-        if( (width(restrictedImage)>2) && (width(restrictedImage)>2) )
+        if( (width(restrictedImage)>2) && (height(restrictedImage)>2) )
             restrictedImage = restrict(restrictedImage)
             maxlevel = l
         end
     end
 
     # change pixel spacing accordingly
-    spatialdomain = image["spatialdomain"]
-    restrictedImage["pixelspacing"][1] = (spatialdomain[2]-spatialdomain[1]) / height(restrictedImage)
-    restrictedImage["pixelspacing"][2] = (spatialdomain[4]-spatialdomain[3]) / width(restrictedImage)
+    restrictedImage["pixelspacing"][1] = (image["spatialdomain"][2]-image["spatialdomain"][1]) / height(restrictedImage)
+    restrictedImage["pixelspacing"][2] = (image["spatialdomain"][4]-image["spatialdomain"][3]) / width(restrictedImage)
+
+    #image["pixelspacing"][1] = (image["spatialdomain"][2]-image["spatialdomain"][1]) / height(image)
+    #image["pixelspacing"][2] = (image["spatialdomain"][4]-image["spatialdomain"][3]) / width(image)
 
     return restrictedImage
 

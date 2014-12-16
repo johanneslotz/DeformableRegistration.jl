@@ -10,7 +10,7 @@ export interpolateImageAtGrid, interpolateImageAtGridWithDerivative
 export linearImageInterpolationAtGrid, linearImageInterpolationAtGridWithDerivative
 
 function getCellCenteredGrid(image::Image)
-  return getCellCenteredGrid(image.properties["spatialdomain"],[size(image)[1],size(image)[2]])
+  return getCellCenteredGrid(image["spatialdomain"],[size(image)[1],size(image)[2]])
 end
 
 function getCellCenteredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int,1})
@@ -22,7 +22,7 @@ function getCellCenteredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int
 end
 
 function getStaggeredGrid(image::Image)
-  return getStaggeredGrid(image.properties["spatialdomain"],[size(image)[1],size(image)[2]])
+  return getStaggeredGrid(image["spatialdomain"],[size(image)[1],size(image)[2]])
 end
 
 function getStaggeredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int,1})
@@ -78,31 +78,28 @@ function cen2stg(centeredGrid::Array{Float64,1},gridSize::Array{Int64,1})
     return staggeredGrid
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},Any,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+function cen2stg(distanceOutput::(Number,Array{Float64,1},Function,(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
-  dD = distanceOutput[2]
-  d2D = distanceOutput[3]
-  dTransformedImage = distanceOutput[4]
-  dD = cen2stg(dD,[size(refImg)[1], size(refImg)[2]])
-  pixelSpacing = prod(refImg.properties["pixelspacing"])
-  d2D = calculateHessianStaggered((dTransformedImage), [size(refImg)[1], size(refImg)[2]], pixelSpacing)
-  return(D, dD, d2D, dTransformedImage)
-end
-
-function cen2stg(distanceOutput::(Number,Any,Any,(Array{Float64,1},Array{Float64,1})), refImg::Image)
-  D = distanceOutput[1]
-  dD = distanceOutput[2]
-  d2D = distanceOutput[3]
+  dD = cen2stg(distanceOutput[2],[size(refImg)[1], size(refImg)[2]])
+  d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,[size(refImg)[1], size(refImg)[2]])),[size(refImg)[1], size(refImg)[2]])
   dTransformedImage = distanceOutput[4]
   return(D, dD, d2D, dTransformedImage)
 end
 
-function calculateHessianStaggered(dTransformedImage, sizeOfReferenceImage, pixelSpacing)
-  drstg = cen2stg( [dTransformedImage[1]; dTransformedImage[2]] , sizeOfReferenceImage)
-  mYstg = (sizeOfReferenceImage[1]+1)*sizeOfReferenceImage[2]; mXstg = sizeOfReferenceImage[1]*(sizeOfReferenceImage[2]+1)
-  dTransformedImage = spdiagm((drstg[1:mXstg],drstg[mXstg+1:end]),[0,mXstg])
-  d2FunctionValue   = pixelSpacing .* dTransformedImage' * dTransformedImage
-  return d2FunctionValue
+function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},(Array{Float64,1},Array{Float64,1})), refImg::Image)
+  D = distanceOutput[1]
+  dD = cen2stg(distanceOutput[2],[size(refImg)[1], size(refImg)[2]])
+  d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,[size(refImg)[1], size(refImg)[2]]),[size(refImg)[1], size(refImg)[2]])
+  dTransformedImage = distanceOutput[4]
+  return(D, dD, d2D, dTransformedImage)
+end
+
+function cen2stg(distanceOutput::(Number,Array{Float64,1},Matrix,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+  D = distanceOutput[1]
+  dD = distanceOutput[2]
+  d2D = distanceOutput[3]
+  dTransformedImage = distanceOutput[4]
+  return(D, dD, d2D, dTransformedImage)
 end
 
 function checkStaggered(image,grid)
@@ -167,7 +164,7 @@ function interpolateImageAtGrid(image::Image,transformedGrid::Array{Float64,1};
     # determine number of new points, pixel spacing and spatial domain of the image
     numberOfPoints::Int = int(size(transformedGrid,1)/2)
     pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image.properties["spatialdomain"]
+    spatialDomain::Array{Float64,1} = image["spatialdomain"]
     sizeY = size(image)[1]
     sizeX = size(image)[2]
 
@@ -195,7 +192,7 @@ function interpolateImageAtGridWithDerivative(image::Image,transformedGrid::Arra
     # determine number of new points, pixel spacing and spatial domain of the image
     numberOfPoints::Int = int(size(transformedGrid,1)/2)
     pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image.properties["spatialdomain"]
+    spatialDomain::Array{Float64,1} = image["spatialdomain"]
     sizeY = size(image)[1]
     sizeX = size(image)[2]
 
@@ -225,7 +222,7 @@ function linearImageInterpolationAtGrid(image::Image,transformedGrid::Array{Floa
     # determine number of new points, pixel spacing and spatial domain of the image
     numberOfPoints::Int = int(size(transformedGrid,1)/2)
     pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image.properties["spatialdomain"]
+    spatialDomain::Array{Float64,1} = image["spatialdomain"]
 
     # interpolate image at new points
     transformedImage = zeros(numberOfPoints)

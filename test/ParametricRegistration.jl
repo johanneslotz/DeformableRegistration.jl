@@ -25,6 +25,6 @@ affineParameters = registerImagesParametric(refImg,temImg)
 
 
 # visualize
-#using PyPlot; pygui(true); close("all")
-#figure()
-#visualizeResults(refImg,temImg,affineParameters=affineParameters)
+using PyPlot; pygui(true); close("all")
+figure()
+visualizeResults(refImg,temImg,affineParameters=affineParameters)

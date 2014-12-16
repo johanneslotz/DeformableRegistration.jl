@@ -32,14 +32,14 @@ function ssdDistance(referenceImage::Image,templateImage::Image,
       # first derivative
       dFunctionValue    = h .* dTransformedImage' * residual
   else
-      dFunctionValue = 0
-      dTransformedImage = 0
+      dFunctionValue = 0.0
+      dTransformedImage = 0.0
   end
 
-  if doHessian
+  if(doHessian)
       d2FunctionValue   = h .* dTransformedImage' * dTransformedImage
   else
-      d2FunctionValue = 0
+      d2FunctionValue = 0.0
   end
 
   return functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)
@@ -74,18 +74,18 @@ function ssdDistanceMatrixFree(referenceImage::Image,templateImage::Image,
           dFunctionValue = QtransposedMultiplication(N,dFunctionValue,centeredGrid)
       end
   else
-      dFunctionValue = 0
-      dTransformedImage = 0
+      dFunctionValue = 0.0
+      dTransformedImage = 0.0
   end
 
-  if doHessian
+  if(doHessian)
       if(parametricOnly)
           d2FunctionValue = computeParametricHessian(N,h,dX_transformedImage,dY_transformedImage,centeredGrid)
       else
           d2FunctionValue(x) = hessianFunction(N,h,dX_transformedImage,dY_transformedImage,x)
       end
   else
-      d2FunctionValue = 0
+      d2FunctionValue = 0.0
   end
 
   return functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)

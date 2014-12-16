@@ -61,7 +61,7 @@ function registerImagesNonparametric(referenceImage,templateImage;
         # define image level
         R = restrictResolutionToLevel(referenceImage,level)
         centeredGrid = getCellCenteredGrid(R)
-        spatialDomain = R.properties["spatialdomain"]
+        spatialDomain = R["spatialdomain"]
         T = restrictResolutionToLevel(templateImage,level)
 
         if(level==levels[1])
@@ -89,8 +89,7 @@ function registerImagesNonparametric(referenceImage,templateImage;
 
         # define objective function
         regulizerMatrix = createElasticOperatorStaggered(pixelspacing(R),imageSize)
-        Jfunc(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize)),R) +
-                      alpha * regularizer(grid-referenceGrid,regulizerMatrix)
+        Jfunc(grid) = measureDistance(R,T,stg2cen(grid,imageSize)) + alpha * regularizer(grid-referenceGrid,regulizerMatrix)
         JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),doDerivative=true,doHessian=true),R) +
                                     alpha * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
 
@@ -100,7 +99,7 @@ function registerImagesNonparametric(referenceImage,templateImage;
     end
 
     # return deformation field
-    deformationField =  stg2cen(deformedGrid-referenceGrid,imageSize)
+    deformationField = stg2cen(deformedGrid-referenceGrid,imageSize)
     referenceGrid = transformGridAffine(getCellCenteredGrid(referenceImage),affineParameters)
     return interpolateDeformationFieldAtGrid(deformationField,imageSize,spatialDomain,referenceGrid)
 

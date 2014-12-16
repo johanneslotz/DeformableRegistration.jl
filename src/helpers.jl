@@ -1,8 +1,18 @@
 # helpers to make addition/multiplication of distance and regularizer possible
-function *(factor,JTuple)
-    return factor.*JTuple[1],factor.*JTuple[2],factor.*JTuple[3]
+
+function *(factor::Number,Regularizer::(Number,Vector,SparseMatrixCSC{Float64,Int64}))
+    return factor.*Regularizer[1], factor.*Regularizer[2], factor.*Regularizer[3]
 end
 
-function +(JTuple1,JTuple2)
-    return JTuple1[1].+JTuple2[1],JTuple1[2].+JTuple2[2],JTuple1[3].+JTuple2[3]
+function +(Distance::(Number,Number,Number,(Vector,Vector)),Regularizer::(Number,Vector,SparseMatrixCSC{Float64,Int64}))
+    return Distance[1].+Regularizer[1], 0, 0
+end
+
+function +(Distance::(Number,Vector,Function,(Vector,Vector)),Regularizer::(Number,Vector,SparseMatrixCSC{Float64,Int64}))
+    d2J(grid) = Distance[3](grid) + Regularizer[3]*grid
+    return Distance[1].+Regularizer[1], Distance[2].+Regularizer[2], d2J
+end
+
+function +(Distance::(Number,Vector,SparseMatrixCSC{Float64,Int64},(Vector,Vector)),Regularizer::(Number,Vector,SparseMatrixCSC{Float64,Int64}))
+    return Distance[1].+Regularizer[1], Distance[2].+Regularizer[2], Distance[3].+Regularizer[3]
 end
