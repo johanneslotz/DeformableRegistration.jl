@@ -57,7 +57,7 @@ errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid, output=false)
 centeredGrid = getCellCenteredGrid(refImg) + 0.001
 D,dD,d2D = ssdDistance(refImg,refImg,centeredGrid,parametricOnly=true,doDerivative=true,doHessian=true)
 Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p))[1]
-errlin,errquad = checkDerivative(Dfunc,dD',[1,0,0,0,1,0])
+errlin,errquad = checkDerivative(Dfunc,dD',[1.0,0,0,0,1,0])
 @test checkErrorDecay(errquad)
 
 

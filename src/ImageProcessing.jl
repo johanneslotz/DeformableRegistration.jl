@@ -84,22 +84,20 @@ end
 
 function restrictResolutionToLevel(image,level)
 
-    # restrict image
-    restrictedImage = copy(image)
+    # copy restrict image, there seems to ber a bug in the image copy method, take care of the deepcopy here
+    restrictedImage = Image(copy(image.data), deepcopy(image.properties))
     maxlevel = 0;
     for l=1:level
         if( (width(restrictedImage)>2) && (height(restrictedImage)>2) )
-            restrictedImage = restrict(restrictedImage)
+            restrictedImage = restrict(restrictedImage,(2,2))
             maxlevel = l
         end
     end
 
     # change pixel spacing accordingly
-    restrictedImage["pixelspacing"][1] = (image["spatialdomain"][2]-image["spatialdomain"][1]) / height(restrictedImage)
-    restrictedImage["pixelspacing"][2] = (image["spatialdomain"][4]-image["spatialdomain"][3]) / width(restrictedImage)
-
-    #image["pixelspacing"][1] = (image["spatialdomain"][2]-image["spatialdomain"][1]) / height(image)
-    #image["pixelspacing"][2] = (image["spatialdomain"][4]-image["spatialdomain"][3]) / width(image)
+    spatialdomain = image["spatialdomain"]
+    restrictedImage["pixelspacing"][1] = (spatialdomain[2]-spatialdomain[1]) / height(restrictedImage)
+    restrictedImage["pixelspacing"][2] = (spatialdomain[4]-spatialdomain[3]) / width(restrictedImage)
 
     return restrictedImage
 
