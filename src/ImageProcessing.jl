@@ -84,12 +84,12 @@ end
 
 function restrictResolutionToLevel(image,level)
 
-    # restrict image
-    restrictedImage = copy(image)
+    # copy restrict image, there seems to ber a bug in the image copy method, take care of the deepcopy here
+    restrictedImage = Image(copy(image.data), deepcopy(image.properties))
     maxlevel = 0;
     for l=1:level
         if( (width(restrictedImage)>2) && (width(restrictedImage)>2) )
-            restrictedImage = restrict(restrictedImage)
+            restrictedImage = restrict(restrictedImage,(2,2))
             maxlevel = l
         end
     end
