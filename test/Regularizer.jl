@@ -64,8 +64,8 @@ S, dS, d2S = regularizer(u, B)
 @test S[1] > 0
 @test (dS'*dS)[1] > 0
 
-using PyPlot
-spy(B)
+#using PyPlot
+#spy(B)
 
 ## speed test
 #omega = [0.0,1.0,0.0,1.0];

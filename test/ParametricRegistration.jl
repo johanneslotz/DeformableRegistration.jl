@@ -27,6 +27,6 @@ println("This recursion test is temporarily disabled. AffineParameters after reg
 println(affineParameters)
 
 # visualize
-using PyPlot; pygui(true); close("all")
-figure()
-visualizeResults(refImg,temImg,affineParameters=affineParameters)
+#using PyPlot; pygui(true); close("all")
+#figure()
+#visualizeResults(refImg,temImg,affineParameters=affineParameters)
