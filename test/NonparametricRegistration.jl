@@ -12,11 +12,18 @@ data[41:80,41:90] = 1
 refImg = createImage(data)
 
 # register images nonparametric
-deformationField = registerImagesNonparametric(refImg,temImg,alpha=0.5)
-#@test_approx_eq_eps
+@time deformationField = registerImagesNonparametric(refImg,temImg,alpha=1,measureDistance=ssdDistance)
 ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
+@test_approx_eq_eps ssdvalue 124.077 1e-1
+println("SSD value after nonlinear registration:")
+println(ssdvalue)
 
-println("The recursion test is temporarily disabled, SSD value after nonlinear registration:")
+
+# register images nonparametric
+@time deformationField = registerImagesNonparametric(refImg,temImg,alpha=1,measureDistance=ssdDistanceMatrixFree)
+ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
+@test_approx_eq_eps ssdvalue 124.077 1e-1
+println("SSD (matrix-free) value after nonlinear registration:")
 println(ssdvalue)
 
 # visualize results
