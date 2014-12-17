@@ -64,6 +64,6 @@ displacement = interpolateDeformationFieldAtGrid(displacement,imageSize,spatialD
 #figure()
 #visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
 
-#@test_approx_eq(sum(displacement),-189175.77072168788)
-println("ATTENTION: Test temporarily disabled...")
+@test_approx_eq(sum(displacement),-189175.77072168788)
+
 
