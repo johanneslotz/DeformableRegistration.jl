@@ -89,7 +89,7 @@ function restrictResolutionToLevel(image,level)
     maxlevel = 0;
     for l=1:level
         if( (width(restrictedImage)>2) && (height(restrictedImage)>2) )
-            restrictedImage = restrict(restrictedImage,(2,2))
+            restrictedImage = restrict(restrictedImage)
             maxlevel = l
         end
     end
