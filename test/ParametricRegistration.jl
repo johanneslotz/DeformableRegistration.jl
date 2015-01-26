@@ -1,4 +1,5 @@
 using ImageRegistration.ImageProcessing
+using ImageRegistration.Distance
 using ImageRegistration.Transformation
 using ImageRegistration.Examples
 using ImageRegistration.Visualization
