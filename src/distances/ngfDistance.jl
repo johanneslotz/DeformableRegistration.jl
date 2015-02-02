@@ -1,10 +1,21 @@
-
+using Images
+import Logging
 function ngfDistance(referenceImage::Image,templateImage::Image,
-                     transformedGrid::Array{Float64,1};
-		                 doDerivative=false,doHessian=false,
-		                 edgeParameterR=1,edgeParameterT=1,
-		                 debug=false,useEdgeParameterInNumerator=true)
+                     options::Dict,
+                     transformedGrid::Array{Float64,1}
+                     )
 
+    opt = options
+
+    doDerivative=opt["doDerivative"]
+    doHessian=opt["doHessian"]
+    edgeParameterR=opt["edgeParameterR"]
+    edgeParameterT=opt["edgeParameterT"]
+    debug = (Logging.LogLevel == Logging.DEBUG) | (Logging.LogLevel == Logging.INFO)
+    useEdgeParameterInNumerator=opt["useEdgeParameterInNumerator"]
+    parametricOnly=opt["parametricOnly"]
+
+    centeredGrid=getCellCenteredGrid(referenceImage)
 
     if(checkStaggered(referenceImage,transformedGrid))
       error("StaggeredGrids are not supported. Please transform to cell centered first.")
@@ -81,6 +92,12 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
               * ((2 * AvgX * spdiagm(gradTx) * G1) + (2 * AvgY * spdiagm(gradTy) * G2))
             )
 
+      if(parametricOnly)
+          N = prod(m)
+          Q = sparse([centeredGrid[1:N] centeredGrid[N+1:end] ones(N)])
+          Q = [Q spzeros(size(Q)[1],size(Q)[2]); spzeros(size(Q)[1],size(Q)[2]) Q]
+          dT = dT * Q
+      end
       #dr2Partial = reshape(  r1 .* -1 ./ (lengthGR .* lengthGT.^3)  ,(size(r1)))
 
       #drc = (    spdiag((r2 .* (AvgX * gradRx) + dr2Partial .* (AvgX * gradTx) )[:]) * AvgX * G1
@@ -92,10 +109,11 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
       end
     end
 
-    functionValue  = prod(ΩR[2:2:end]-ΩR[1:2:end]) - prod(h) * (rc'*rc)
+    functionValue  = (prod(ΩR[2:2:end]-ΩR[1:2:end]) - prod(h) * (rc'*rc))[1]
 
     #return functionValue[1], dFunctionValue', d2FunctionValue, r1, 1.-(rc.^2)
     return functionValue,dFunctionValue',d2FunctionValue, drc
 
 
 end
+
