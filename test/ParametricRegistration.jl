@@ -1,7 +1,8 @@
 using ImageRegistration.ImageProcessing
 using ImageRegistration.Transformation
 using ImageRegistration.Examples
-using ImageRegistration.Visualization
+#using ImageRegistration.Visualization
+using ImageRegistration.Distance
 using Base.Test
 
 println("testing parametric registration...")
@@ -26,6 +27,14 @@ temImg = createImage(temImg)
 # register images with ssd matrix free
 @time affineParameters = registerImagesParametric(refImg,temImg,measureDistance=ssdDistanceMatrixFree)
 @test_approx_eq_eps affineParameters [0.67762891033478,-0.18051497507358655,117.88728616297367,-0.04520880359582362,0.6765803426265078,59.969880090069566] 1e-1
+
+
+# register images with ngf matrix based
+@time affineParameters = registerImagesParametric(refImg,temImg,measureDistance=ngfDistance)
+print(affineParameters)
+@test_approx_eq_eps affineParameters [0.67762891033478,-0.18051497507358655,117.88728616297367,-0.04520880359582362,0.6765803426265078,59.969880090069566] 1e-1
+@test_approx_eq_eps affineParameters "this is untested yet because of a PyPlot Error"
+
 
 # visualize
 #using PyPlot; pygui(true); close("all")
