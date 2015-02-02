@@ -1,5 +1,5 @@
 module Optimization
-
+import Logging
 using KrylovMethods
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
@@ -9,9 +9,14 @@ function optimizeGaussNewton(Jfunc::Function,
                              y::Array{Float64,1};
                              maxIterGaussNewton=10,
                              maxIterCG=2000,
-                             output=false)
+                             output="deprecated")
 
     JRef = Jfunc(y)[1]; y0=y; JOld = Inf
+
+    if(output == "deprecated")
+      Logging.warn("Deprecated use of the output keyboard will be ignored, Set Logging.LogLevel=INFO to see additional output.")
+    end
+    output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
 
     for iter = 1:maxIterGaussNewton
 
@@ -22,15 +27,19 @@ function optimizeGaussNewton(Jfunc::Function,
         # number of parameters < 10 => use backslash operator
         # else use cg method
         cgIterations=0
+        Logging.debug("dJ: ",dJ)
+        Logging.debug("d2J: ",d2J)
         if(length(y)<10)
             dy=d2J\-dJ
         else
             dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=maxIterCG)[1:4]
         end
 
+
 		    # check descent direction
 		    if( (dJ'*dy)[1] > 0)
             dy = -dy
+            Logging.warn("Changing sign of computed descent direction. This is a suspicious move.")
 		    end
 
         # armijo line search method
@@ -50,6 +59,7 @@ function optimizeGaussNewton(Jfunc::Function,
 
         # update parameter y
         y = y + stepLength.*dy
+        Logging.debug("y: ",y)
 
         # stopping criteria
         if checkStoppingCriteria(J[1],JOld[1],JRef[1],dJ,y0,y,stepLength*dy,printActiveStoppingCirteria=output)
