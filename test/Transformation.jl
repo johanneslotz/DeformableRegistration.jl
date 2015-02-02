@@ -37,7 +37,7 @@ staggeredGridFromCenteredGrid = cen2stg(centeredGrid,gridSize)
 ### INTERPOLATION
 
 # test linearImageInterpolationAtGrid, linearImageInterpolationAtGridWithDerivative
-testimage = dirname(Base.source_path()) * "/testdata/lena.png"
+testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
 img = loadImage(testimage)
 centeredGrid = getCellCenteredGrid(img)
 affineParameters = [0.5,0.4,50,0,0.5,100]
