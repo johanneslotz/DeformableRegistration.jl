@@ -1,15 +1,18 @@
 using ImageRegistration.ImageProcessing
-using ImageRegistration.Distance
-using ImageRegistration.Transformation
-using ImageRegistration.Examples
-#using ImageRegistration.Visualization
-using ImageRegistration.Distance
-using Base.Test
+ using ImageRegistration.Distance
+ using ImageRegistration.Transformation
+ using ImageRegistration.Examples
+ #using ImageRegistration.Visualization
+ using ImageRegistration.Distance
+ using Base.Test
+ import Logging
+
+Logging.configure(level=Logging.INFO)
 
 println("testing parametric registration...")
 
 # load reference image
-testimage = dirname(Base.source_path()) * "/testdata/lena.png"
+testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
 refImg = loadImage(testimage)
 
 # define a cell centered grid, transform it and create a template image
@@ -21,23 +24,45 @@ transformedGrid = transformGridAffine(centeredGrid,affineParameters) #+ deformat
 temImg = linearImageInterpolationAtGrid(refImg,transformedGrid)
 temImg = createImage(temImg)
 
+options = ImageRegistration.getDefaultOptions()
+
 # register images
-@time affineParameters = registerImagesParametric(refImg,temImg, measureDistance=ssdDistance)
-@test_approx_eq_eps affineParameters [0.67762891033478,-0.18051497507358655,117.88728616297367,-0.04520880359582362,0.6765803426265078,59.969880090069566] 1e-1
+@time affineParameters = registerImagesParametric(refImg,temImg, ImageRegistration.getDefaultOptions(), measureDistance=ssdDistance)
+
+finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters),doDerivative=true,parametricOnly =true)
+finalDistanceNGF = ngfDistance(refImg,temImg,options,transformGridAffine(centeredGrid,affineParameters))
+@test_approx_eq_eps finalDistanceNGF[1] 71513.2 1e-1
+@test_approx_eq_eps finalDistanceSSD[1] 499.85 1e-1
+Logging.info("regression test passed (parametric): ", ssdDistance)
 
 # register images with ssd matrix free
-@time affineParameters = registerImagesParametric(refImg,temImg,measureDistance=ssdDistanceMatrixFree)
-@test_approx_eq_eps affineParameters [0.67762891033478,-0.18051497507358655,117.88728616297367,-0.04520880359582362,0.6765803426265078,59.969880090069566] 1e-1
+@time affineParameters = registerImagesParametric(refImg,temImg,ImageRegistration.getDefaultOptions(),measureDistance=ssdDistanceMatrixFree)
+finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
+finalDistanceNGF = ngfDistance(refImg,temImg,options,transformGridAffine(centeredGrid,affineParameters))
+
+@test_approx_eq_eps finalDistanceNGF[1] 71513.2 1e-1
+@test_approx_eq_eps finalDistanceSSD[1] 499.85 1e-1
+Logging.info("regression test passed (parametric): ", ssdDistanceMatrixFree)
+
 
 
 # register images with ngf matrix based
-@time affineParameters = registerImagesParametric(refImg,temImg,measureDistance=ngfDistance)
-print(affineParameters)
-@test_approx_eq_eps affineParameters [0.67762891033478,-0.18051497507358655,117.88728616297367,-0.04520880359582362,0.6765803426265078,59.969880090069566] 1e-1
-@test_approx_eq_eps affineParameters "this is untested yet because of a PyPlot Error"
+# options = ImageRegistration.getDefaultOptions()
+#  options["edgeParameterR"] = 0.001#*Distance.estimateNGFEpsilon(refImg)
+#  options["edgeParameterT"] = 0.001#*Distance.estimateNGFEpsilon(temImg)
 
+# @time affineParameters = ImageRegistration.Examples.registerImagesParametric(refImg,temImg,options,measureDistance=ngfDistance,levels=[5,4,3,2])
+# finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
+# finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters),options = options)
+
+# @test_approx_eq_eps finalDistanceNGF[1] 71513.2 1e-1
+# @test_approx_eq_eps finalDistanceSSD[1] 499.85 1e-1
+# Logging.info("regression test passed (parametric): ", ngfDistance)
 
 # visualize
-#using PyPlot; pygui(true); close("all")
-#figure()
-#visualizeResults(refImg,temImg,affineParameters=affineParameters)
+using ImageRegistration.Visualization
+ using PyPlot; pygui(true); close("all")
+ figure()
+ visualizeResults(refImg,temImg,affineParameters=affineParameters)
+
+
