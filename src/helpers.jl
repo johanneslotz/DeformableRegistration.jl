@@ -16,3 +16,15 @@ end
 function +(Distance::(Number,Vector,SparseMatrixCSC{Float64,Int64},(Vector,Vector)),Regularizer::(Number,Vector,SparseMatrixCSC{Float64,Int64}))
     return Distance[1].+Regularizer[1], Distance[2].+Regularizer[2], Distance[3].+Regularizer[3]
 end
+
+import ImageRegistration.Transformation
+function getDefaultOptions()
+  options = {"doDerivative" => true,
+             "doHessian" => true,
+             "edgeParameterR" => 0.01,
+             "edgeParameterT" => 0.01,
+             "centeredGrid" => ImageRegistration.Transformation.getCellCenteredGrid,
+             "useEdgeParameterInNumerator" => true,
+             "parametricOnly" => true}
+  return options
+end
