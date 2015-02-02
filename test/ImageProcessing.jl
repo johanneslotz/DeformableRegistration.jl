@@ -13,7 +13,7 @@ function checkImageProperties(img::Image)
 end
 
 # test loadImage
-testimage = dirname(Base.source_path()) * "/testdata/testimage.png"
+testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
 img = loadImage(testimage)
 checkImageProperties(img)
 # check if spatial domain is the one that was specified
