@@ -1,4 +1,5 @@
-# mehods tests
+
+# methods tests
 include("ImageProcessing.jl")
 include("Transformation.jl")
 include("Distance.jl")
