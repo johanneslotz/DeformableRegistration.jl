@@ -15,12 +15,14 @@ data[41:80,41:90] = 1
 referenceImage = createImage(data)
 
 levels = [4,3,2]
-α = 1
+
 
 displacement = 0
 imageSize = 0
 spatialDomain = 0
 
+options = regOptions()
+options.α = 1
 # start multilevel registration
 for level in levels
 
@@ -45,14 +47,17 @@ for level in levels
   regulizerMatrix = createDiffusiveOperatorCentered(R.properties["pixelspacing"],imageSize)
 
   JntObjtvFctn(displacement) =
-    ssdDistance(R,T,displacement+identityGrid) +
-    α * regularizer(displacement,regulizerMatrix)
+    ssdDistance(R,T,displacement+identityGrid,options) +
+    options.α * regularizer(displacement,regulizerMatrix)
+  optionsWithD = deepcopy(options)
+  optionsWithD.doDerivative = true
+  optionsWithD.doHessian = true
   JntObjtvFctnWDerivative(displacement) =
-    ssdDistance(R,T,displacement+identityGrid,doDerivative=true,doHessian=true) +
-    α * regularizer(displacement,regulizerMatrix,doDerivative=true,doHessian=true)
+    ssdDistance(R,T,displacement+identityGrid,optionsWithD) +
+    options.α * regularizer(displacement,regulizerMatrix,doDerivative=true,doHessian=true)
 
   # gauss newton method
-  displacement = optimizeGaussNewton(JntObjtvFctn,JntObjtvFctnWDerivative,displacement,output=false)
+  displacement = optimizeGaussNewton(JntObjtvFctn,JntObjtvFctnWDerivative,displacement,options)
 
 end
 

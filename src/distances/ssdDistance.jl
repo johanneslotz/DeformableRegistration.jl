@@ -1,8 +1,10 @@
 function ssdDistance(referenceImage::Image,templateImage::Image,
-                     transformedGrid::Array{Float64,1};
-                     doDerivative=false,doHessian=false,
-                     parametricOnly=false,
+                     transformedGrid::Array{Float64,1}, options::regOptions;
                      centeredGrid = getCellCenteredGrid(referenceImage))
+
+  doDerivative=options.doDerivative
+  doHessian=options.doHessian
+  parametricOnly=options.parametricOnly
 
   if(checkStaggered(referenceImage,transformedGrid))
       error("StaggeredGrids are not supported. Please transform to cell centered first.")
@@ -47,9 +49,7 @@ function ssdDistance(referenceImage::Image,templateImage::Image,
 end
 
 function ssdDistanceMatrixFree(referenceImage::Image,templateImage::Image,
-                               transformedGrid::Array{Float64,1};
-                               doDerivative=false,doHessian=false,
-                               parametricOnly=false,
+                               transformedGrid::Array{Float64,1}, o::regOptions;
                                centeredGrid = getCellCenteredGrid(referenceImage))
 
   if(checkStaggered(referenceImage,transformedGrid))
@@ -68,9 +68,9 @@ function ssdDistanceMatrixFree(referenceImage::Image,templateImage::Image,
   functionValue = 0.5 * h * BLAS.dot(N,residual,1,residual,1)[1] # !
 
   # check if only the distance is wanted
-  if(doDerivative)
+  if(o.doDerivative)
       dFunctionValue = BLAS.scal(2*N,h,dTtransposedMultiplication(N,dX_transformedImage,dY_transformedImage,residual),1)
-      if(parametricOnly)
+      if(o.parametricOnly)
           dFunctionValue = QtransposedMultiplication(N,dFunctionValue,centeredGrid)
       end
   else
@@ -78,8 +78,8 @@ function ssdDistanceMatrixFree(referenceImage::Image,templateImage::Image,
       dTransformedImage = 0.0
   end
 
-  if(doHessian)
-      if(parametricOnly)
+  if(o.doHessian)
+      if(o.parametricOnly)
           d2FunctionValue = computeParametricHessian(N,h,dX_transformedImage,dY_transformedImage,centeredGrid)
       else
           d2FunctionValue(x) = hessianFunction(N,h,dX_transformedImage,dY_transformedImage,x)

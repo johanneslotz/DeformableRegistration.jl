@@ -1,10 +1,11 @@
 using Images
 using ImageRegistration.Transformation
+using ImageRegistration
 
 function maskedSsdDistance(referenceImage::Image,templateImage::Image,
                            transformedGrid::Array{Float64,1},
-                           mask::Array{Float64,1};
-                           doDerivative=false,doHessian=false)
+                           mask::Array{Float64,1},
+                           o::regOptions)
 
     # interpolation of the template image at transformed grid points
     transformedImage, dY_transformedImage, dX_transformedImage =
@@ -21,7 +22,7 @@ function maskedSsdDistance(referenceImage::Image,templateImage::Image,
 	  functionValue = 0.5 .* h .* residual' * residual
 
     # check if only the distance is wanted
-    if(~doDerivative)
+    if(~o.doDerivative)
 	      return functionValue
     end
 

@@ -1,5 +1,7 @@
 module Distance
 
+
+using ImageRegistration
 using Images
 using ImageRegistration.Transformation
 import Logging
@@ -11,6 +13,5 @@ include("distances/ssdDistance.jl")
 include("distances/maskedSsdDistance.jl")
 include("distances/ngfDistance.jl")
 include("distances/estimateNGFEpsilon.jl")
-
 
 end

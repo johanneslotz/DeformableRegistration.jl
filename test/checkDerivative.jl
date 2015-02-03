@@ -1,5 +1,6 @@
-function checkDerivative(f,df,x;doPlot::Bool=false,output::Bool=true)
-    N = 14
+import Logging
+function checkDerivative(f,df,x;doPlot::Bool=false)
+    N = 17
     h = exp10(2:-1:-N)
     v = randn(size(x)).-0.5
     fx = f(x)
@@ -8,9 +9,8 @@ function checkDerivative(f,df,x;doPlot::Bool=false,output::Bool=true)
     for i=1:length(h)
         errlin[i]  = norm(fx             - f(x+h[i]*v))
         errquad[i] = norm(fx + h[i]*df*v - f(x+h[i]*v))
-        if(output)
-            @printf(" h: %5e  ||f(x+h*v)||: %5e   elin: %5e   equad: %5e \n",h[i], norm(f(x+h[i]*v)), errlin[i],errquad[i])
-        end
+        s = @sprintf(" h: %5e  ||f(x+h*v)||: %5e   elin: %5e   equad: %5e \n",h[i], norm(f(x+h[i]*v)), errlin[i],errquad[i])
+        Logging.debug(s)
     end
     if(doPlot)
       PyPlot.rc("legend",fontsize=10)

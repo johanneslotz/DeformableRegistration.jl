@@ -1,24 +1,19 @@
 module Optimization
 import Logging
-using KrylovMethods
+import KrylovMethods
+using ImageRegistration #needed for regOptions type
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 
 function optimizeGaussNewton(Jfunc::Function,
                              JfuncWithDerivative::Function,
-                             y::Array{Float64,1};
-                             maxIterGaussNewton=10,
-                             maxIterCG=2000,
-                             output="deprecated")
+                             y::Array{Float64,1}, options::regOptions)
 
     JRef = Jfunc(y)[1]; y0=y; JOld = Inf
 
-    if(output == "deprecated")
-      Logging.warn("Deprecated use of the output keyboard will be ignored, Set Logging.LogLevel=INFO to see additional output.")
-    end
     output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
 
-    for iter = 1:maxIterGaussNewton
+    for iter = 1:options.maxIterGaussNewton
 
         # get derivatives of objective function
         J, dJ, d2J = JfuncWithDerivative(y)
@@ -32,7 +27,7 @@ function optimizeGaussNewton(Jfunc::Function,
         if(length(y)<10)
             dy=d2J\-dJ
         else
-            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=maxIterCG)[1:4]
+            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG)[1:4]
         end
 
 
@@ -49,12 +44,13 @@ function optimizeGaussNewton(Jfunc::Function,
         end
 
         # output
-        if(output)
-            if(cgIterations==0)
-                @printf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
-            else
-                @printf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
-            end
+
+        if(cgIterations==0)
+          s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
+          Logging.debug(s)
+        else
+          s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
+          Logging.debug(s)
         end
 
         # update parameter y

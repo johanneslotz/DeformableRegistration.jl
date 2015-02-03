@@ -6,16 +6,14 @@ using ImageRegistration.Distance
 using ImageRegistration.Regularizer
 using ImageRegistration.Optimization
 using Images
-
-import ImageRegistration
+import Logging
+using ImageRegistration
 
 export registerImagesParametric, registerImagesNonparametric
 
-function registerImagesParametric(referenceImage,templateImage, options::Dict;
+function registerImagesParametric(referenceImage,templateImage, options::regOptions;
                                   levels = [5,4,3],
-                                  measureDistance = ssdDistance,
-                                  maxIterGaussNewton = 20,
-                                  output=false)
+                                  measureDistance = ssdDistance)
 
     # initial guess affine parameters
     affineParameters = [1.0,0,0,0,1.0,0]
@@ -29,22 +27,27 @@ function registerImagesParametric(referenceImage,templateImage, options::Dict;
         T = restrictResolutionToLevel(templateImage,level)
 
         # output
-        if(output)
-          println("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
-        end
+        Logging.info("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
 
         # define objective function
         if measureDistance == ngfDistance
           JfuncWithDerivative(param) = measureDistance(R,T,options,transformGridAffine(centeredGrid,param))
           Jfunc(param) = measureDistance(R,T,options,transformGridAffine(centeredGrid,param))
         else
-          JfuncWithDerivative(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param),parametricOnly=true,doDerivative=true,doHessian=true,centeredGrid=centeredGrid)
-          Jfunc(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param))
+          options.parametricOnly = true
+          optionsNoD = deepcopy(options)
+          optionsD = deepcopy(options)
+          optionsNoD.doDerivative = false
+          optionsNoD.doHessian = false
+          optionsD.doDerivative = true
+          optionsD.doHessian = true
+          JfuncWithDerivative(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param),optionsD)
+          Jfunc(param) = measureDistance(R,T,transformGridAffine(centeredGrid,param),optionsNoD)
         end
 
 
         # gauss newton method
-        affineParameters = optimizeGaussNewton(Jfunc,JfuncWithDerivative,affineParameters,output=output)
+        affineParameters = optimizeGaussNewton(Jfunc,JfuncWithDerivative,affineParameters,options)
 
     end
 
@@ -52,13 +55,10 @@ function registerImagesParametric(referenceImage,templateImage, options::Dict;
 
 end
 
-function registerImagesNonparametric(referenceImage,templateImage;
+function registerImagesNonparametric(referenceImage,templateImage,options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      levels = [4,3,2],
-                                     measureDistance = ssdDistance,
-                                     alpha = 1,
-                                     maxIterGaussNewton = 10,
-                                     output=false)
+                                     measureDistance = ssdDistance)
 
     # define variables
     referenceGrid = []; deformedGrid = []; imageSize = []; spatialDomain = []
@@ -91,9 +91,7 @@ function registerImagesNonparametric(referenceImage,templateImage;
         deformedGrid = cen2stg(deformedGrid,imageSize)
 
         # output
-        if(output)
-          println("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
-        end
+        Logging.info("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
 
         # define objective function
         regulizerMatrix = createElasticOperatorStaggered(pixelspacing(R),imageSize)
@@ -101,17 +99,23 @@ function registerImagesNonparametric(referenceImage,templateImage;
           optionsNoDerivative = ImageRegistration.getDefaultOptions()
           optionsNoDerivative["doDerivative"] = false
           optionsWithDerivative = ImageRegistration.getDefaultOptions()
-          Jfunc(grid) = measureDistance(R,T,optionsNoDerivative,stg2cen(grid,imageSize)) + alpha * regularizer(grid-referenceGrid,regulizerMatrix)
+          Jfunc(grid) = measureDistance(R,T,optionsNoDerivative,stg2cen(grid,imageSize)) + options.α * regularizer(grid-referenceGrid,regulizerMatrix)
           JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,optionsWithDerivative,stg2cen(grid,imageSize)),R) +
-                                      alpha * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
+                                      options.α * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
         else
-          Jfunc(grid) = measureDistance(R,T,stg2cen(grid,imageSize)) + alpha * regularizer(grid-referenceGrid,regulizerMatrix)
-          JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),doDerivative=true,doHessian=true),R) +
-                                      alpha * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
+          optionsNoD = deepcopy(options)
+          optionsD = deepcopy(options)
+          optionsNoD.doDerivative = false
+          optionsNoD.doHessian = false
+          optionsD.doDerivative = true
+          optionsD.doHessian = true
+          Jfunc(grid) = measureDistance(R,T,stg2cen(grid,imageSize),optionsNoD) + options.α * regularizer(grid-referenceGrid,regulizerMatrix)
+          JfuncWithDerivative(grid) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),optionsD),R) +
+                                      options.α * regularizer(grid-referenceGrid,regulizerMatrix,doDerivative=true,doHessian=true)
         end
 
         # gauss newton method
-        deformedGrid = optimizeGaussNewton(Jfunc,JfuncWithDerivative,deformedGrid,output=output)
+        deformedGrid = optimizeGaussNewton(Jfunc,JfuncWithDerivative,deformedGrid,options)
 
     end
 

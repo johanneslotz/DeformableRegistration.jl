@@ -2,7 +2,7 @@ module Visualization
 
 using PyPlot
 using Images
-using ..Transformation
+using ImageRegistration.Transformation
 
 export showImage, showGrid, visualizeResults
 
