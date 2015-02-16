@@ -1,12 +1,14 @@
 module Distance
 
+using Images
+using Logging
 
 using ImageRegistration
-using Images
 using ImageRegistration.Transformation
-import Logging
+using ImageRegistration.Interpolation
+using ImageRegistration.ImageProcessing
 
-export ssdDistance, ssdDistanceMatrixFree, maskedSsdDistance, ngfDistance, estimateNGFEpsilon
+export ssdDistance, maskedSsdDistance, ngfDistance, estimateNGFEpsilon
 export calculateHessianStaggered
 
 include("distances/ssdDistance.jl")

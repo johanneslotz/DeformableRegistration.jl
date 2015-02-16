@@ -3,6 +3,7 @@ using ImageRegistration.ImageProcessing
 using ImageRegistration.Examples
 using ImageRegistration.Distance
 using ImageRegistration.Transformation
+using ImageRegistration.Interpolation
 using ImageRegistration.Visualization
 using ImageRegistration.Regularizer
 using ImageRegistration.Optimization
@@ -14,50 +15,42 @@ templateImage = createImage(data) 
 data[41:80,41:90] = 1
 referenceImage = createImage(data)
 
-levels = [4,3,2]
-
-
 displacement = 0
 imageSize = 0
 spatialDomain = 0
 
 options = regOptions()
-options.α = 1
+options.regularizerWeight = 1
+options.levels = [4,3,2]
+
 # start multilevel registration
-for level in levels
+for level in options.levels
 
   R = restrictResolutionToLevel(referenceImage,level)
-  spatialDomain = R.properties["spatialdomain"]
+  spatialDomain = getSpatialDomain(R)
   T = restrictResolutionToLevel(templateImage,level)
 
   identityGrid = getCellCenteredGrid(R)
 
-  if(level==levels[1])
+  if(level==options.levels[1])
     displacement = 0.0 .* getCellCenteredGrid(R)
-    displacementDim = [size(R)[1],size(R)[2]]
+    displacementDim = getSize(R)
   end
 
   displacement = interpolateDeformationFieldAtGrid(displacement,displacementDim,spatialDomain,identityGrid)
-  displacementDim = [size(R)[1],size(R)[2]]
+  displacementDim = getSize(R)
 
   # update imageSize
-  imageSize = [size(R)[1],size(R)[2]]
+  imageSize = getSize(R)
 
   # define objective function
-  regulizerMatrix = createDiffusiveOperatorCentered(R.properties["pixelspacing"],imageSize)
-
-  JntObjtvFctn(displacement) =
-    ssdDistance(R,T,displacement+identityGrid,options) +
-    options.α * regularizer(displacement,regulizerMatrix)
-  optionsWithD = deepcopy(options)
-  optionsWithD.doDerivative = true
-  optionsWithD.doHessian = true
-  JntObjtvFctnWDerivative(displacement) =
-    ssdDistance(R,T,displacement+identityGrid,optionsWithD) +
-    options.α * regularizer(displacement,regulizerMatrix,doDerivative=true,doHessian=true)
+  regulizerMatrix = createDiffusiveOperatorCentered(getPixelSpacing(R),imageSize)
+  JntObjtvFctn(displacement;doDerivative=false,doHessian=false) =
+    ssdDistance(R,T,displacement+identityGrid,doDerivative=doDerivative,doHessian=doHessian,options=options) +
+    options.regularizerWeight * regularizer(displacement,regulizerMatrix)
 
   # gauss newton method
-  displacement = optimizeGaussNewton(JntObjtvFctn,JntObjtvFctnWDerivative,displacement,options)
+  displacement = optimizeGaussNewton(JntObjtvFctn,displacement,options)
 
 end
 
@@ -70,5 +63,3 @@ displacement = interpolateDeformationFieldAtGrid(displacement,imageSize,spatialD
 #visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
 
 @test_approx_eq_eps sum(displacement) -189175.77072168788 1e-1
-
-

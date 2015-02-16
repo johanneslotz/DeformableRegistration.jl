@@ -1,7 +1,7 @@
-
-# methods tests
-include("ImageProcessing.jl")
+# method tests
+#include("ImageProcessing.jl")
 include("Transformation.jl")
+include("Interpolation.jl")
 include("Distance.jl")
 include("Regularizer.jl")
 include("Visualization.jl")

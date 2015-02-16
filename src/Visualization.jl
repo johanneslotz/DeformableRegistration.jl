@@ -2,7 +2,9 @@ module Visualization
 
 using PyPlot
 using Images
+
 using ImageRegistration.Transformation
+using ImageRegistration.Interpolation
 
 export showImage, showGrid, visualizeResults
 
@@ -127,6 +129,7 @@ function visualizeResults(referenceImage,templateImage;
     showImage(differenceImage,spatialDomain=referenceImage["spatialdomain"])
     xlabel("max: $(maximum(differenceImage[:]))")
     title("Template[y]-Reference")
+
 end
 
 end

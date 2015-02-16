@@ -2,9 +2,7 @@ module Regularizer
 
 export regularizer, createElasticOperatorCentered, createElasticOperatorStaggered, createDiffusiveOperatorCentered
 
-function regularizer(deformationField::Array{Float64,1},
-                            operator;
-                            doDerivative=false,doHessian=false)
+function regularizer(deformationField::Array{Float64,1}, operator)
 
     d2functionValue = operator'*operator
     dfunctionValue  = d2functionValue*deformationField

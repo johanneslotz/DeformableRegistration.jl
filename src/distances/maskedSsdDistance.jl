@@ -1,7 +1,3 @@
-using Images
-using ImageRegistration.Transformation
-using ImageRegistration
-
 function maskedSsdDistance(referenceImage::Image,templateImage::Image,
                            transformedGrid::Array{Float64,1},
                            mask::Array{Float64,1},

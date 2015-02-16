@@ -5,6 +5,8 @@ using PyPlot
 #pygui(true); close("all")
 using Base.Test
 
+println("Testing visualization.")
+
 # test showImage
 testimage = dirname(Base.source_path()) * "/testdata/testimage.png"
 img = loadImage(testimage,spatialDomain=[-1.1,2.1,-1.0,2.21])

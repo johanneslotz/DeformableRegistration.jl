@@ -1,5 +1,3 @@
-using Images
-import Logging
 function ngfDistance(referenceImage::Image,templateImage::Image,
                      options::Dict,
                      transformedGrid::Array{Float64,1}
@@ -40,9 +38,9 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
     end
 
     m = size(referenceImage)
-    h = referenceImage.properties["pixelspacing"]
+    h = getPixelSpacing(referenceImage)
     Rc = referenceImage.data
-    ΩR = referenceImage.properties["spatialdomain"]
+    ΩR = getSpatialDomain(referenceImage)
 
     shortFiniteDiffX = spdiagm((-ones(m[1]-1,1),ones(m[1]-2,1)),[0, 1],m[1]-1,m[1])/(2*h[1])
     #shortFiniteDiffX[1] = shortFiniteDiffX[2]

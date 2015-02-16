@@ -3,14 +3,13 @@ module Transformation
 using Images
 using Grid
 
-export getCellCenteredGrid, getStaggeredGrid, stg2cen, cen2stg, checkStaggered
-export transformGridAffine
-export interpolateDeformationFieldAtGrid
-export interpolateImageAtGrid, interpolateImageAtGridWithDerivative
-export linearImageInterpolationAtGrid, linearImageInterpolationAtGridWithDerivative
+using ImageRegistration.ImageProcessing
 
-function getCellCenteredGrid(image::Image)
-  return getCellCenteredGrid(image["spatialdomain"],[size(image)[1],size(image)[2]])
+export getCellCenteredGrid, getStaggeredGrid, stg2cen, cen2stg, checkStaggered, getCellCenteredGridRanges
+export transformGridAffine, transformWorldCoordinate
+
+function getCellCenteredGrid(I::Image)
+  return getCellCenteredGrid(getSpatialDomain(I),getSize(I))
 end
 
 function getCellCenteredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int,1})
@@ -22,7 +21,7 @@ function getCellCenteredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int
 end
 
 function getStaggeredGrid(image::Image)
-  return getStaggeredGrid(image["spatialdomain"],[size(image)[1],size(image)[2]])
+  return getStaggeredGrid(getSpatialDomain(I),getSize(I))
 end
 
 function getStaggeredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int,1})
@@ -80,16 +79,16 @@ end
 
 function cen2stg(distanceOutput::(Number,Array{Float64,1},Function,(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
-  dD = cen2stg(distanceOutput[2],[size(refImg)[1], size(refImg)[2]])
-  d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,[size(refImg)[1], size(refImg)[2]])),[size(refImg)[1], size(refImg)[2]])
+  dD = cen2stg(distanceOutput[2],getSize(refImg))
+  d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
   dTransformedImage = distanceOutput[4]
   return(D, dD, d2D, dTransformedImage)
 end
 
 function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
-  dD = cen2stg(distanceOutput[2],[size(refImg)[1], size(refImg)[2]])
-  d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,[size(refImg)[1], size(refImg)[2]]),[size(refImg)[1], size(refImg)[2]])
+  dD = cen2stg(distanceOutput[2],getSize(refImg))
+  d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
   dTransformedImage = distanceOutput[4]
   return(D, dD, d2D, dTransformedImage)
 end
@@ -102,12 +101,48 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},Matrix,(Array{Float64,
   return(D, dD, d2D, dTransformedImage)
 end
 
-function checkStaggered(image,grid)
-  if( (2*prod(size(image))) == size(grid,1) )
+function cen2stg(distanceOutput::(Number,Number,Number,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+  D = distanceOutput[1]
+  dD = distanceOutput[2]
+  d2D = distanceOutput[3]
+  dTransformedImage = distanceOutput[4]
+  return(D, dD, d2D, dTransformedImage)
+end
+
+function checkStaggered(I::Image,grid::Array{Float64,1})
+  if( 2*prod(size(I)) == size(grid,1) )
       return false
   else
       return true
   end
+end
+
+function getCellCenteredGridRanges(I::Image)
+    spatialDomain = getSpatialDomain(I)
+    pixelSpacing = getPixelSpacing(I)
+    y = spatialDomain[1]+pixelSpacing[1]/2:pixelSpacing[1]:spatialDomain[2]
+    x = spatialDomain[3]+pixelSpacing[2]/2:pixelSpacing[2]:spatialDomain[4]
+    return y,x
+end
+
+function transformWorldCoordinate(I::Image,y::Float64,x::Float64)
+    spatialDomain = getSpatialDomain(I)
+    pixelSpacing = getPixelSpacing(I)
+    yNew = (y - spatialDomain[1]) / pixelSpacing[1] + .5
+    xNew = (x - spatialDomain[3]) / pixelSpacing[2] + .5
+    return yNew,xNew
+end
+
+function transformWorldCoordinate(I::Image,grid::Array{Float64,1})
+    spatialDomain = getSpatialDomain(I)
+    pixelSpacing = getPixelSpacing(I)
+    N = size(grid,1)
+    newGrid = zeros(N)
+    for i=1:N
+      newGrid[i] = (grid[i] - spatialDomain[3]) / pixelSpacing[2] + .5
+      newGrid[N+i] = (grid[N+i] - spatialDomain[1]) / pixelSpacing[1] + .5
+    end
+    return newGrid
 end
 
 function transformGridAffine(grid,affineParameters)
@@ -124,188 +159,6 @@ function transformGridAffine(transformationMatrix::Matrix,gridOrg::Array{Float64
         @inbounds grid[N+i] = transformationMatrix[2,1]*gridOrg[i]+transformationMatrix[2,2]*gridOrg[N+i]+translationParameters[2]
     end
     return grid
-end
-
-function interpolateDeformationFieldAtGrid(deformationField::Array{Float64,2}, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1})
-
-    # determine number of new points and pixel spacing
-    numberOfPoints::Int = int(size(newPoints,1)/2)
-    pixelSpacing::Array{Float64,1} = [(spatialDomain[2]-spatialDomain[1])/size(deformationField)[1],
-                                      (spatialDomain[4]-spatialDomain[3])/size(deformationField)[2]]
-
-    # define interpolation grid
-    deformationFieldInt = InterpGrid(deformationField, BCreflect, InterpLinear)
-
-    # interpolate deformation at new points
-    deformationFieldAtNewPoints=Array(Float64, numberOfPoints); y=0.0; x=0.0;
-    for i=1:numberOfPoints
-        x = (newPoints[i] - spatialDomain[3]) / pixelSpacing[2] + .5
-        y = (newPoints[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
-        deformationFieldAtNewPoints[i] = deformationFieldInt[y,x]
-    end
-
-    return deformationFieldAtNewPoints
-
-end
-
-function interpolateDeformationFieldAtGrid(deformationField::Array{Float64,1}, gridSize, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1})
-
-    deformationFieldX = reshape(deformationField[1:prod(gridSize)],gridSize[1],gridSize[2])
-    deformationFieldY = reshape(deformationField[prod(gridSize)+1:end],gridSize[1],gridSize[2])
-
-    return [interpolateDeformationFieldAtGrid(deformationFieldX,spatialDomain,newPoints),
-            interpolateDeformationFieldAtGrid(deformationFieldY,spatialDomain,newPoints)]
-
-end
-
-function interpolateImageAtGrid(image::Image,transformedGrid::Array{Float64,1};
-                                         InterpFunction=InterpLinear)
-
-    # determine number of new points, pixel spacing and spatial domain of the image
-    numberOfPoints::Int = int(size(transformedGrid,1)/2)
-    pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image["spatialdomain"]
-    sizeY = size(image)[1]
-    sizeX = size(image)[2]
-
-    # define interpolation grid
-    imageInt = InterpGrid(image.data, 0.0, InterpFunction)
-
-    # interpolate image at new points
-    transformedImage = zeros(numberOfPoints); y=0.0; x=0.0;
-    for i=1:numberOfPoints
-        x = (transformedGrid[i] - spatialDomain[3]) / pixelSpacing[2] + .5
-        y = (transformedGrid[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
-        if ((x <= 0) | (y <= 0) | (x >= sizeX+1) | (y >= sizeY+1))
-            continue
-        end
-        transformedImage[i] = imageInt[y,x]
-    end
-
-    return reshape(transformedImage,height(image),width(image))
-
-end
-
-function interpolateImageAtGridWithDerivative(image::Image,transformedGrid::Array{Float64,1};
-                                                       InterpFunction=InterpLinear)
-
-    # determine number of new points, pixel spacing and spatial domain of the image
-    numberOfPoints::Int = int(size(transformedGrid,1)/2)
-    pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image["spatialdomain"]
-    sizeY = size(image)[1]
-    sizeX = size(image)[2]
-
-    # define interpolation grid
-    imageInt = InterpGrid(image.data, 0.0, InterpFunction)
-
-    # interpolate image at new points with derivative
-    transformedImage = zeros(numberOfPoints); y=0.0; x=0.0;
-    dY_transformedImage = zeros(numberOfPoints)
-    dX_transformedImage = zeros(numberOfPoints)
-    for i=1:numberOfPoints
-        x = (transformedGrid[i] - spatialDomain[3]) / pixelSpacing[2] + .5
-        y = (transformedGrid[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
-        if ((x <= 0) | (y <= 0) | (x >= sizeX+1) | (y >= sizeY+1))
-            continue
-        end
-        transformedImage[i],(dY_transformedImage[i],dX_transformedImage[i]) = valgrad(imageInt,y,x)
-    end
-
-    return reshape(transformedImage,height(image),width(image)),
-           reshape(dY_transformedImage,height(image),width(image)),
-           reshape(dX_transformedImage,height(image),width(image))
-end
-
-function linearImageInterpolationAtGrid(image::Image,transformedGrid::Array{Float64,1})
-
-    # determine number of new points, pixel spacing and spatial domain of the image
-    numberOfPoints::Int = int(size(transformedGrid,1)/2)
-    pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image["spatialdomain"]
-
-    # interpolate image at new points
-    transformedImage = zeros(numberOfPoints)
-    p::Array{Float64,1} = zeros(4)
-    sizeY = size(image)[1]
-    sizeX = size(image)[2]
-    x::Float64 = 0.0; y::Float64 = 0.0;
-    xf::Int = 0; yf::Int = 0;
-
-    for i=1:numberOfPoints
-
-        x = (transformedGrid[i]   - spatialDomain[3]) / pixelSpacing[2] + .5
-        y = (transformedGrid[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
-
-        if ((x <= 0) | (y <= 0) | (x >= sizeX+1) | (y >= sizeY+1))
-            continue
-        end
-
-        xf = ifloor(x)
-        yf = ifloor(y)
-
-
-        p[1] = ((xf<1)          | (yf<1))        ?   0.0: image.data[yf,xf]
-        p[2] = ((xf+1>sizeX)    | (yf<1))        ?   0.0: image.data[yf,xf+1]
-        p[3] = ((xf<1)          | (yf+1>sizeY))  ?   0.0: image.data[yf+1,xf]
-        p[4] = ((xf+1>sizeX)    | (yf+1>sizeY))  ?   0.0: image.data[yf+1,xf+1]
-
-        x = x - xf
-        y = y - yf
-
-        transformedImage[i] = (p[1] * (1-x) + p[2] * x) * (1-y) + (p[3] * (1-x) + p[4] * x) * y
-
-    end
-
-    return reshape(transformedImage,height(image),width(image))
-
-end
-
-function linearImageInterpolationAtGridWithDerivative(image::Image,transformedGrid::Array{Float64,1})
-
-    # determine number of new points, pixel spacing and spatial domain of the image
-    numberOfPoints::Int = int(size(transformedGrid,1)/2)
-    pixelSpacing::Array{Float64,1} = pixelspacing(image)
-    spatialDomain::Array{Float64,1} = image.properties["spatialdomain"]
-
-    # interpolate image at new points
-    transformedImage = zeros(numberOfPoints)
-    dY_transformedImage = zeros(numberOfPoints)
-    dX_transformedImage = zeros(numberOfPoints)
-    p = zeros(4)
-    sizeY= size(image)[1]
-    sizeX = size(image)[2]
-    x::Float64 = 0.0; y::Float64 = 0.0;
-    xf::Int = 0; yf::Int = 0;
-
-    for i=1:numberOfPoints
-
-        x = (transformedGrid[i]   - spatialDomain[3]) / pixelSpacing[2] + .5
-        y = (transformedGrid[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
-
-        if ((x <= 0) | (y <= 0) | (x >= sizeX+1) | (y >= sizeY+1))
-            continue
-        end
-
-        xf = ifloor(x)
-        yf = ifloor(y)
-
-        p[1] = ((xf<1)          | (yf<1))        ?   0.0: image.data[yf,xf]
-        p[2] = ((xf+1>sizeX)    | (yf<1))        ?   0.0: image.data[yf,xf+1]
-        p[3] = ((xf<1)          | (yf+1>sizeY))  ?   0.0: image.data[yf+1,xf]
-        p[4] = ((xf+1>sizeX)    | (yf+1>sizeY))  ?   0.0: image.data[yf+1,xf+1]
-
-        x = x - xf
-        y = y - yf
-
-        transformedImage[i] = (p[1] * (1-x) + p[2] * x) * (1-y) + (p[3] * (1-x) + p[4] * x) * y
-        dX_transformedImage[i] = ((p[2] - p[1]) * (1-y) + (p[4] - p[3]) * y) / pixelSpacing[2]
-        dY_transformedImage[i] = ((p[3] - p[1]) * (1-x) + (p[4] - p[2]) * x) / pixelSpacing[1]
-
-    end
-
-    return transformedImage,dY_transformedImage,dX_transformedImage
-
 end
 
 end

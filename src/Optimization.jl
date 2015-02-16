@@ -1,12 +1,13 @@
 module Optimization
-import Logging
-import KrylovMethods
-using ImageRegistration #needed for regOptions type
+
+using Logging
+using KrylovMethods
+
+using ImageRegistration
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 
 function optimizeGaussNewton(Jfunc::Function,
-                             JfuncWithDerivative::Function,
                              y::Array{Float64,1}, options::regOptions)
 
     JRef = Jfunc(y)[1]; y0=y; JOld = Inf
@@ -16,7 +17,7 @@ function optimizeGaussNewton(Jfunc::Function,
     for iter = 1:options.maxIterGaussNewton
 
         # get derivatives of objective function
-        J, dJ, d2J = JfuncWithDerivative(y)
+        J, dJ, d2J = Jfunc(y,doDerivative=true,doHessian=true)
 
         # solve system of linear equations d2J*dy=-dJ
         # number of parameters < 10 => use backslash operator
@@ -29,7 +30,6 @@ function optimizeGaussNewton(Jfunc::Function,
         else
             dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG)[1:4]
         end
-
 
 		    # check descent direction
 		    if( (dJ'*dy)[1] > 0)
