@@ -1,3 +1,4 @@
+using ImageRegistration
 using ImageRegistration.Distance
 using ImageRegistration.ImageProcessing
 using ImageRegistration.Transformation
@@ -8,35 +9,14 @@ using PyPlot
 using Images
 using Logging
 
+# setup logging
 Logging.configure(level = Logging.INFO) # set to DEBUG to see error tables
 
 # define check derivative
 include("helpers/checkDerivative.jl")
 
-# load reference image
-#refImg = loadImage(testimage)
-refImg = createImage(100*rand(50,60),spatialDomain=[0.0,50,0,60])
-typeof(refImg)
-
-Logging.info("Checking interpolation on deformed grid...")
-# define a cell centered grid, transform it and create a template image
-centeredGrid = getCellCenteredGrid(refImg)
-affineParameters = [1.5,0.4,-20,0.1,1.5,-10]
-deformationField = zeros(prod(size(refImg))*2)
-deformationField[prod(size(refImg))+1:end] = 10*sin(0.01*centeredGrid[1:prod(size(refImg))])
-transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-#temImg = linearImageInterpolationAtGrid(refImg,transformedGrid)
-#temImg = createImage(temImg)
-
-Logging.info("Checking image derivatives...")
-# cheack image derivative
-centeredGrid = getCellCenteredGrid(refImg) + 0.1
-Ifunc(x) = linearImageInterpolationAtGrid(refImg,x)[:]
-transformedImage, dY_transformedImage, dX_transformedImage =
-  linearImageInterpolationAtGridWithDerivative(refImg,centeredGrid)
-dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0, prod(size(refImg))])
-errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
-@test checkErrorDecay(errquad)
+# create reference image
+refImg = createImage(100*rand(50,60))
 
 # println("Checking NGF cell centered derivatives...")
 # # measure distance and check derivative (nonparametric)
@@ -60,25 +40,38 @@ errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
 #errlin,errquad = checkDerivative(Dfunc,dD',[1.0,0,0,0,1,0])
 #@test checkErrorDecay(errquad)
 
-Logging.info("Checking SSD cell centered derivatives...nonparametric")
+Logging.info("Distance: Checking SSD...")
 # measure distance and check derivative (nonparametric)
 centeredGrid = getCellCenteredGrid(refImg)
 centeredGrid = centeredGrid + 0.3 *rand(size(centeredGrid))
 D,dD,d2D = ssdDistance(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true)
 Dfunc(x) = ssdDistance(refImg,refImg,x)[1]
-
+errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid,doPlot=true)
+@test checkErrorDecay(errquad)
+Logging.info("Distance: SSD nonparametric derivative ✔")
+options = regOptions()
+options.matrixFree = true;
+D,dD,d2D = ssdDistance(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+Dfunc(x) = ssdDistance(refImg,refImg,x)[1]
 errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
 @test checkErrorDecay(errquad)
-Logging.info("Checking SSD cell centered derivatives...parametric")
+Logging.info("Distance: SSD nonparametric matrixfree derivative ✔")
 # measure distance and check derivative (parametic)
 centeredGrid = getCellCenteredGrid(refImg)
 options = ImageRegistration.regOptions()
 options.parametricOnly=true
 evaluationPoint = [1,0,0,0,1,0]+0.1*rand(6)
 D,dD,d2D = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
-#Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
-#errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
-#@test checkErrorDecay(errquad)
+Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
+errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
+@test checkErrorDecay(errquad)
+Logging.info("Distance: SSD parametric derivative ✔")
+options.matrixFree = true;
+D,dD,d2D = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
+Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
+errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
+@test checkErrorDecay(errquad)
+Logging.info("Distance: SSD parametric matrixfree derivative ✔")
 
 #Logging.info("Checking maskedSSD cell centered derivatives...")
 # measure distance and check derivative (nonparametric)

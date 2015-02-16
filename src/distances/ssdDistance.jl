@@ -19,7 +19,7 @@ function ssdDistance(referenceImage::Image,templateImage::Image,
 
   # interpolation of the template image at transformed grid points
   transformedImage, dY_transformedImage, dX_transformedImage =
-      linearImageInterpolationAtGridWithDerivative(templateImage,transformedGrid)
+      interpolateImage(templateImage,transformedGrid,doDerivative=true)
 
   # measure the ssd distance
   N = prod(getSize(referenceImage))

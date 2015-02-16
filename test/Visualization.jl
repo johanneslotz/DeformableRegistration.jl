@@ -2,10 +2,11 @@ using ImageRegistration.ImageProcessing
 using ImageRegistration.Transformation
 using ImageRegistration.Visualization
 using PyPlot
-#pygui(true); close("all")
 using Base.Test
 
-println("Testing visualization.")
+# setup logging
+Logging.configure(level = Logging.INFO) # set to DEBUG to see error tables
+Logging.info("Visualization: Testing visualization...")
 
 # test showImage
 testimage = dirname(Base.source_path()) * "/testdata/testimage.png"
@@ -14,9 +15,11 @@ figure();
 showImage(img,name="/testdata/testimage.png")
 # check if figure was created
 @assert typeof(gcf()) == Figure
+Logging.info("Visualization: showImage: Figure was created ✔")
 # check y and x limits
 @test ylim() == (2.1,-1.1)
 @test xlim() == (-1.0,2.21)
+Logging.info("Visualization: showImage: x,y limits are alright ✔")
 
 # test showGrid
 gridSize = [256,256]
@@ -31,6 +34,8 @@ showGrid(spatialDomain,gridSize,centeredGrid,
          deformationField=deformationField)
 # check if figure was created
 @assert typeof(gcf()) == Figure
+Logging.info("Visualization: showGrid: Figure was created ✔")
 # check y and x limits
 @test ylim() == (2.1,-1.1)
 @test xlim() == (-1.0,2.21)
+Logging.info("Visualization: showGrid: x,y limits are alright ✔")

@@ -1,5 +1,5 @@
 # method tests
-#include("ImageProcessing.jl")
+include("ImageProcessing.jl")
 include("Transformation.jl")
 include("Interpolation.jl")
 include("Distance.jl")

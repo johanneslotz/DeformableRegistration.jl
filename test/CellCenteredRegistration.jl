@@ -37,7 +37,7 @@ for level in options.levels
     displacementDim = getSize(R)
   end
 
-  displacement = interpolateDeformationFieldAtGrid(displacement,displacementDim,spatialDomain,identityGrid)
+  displacement = interpolateDeformationField(displacement,displacementDim,spatialDomain,identityGrid)
   displacementDim = getSize(R)
 
   # update imageSize
@@ -55,7 +55,7 @@ for level in options.levels
 end
 
 # upsample deformation to reference image
-displacement = interpolateDeformationFieldAtGrid(displacement,imageSize,spatialDomain,getCellCenteredGrid(referenceImage))
+displacement = interpolateDeformationField(displacement,imageSize,spatialDomain,getCellCenteredGrid(referenceImage))
 
 # add this visualization if needed
 #using PyPlot; pygui(true); close("all")

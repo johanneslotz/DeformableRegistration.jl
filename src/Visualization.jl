@@ -58,8 +58,8 @@ function showGrid(spatialDomain,gridSize,centeredGrid;
         # affine transformation
         transformedLine = transformGridAffine(line'[:],affineParameters)
         # deform line
-        transformedLine[1:N] = transformedLine[1:N] + interpolateDeformationFieldAtGrid(deformationFieldX,spatialDomain,line)
-        transformedLine[N+1:end] = transformedLine[N+1:end] + interpolateDeformationFieldAtGrid(deformationFieldY,spatialDomain,line)
+        transformedLine[1:N] = transformedLine[1:N] + interpolateDeformationField(deformationFieldX,spatialDomain,line)
+        transformedLine[N+1:end] = transformedLine[N+1:end] + interpolateDeformationField(deformationFieldY,spatialDomain,line)
         # plot line
         plot(transformedLine[1:N],transformedLine[N+1:end],gridColor)
     end
@@ -72,8 +72,8 @@ function showGrid(spatialDomain,gridSize,centeredGrid;
         # affine transformation
         transformedLine = transformGridAffine(line'[:],affineParameters)
         # deform line
-        transformedLine[1:N] = transformedLine[1:N] + interpolateDeformationFieldAtGrid(deformationFieldX,spatialDomain,line)
-        transformedLine[N+1:end] = transformedLine[N+1:end] + interpolateDeformationFieldAtGrid(deformationFieldY,spatialDomain,line)
+        transformedLine[1:N] = transformedLine[1:N] + interpolateDeformationField(deformationFieldX,spatialDomain,line)
+        transformedLine[N+1:end] = transformedLine[N+1:end] + interpolateDeformationField(deformationFieldY,spatialDomain,line)
         # plot line
         plot(transformedLine[1:N],transformedLine[N+1:end],gridColor)
     end
@@ -121,7 +121,7 @@ function visualizeResults(referenceImage,templateImage;
     title("y (def. Grid)")
     subplot(2,3,5)
     transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-    transformedTemplate = linearImageInterpolationAtGrid(templateImage,transformedGrid)
+    transformedTemplate = interpolateImage(templateImage,transformedGrid)
     showImage(transformedTemplate,spatialDomain=referenceImage["spatialdomain"])
     title("Template[y]")
     subplot(2,3,6)

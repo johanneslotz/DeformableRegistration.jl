@@ -1,4 +1,6 @@
-import Logging
+using PyPlot
+using Logging
+
 function checkDerivative(f,df,x;doPlot::Bool=false)
     N = 17
     h = exp10(2:-1:-N)
