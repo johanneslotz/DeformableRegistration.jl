@@ -49,7 +49,7 @@ Logging.info("Regression test passed (parametric): ", ssdDistance)
 # Logging.info("regression test passed (parametric): ", ngfDistance)
 
 # visualize
-using ImageRegistration.Visualization
-using PyPlot; pygui(true); close("all")
-figure()
-visualizeResults(refImg,temImg,affineParameters=affineParameters)
+#using ImageRegistration.Visualization
+#using PyPlot; pygui(true); close("all")
+#figure()
+#visualizeResults(refImg,temImg,affineParameters=affineParameters)

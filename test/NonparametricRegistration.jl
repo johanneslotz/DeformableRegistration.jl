@@ -30,7 +30,7 @@ Logging.info("Regression test passed (nonparametric): ", ssdDistance)
 # println(ssdvalue)
 
 # visualize results
-using ImageRegistration.Visualization
-using PyPlot; pygui(true); close("all")
-figure()
-visualizeResults(refImg,temImg,deformationField=deformationField)
+#using ImageRegistration.Visualization
+#using PyPlot; pygui(true); close("all")
+#figure()
+#visualizeResults(refImg,temImg,deformationField=deformationField)
