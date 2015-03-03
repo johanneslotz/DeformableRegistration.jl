@@ -93,15 +93,7 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float6
   return(D, dD, d2D, dTransformedImage)
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},Matrix,(Array{Float64,1},Array{Float64,1})), refImg::Image)
-  D = distanceOutput[1]
-  dD = distanceOutput[2]
-  d2D = distanceOutput[3]
-  dTransformedImage = distanceOutput[4]
-  return(D, dD, d2D, dTransformedImage)
-end
-
-function cen2stg(distanceOutput::(Number,Number,Number,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+function cen2stg(distanceOutput::(Number,Any,Any,(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
   dD = distanceOutput[2]
   d2D = distanceOutput[3]

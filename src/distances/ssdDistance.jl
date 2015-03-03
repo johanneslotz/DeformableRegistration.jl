@@ -24,59 +24,77 @@ function ssdDistance(referenceImage::Image,templateImage::Image,
   # measure the ssd distance
   N = prod(getSize(referenceImage))
   pixelSize = prod(getPixelSpacing(referenceImage))
-  residual = Array{Float64,N}
   residual = transformedImage .- referenceImage.data[:]
-  #functionValue = (0.5 .* pixelSize .* residual' * residual)[1]
   functionValue = 0.5 * pixelSize * BLAS.dot(N,residual,1,residual,1)[1]
 
-  # derivative?
-  if(doDerivative)
-    if(matrixFree)
-      dFunctionValue = ssdDerivativeMF(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly)
-    else
-      dFunctionValue,dTransformedImage = ssdDerivativeMB(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly)
-    end
+  # calculate ssd derivatives matrix free?
+  if(matrixFree)
+    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly,doDerivative,doHessian)
   else
-    dFunctionValue = 0.0
-    dTransformedImage = 0.0
-  end
-
-  # hessian?
-  if(doHessian)
-    if(matrixFree)
-      if(parametricOnly)
-        d2FunctionValue = computeParametricHessian(N,pixelSize,dX_transformedImage,dY_transformedImage,centeredGrid)
-      else
-        d2FunctionValue(x) = hessianFunction(N,pixelSize,dX_transformedImage,dY_transformedImage,x)
-      end
-    else
-      d2FunctionValue = pixelSize .* dTransformedImage' * dTransformedImage
-    end
-  else
-    d2FunctionValue = 0.0
+    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly,doDerivative,doHessian)
   end
 
   return functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)
 
 end
 
-function ssdDerivativeMB(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly)
-  # rearrange the image derivative
-  dTransformedImage = spdiagm((dX_transformedImage,dY_transformedImage),[0,N])
-  # parametric case
-  if(parametricOnly)
-    Q = sparse([centeredGrid[1:N] centeredGrid[N+1:end] ones(N)])
-    Q = [Q spzeros(size(Q)[1],size(Q)[2]); spzeros(size(Q)[1],size(Q)[2]) Q]
-    dTransformedImage = dTransformedImage * Q
+function ssdDerivativesMatrixBased(dX_transformedImage::Array{Float64,1},
+                                   dY_transformedImage::Array{Float64,1},
+                                   residual::Array{Float64,1},
+                                   centeredGrid::Array{Float64,1},
+                                   pixelSize::Number,N::Number,
+                                   parametricOnly::Bool,doDerivative::Bool,doHessian::Bool)
+
+  if(doDerivative)
+    dTransformedImage = spdiagm((dX_transformedImage,dY_transformedImage),[0,N])
+    if(parametricOnly)
+      Q = sparse([centeredGrid[1:N] centeredGrid[N+1:end] ones(N)])
+      Q = [Q spzeros(size(Q)[1],size(Q)[2]); spzeros(size(Q)[1],size(Q)[2]) Q]
+      dTransformedImage = dTransformedImage * Q
+    end
+    dFunctionValue = pixelSize .* dTransformedImage' * residual
+  else
+    dFunctionValue = 0.0
+    dTransformedImage = 0.0
   end
-  return pixelSize .* dTransformedImage' * residual, dTransformedImage
+
+  if(doHessian)
+    d2FunctionValue = pixelSize .* dTransformedImage' * dTransformedImage
+  else
+    d2FunctionValue = 0.0
+  end
+
+  return dFunctionValue, d2FunctionValue
+
 end
 
-function ssdDerivativeMF(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly)
-  dFunctionValue = BLAS.scal(2*N,pixelSize,dTtransposedMultiplication(N,dX_transformedImage,dY_transformedImage,residual),1)
-  # parametric case
-  if(parametricOnly)
-    dFunctionValue = QtransposedMultiplication(N,dFunctionValue,centeredGrid)
+function ssdDerivativesMatrixFree(dX_transformedImage::Array{Float64,1},
+                                  dY_transformedImage::Array{Float64,1},
+                                  residual::Array{Float64,1},
+                                  centeredGrid::Array{Float64,1},
+                                  pixelSize::Number,N::Number,
+                                  parametricOnly::Bool,doDerivative::Bool,doHessian::Bool)
+
+  if(doDerivative)
+    dFunctionValue = BLAS.scal(2*N,pixelSize,dTtransposedMultiplication(N,dX_transformedImage,dY_transformedImage,residual),1)
+    if(parametricOnly)
+      dFunctionValue = QtransposedMultiplication(N,dFunctionValue,centeredGrid)
+    end
+  else
+    dFunctionValue = 0.0
+    dTransformedImage = 0.0
   end
-  return dFunctionValue
+
+  if(doHessian)
+    if(parametricOnly)
+      d2FunctionValue = computeParametricHessian(N,pixelSize,dX_transformedImage,dY_transformedImage,centeredGrid)
+    else
+      d2FunctionValue(x) = hessianFunction(N,pixelSize,dX_transformedImage,dY_transformedImage,x)
+    end
+  else
+    d2FunctionValue = 0.0
+  end
+
+  return dFunctionValue,d2FunctionValue
+
 end
