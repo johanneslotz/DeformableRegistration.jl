@@ -23,8 +23,8 @@ function optimizeGaussNewton(Jfunc::Function,
         # number of parameters < 10 => use backslash operator
         # else use cg method
         cgIterations=0
-        Logging.debug("dJ: ",dJ)
-        Logging.debug("d2J: ",d2J)
+        #Logging.debug("dJ: ",dJ)
+        #Logging.debug("d2J: ",d2J)
         if(length(y)<10)
             dy=d2J\-dJ
         else
@@ -38,24 +38,23 @@ function optimizeGaussNewton(Jfunc::Function,
 		    end
 
         # armijo line search method
-        stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy,printFailedLineSearch=output)
+        stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy)
         if(LSfailed)
             break
         end
 
         # output
-
         if(cgIterations==0)
-          s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
+          s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f",iter, J[1], LSiter, J[1]/JRef[1])
           Logging.debug(s)
         else
-          s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
+          s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
           Logging.debug(s)
         end
 
         # update parameter y
         y = y + stepLength.*dy
-        Logging.debug("y: ",y)
+        #Logging.debug("y: ",y)
 
         # stopping criteria
         if checkStoppingCriteria(J[1],JOld[1],JRef[1],dJ,y0,y,stepLength*dy,printActiveStoppingCirteria=output)
@@ -76,8 +75,7 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
                           dJ::Array{Float64,1},    # gradient of the objective funtion
                           y::Array{Float64,1},     # old variables
                           dy::Array{Float64,1};    # search direction
-                          tolLS::Float64 = 1e-4,
-                          printFailedLineSearch = false)
+                          tolLS::Float64 = 1e-4)
 
     stepLength = 1.0; LSiter = 1; LSfailed = false;
 
@@ -93,9 +91,9 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
 
     end
 
-    if(printFailedLineSearch & LSfailed)
-        @printf("STOPPING:\n")
-        @printf("   0. Line search failed after %2d iterations.\n",LSiter)
+    if(LSfailed)
+        s = @sprintf("   0. Line search failed after %2d iterations.",LSiter)
+        Logging.debug(s)
     end
 
     return stepLength,LSiter,LSfailed
