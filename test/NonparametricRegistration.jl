@@ -48,8 +48,8 @@ options.levels = [4,3,2]
 ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 
-@test_approx_eq_eps ssdvalue 610.833 1e-1
-@test_approx_eq_eps ngfvalue 506.986 1e-1
+@test_approx_eq_eps ssdvalue 496.054 1e-1
+@test_approx_eq_eps ngfvalue 444.766 1e-1
 # println("SSD value after nonlinear NGF registration:")
 # println(ssdvalue)
 
