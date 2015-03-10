@@ -2,14 +2,30 @@
 
 [![wercker status](https://app.wercker.com/status/6e79cb4e56aefa2c386d4f14cd2e3a0f/m "wercker status")](https://app.wercker.com/project/bykey/6e79cb4e56aefa2c386d4f14cd2e3a0f)
 
-A first step towards an image registration package written in Julia. 
+A first step towards an image registration package written in Julia.
 
-Some of the code is inspired by the [FAIR](http://www.mic.uni-luebeck.de/de/people/jan-modersitzki/software/fair.html)  software package by Jan Modersitzki. ImageRegistration.jl relies on the Julia packages
-- [Images](https://github.com/timholy/Images.jl) for image loading and management of image properties
-- [Grid](https://github.com/timholy/Grid.jl) for the interpolation
-- [KrylovMethods](https://github.com/lruthotto/KrylovMethods.jl) to solve the linear system in the Gauss-Newton optimization
-- [PyPlot](https://github.com/stevengj/PyPlot.jl) 
+Some of the code is inspired by the [FAIR](http://www.mic.uni-luebeck.de/de/people/jan-modersitzki/software/fair.html)  software package by Jan Modersitzki.
 
+## Getting started
+
+```
+Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl")
+Pkg.clone("https://github.com/johanneslotz/ImageRegistration.jl")
+```
+
+To get started, compute a first registration based on the example code in
+
+```
+tests/{Parametric,Nonparametric}Registration.jl
+```
+
+## Features
+
+- Disance Measures: SSD, NGF (only nonparametric so far)
+- Regularizer: Diffusive, Elastic
+- Optimization: Gauss-Newton/Armijo
+
+## Module organization
 
 Besides the mentioned packages the **ImageRegistration** module itself consists of a few submodules:
 
@@ -21,7 +37,7 @@ Besides the mentioned packages the **ImageRegistration** module itself consists 
 
 * **.ImageProcessing**: Different functions to create and load images and handle their properties.
 
-* **.Transformation**: Convenience functions to create cell-centered and staggered grids, to convert between them and to transform them. 
+* **.Transformation**: Convenience functions to create cell-centered and staggered grids, to convert between them and to transform them.
 
 * **.Visualization**
 
