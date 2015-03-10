@@ -17,8 +17,8 @@ refImg = loadImage(testimage)
 
 # define a cell centered grid, transform it and create a template image
 centeredGrid = getCellCenteredGrid(refImg)
-affineParameters = [1.5,0.4,-200,0.1,1.5,-100]
-transformedGrid = transformGridAffine(centeredGrid,affineParameters)
+affineParametersInitial = [1.5,0.4,-200,0.1,1.5,-100]
+transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
 temImg = interpolateImage(refImg,transformedGrid)
 temImg = createImage(temImg)
 
@@ -27,29 +27,30 @@ options = ImageRegistration.regOptions()
 options.parametricOnly = true;
 options.matrixFree = true;
 
+options.useEdgeParameterInNumerator
 # register images
 affineParameters = registerImagesParametric(refImg,temImg, options)
 finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
 #finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters),options)
 #@test_approx_eq_eps finalDistanceNGF[1] 71513.2 3.0
 @test_approx_eq_eps finalDistanceSSD[1] 499.85 5e-1
-Logging.info("Regression test passed (parametric): ", ssdDistance)
+Logging.info(string("Regression test passed (parametric): ", finalDistanceSSD)
 
-# register images with ngf matrix based
-# options = ImageRegistration.getDefaultOptions()
-# options["edgeParameterR"] = 0.001#*Distance.estimateNGFEpsilon(refImg)
-# options["edgeParameterT"] = 0.001#*Distance.estimateNGFEpsilon(temImg)
-
-# @time affineParameters = ImageRegistration.Examples.registerImagesParametric(refImg,temImg,options,measureDistance=ngfDistance,levels=[5,4,3,2])
-# finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
-# finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters),options = options)
-
+## register images with ngf matrix based
+#options.edgeParameterR =  1e-2
+# options.edgeParameterT =  options.edgeParameterR
+# options.levels= [5,4,3,2,1]
+#@time affineParameters = ImageRegistration.Examples.registerImagesParametric(refImg,temImg,options,measureDistance=ngfDistance)
+#finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
+#finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters), doDerivative=false)
+#finalDistanceNGF
+#affineParameters
 # @test_approx_eq_eps finalDistanceNGF[1] 71513.2 1e-1
 # @test_approx_eq_eps finalDistanceSSD[1] 499.85 1e-1
 # Logging.info("regression test passed (parametric): ", ngfDistance)
 
 # visualize
-#using ImageRegistration.Visualization
-#using PyPlot; pygui(true); close("all")
-#figure()
-#visualizeResults(refImg,temImg,affineParameters=affineParameters)
+using ImageRegistration.Visualization
+ using PyPlot; pygui(true); close("all")
+ figure()
+ visualizeResults(refImg,temImg,affineParameters=affineParameters)

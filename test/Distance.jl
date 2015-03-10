@@ -18,28 +18,6 @@ include("helpers/checkDerivative.jl")
 # create reference image
 refImg = createImage(100*rand(50,60))
 
-# println("Checking NGF cell centered derivatives...")
-# # measure distance and check derivative (nonparametric)
-# options = ImageRegistration.getDefaultOptions()
-# options["edgeParameterR"] = 0.1
-# options["edgeParameterT"] = 0.1
-# options["centeredGrid"] = getCellCenteredGrid(refImg) + 0.0001
-# options["parametricOnly"] = false
-
-# D,dD,d2D,drc = ngfDistance(refImg,refImg,options, options["centeredGrid"] )
-# Dfunc(x) = ngfDistance(refImg,refImg,options,x)[1]
-# errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid, output=true)
-# @test checkErrorDecay(errquad)
-
-# measure distance and check derivative (parametic)
-#centeredGrid = getCellCenteredGrid(refImg) + 0.001
-#options["parametricOnly"] = true
-
-#D,dD,d2D = ngfDistance(refImg,refImg,options,centeredGrid)
-#Dfunc(p) = ngfDistance(refImg,refImg,options,transformGridAffine(centeredGrid,p))[1]
-#errlin,errquad = checkDerivative(Dfunc,dD',[1.0,0,0,0,1,0])
-#@test checkErrorDecay(errquad)
-
 Logging.info("Distance: Checking SSD...")
 # measure distance and check derivative (nonparametric)
 centeredGrid = getCellCenteredGrid(refImg)
@@ -86,6 +64,12 @@ Logging.info("Distance: Checking NGF...")
 @test checkErrorDecay(errquad)
 
 
+#Logging.info("Distance: NGF parametric derivative ...")
+ #D,dD,d2D = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
+ #Dfunc(p) = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
+ #errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=true)
+#@test checkErrorDecay(errquad)
+
 #Logging.info("Checking maskedSSD cell centered derivatives...")
 # measure distance and check derivative (nonparametric)
 #mask = ones(refImg.data)[:]
@@ -101,14 +85,6 @@ Logging.info("Distance: Checking NGF...")
 #optNoDeriv.parametricOnly=false
 #Dfunc(x) = maskedSsdDistance(refImg,refImg,x,mask,optNoDeriv)[1]
 #errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
-#@test checkErrorDecay(errquad)
-
-Logging.warn("CURRENTLY NOT Checking SSD staggered derivatives... These derivatives are not working, this is a known bug.")
-#staggeredGrid = getStaggeredGrid(refImg) + 0.1
-#imageSize = [size(refImg)[1],size(refImg)[2]]
-#D,dD,d2D = cen2stg( ssdDistance(refImg,refImg,stg2cen(staggeredGrid,imageSize)) ,refImg)
-#Dfunc(x) = cen2stg( ssdDistance(refImg,refImg,stg2cen(x,imageSize), doDerivative=true, doHessian=true) ,refImg)[1]
-#errlin,errquad = checkDerivative(Dfunc,dD',staggeredGrid)
 #@test checkErrorDecay(errquad)
 
 testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"

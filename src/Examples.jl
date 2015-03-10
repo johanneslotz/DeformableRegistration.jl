@@ -26,7 +26,7 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
     T = restrictResolutionToLevel(templateImage,level)
 
     # output
-    Logging.debug("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
+    Logging.info("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
 
     # define objective function
     Jfunc(param;doDerivative=false,doHessian=false) = measureDistance(R,T,transformGridAffine(centeredGrid,param),doDerivative=doDerivative,doHessian=doHessian,options=options)
