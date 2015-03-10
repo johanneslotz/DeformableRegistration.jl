@@ -64,11 +64,15 @@ Logging.info("Distance: Checking NGF...")
 @test checkErrorDecay(errquad)
 
 
-#Logging.info("Distance: NGF parametric derivative ...")
- #D,dD,d2D = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
- #Dfunc(p) = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
- #errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=true)
-#@test checkErrorDecay(errquad)
+Logging.info("Distance: NGF parametric derivative ...")
+ evaluationPoint = [1,0,0,0,1,0.0]+0.1*rand(6)
+ centeredGrid = getCellCenteredGrid(refImg)
+ options.edgeParameterR = 0.1
+ options.edgeParameterT = 0.1
+ D,dD,d2D = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
+ Dfunc(p) = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
+ errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=true)
+@test checkErrorDecay(errquad)
 
 #Logging.info("Checking maskedSSD cell centered derivatives...")
 # measure distance and check derivative (nonparametric)

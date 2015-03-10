@@ -26,9 +26,9 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
 
     #c,dTtuple = linearInter2D(templateImage.data, ΩT, mT, deformedGrid,doDerivative=doDerivative)
     if doDerivative
-      transformedImage, dX_transformedImage, dY_transformedImage =
+      transformedImage, dY_transformedImage, dX_transformedImage =
           interpolateImage(templateImage,transformedGrid,doDerivative=true)
-      dT = spdiagm((dY_transformedImage, dX_transformedImage),[0,prod(size(transformedImage))])
+      dT = spdiagm((dX_transformedImage, dY_transformedImage),[0,prod(size(transformedImage))])
 
     else
       transformedImage =
