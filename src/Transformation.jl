@@ -85,6 +85,13 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},Function,(Array{Float6
   return(D, dD, d2D, dTransformedImage)
 end
 
+function cen2stg(distanceOutput::(Number,Array{Float64,1},Function), refImg::Image)
+  D = distanceOutput[1]
+  dD = cen2stg(distanceOutput[2],getSize(refImg))
+  d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
+	return(D, dD, d2D)
+end
+
 function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
   dD = cen2stg(distanceOutput[2],getSize(refImg))
@@ -93,12 +100,26 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float6
   return(D, dD, d2D, dTransformedImage)
 end
 
+function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64}), refImg::Image)
+  D = distanceOutput[1]
+  dD = cen2stg(distanceOutput[2],getSize(refImg))
+  d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
+  return(D, dD, d2D)
+end
+
 function cen2stg(distanceOutput::(Number,Any,Any,(Array{Float64,1},Array{Float64,1})), refImg::Image)
   D = distanceOutput[1]
   dD = distanceOutput[2]
   d2D = distanceOutput[3]
   dTransformedImage = distanceOutput[4]
   return(D, dD, d2D, dTransformedImage)
+end
+
+function cen2stg(distanceOutput::(Number,Number,Number), refImg::Image)
+  D = distanceOutput[1]
+  dD = distanceOutput[2]
+  d2D = distanceOutput[3]
+  return(D, dD, d2D)
 end
 
 function checkStaggered(I::Image,grid::Array{Float64,1})
