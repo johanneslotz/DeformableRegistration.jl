@@ -16,7 +16,7 @@ Pkg.clone("https://github.com/johanneslotz/ImageRegistration.jl")
 To get started, compute a first registration based on the example code in
 
 ```
-tests/{Parametric,Nonparametric}Registration.jl
+test/{Parametric,Nonparametric}Registration.jl
 ```
 
 ## Features

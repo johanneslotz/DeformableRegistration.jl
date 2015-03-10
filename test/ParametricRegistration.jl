@@ -34,7 +34,7 @@ finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,af
 #finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters),options)
 #@test_approx_eq_eps finalDistanceNGF[1] 71513.2 3.0
 @test_approx_eq_eps finalDistanceSSD[1] 499.85 5e-1
-Logging.info(string("Regression test passed (parametric): ", finalDistanceSSD)
+Logging.info("Regression test passed (parametric): ")
 
 ## register images with ngf matrix based
 #options.edgeParameterR =  1e-2
