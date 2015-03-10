@@ -48,6 +48,7 @@ D,dD,d2D = ssdDistance(refImg,refImg,centeredGrid,doDerivative=true,doHessian=tr
 Dfunc(x) = ssdDistance(refImg,refImg,x)[1]
 errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid,doPlot=true)
 @test checkErrorDecay(errquad)
+
 Logging.info("Distance: SSD nonparametric derivative ✔")
 options = regOptions()
 options.matrixFree = true;
@@ -55,6 +56,7 @@ D,dD,d2D = ssdDistance(refImg,refImg,centeredGrid,doDerivative=true,doHessian=tr
 Dfunc(x) = ssdDistance(refImg,refImg,x)[1]
 errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
 @test checkErrorDecay(errquad)
+
 Logging.info("Distance: SSD nonparametric matrixfree derivative ✔")
 # measure distance and check derivative (parametic)
 centeredGrid = getCellCenteredGrid(refImg)
@@ -65,6 +67,7 @@ D,dD,d2D = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluation
 Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options=options)[1]
 errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
 @test checkErrorDecay(errquad)
+
 Logging.info("Distance: SSD parametric derivative ✔")
 options.matrixFree = true;
 D,dD,d2D = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
@@ -72,6 +75,16 @@ Dfunc(p) = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,p),options
 errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint)
 @test checkErrorDecay(errquad)
 Logging.info("Distance: SSD parametric matrixfree derivative ✔")
+
+Logging.info("Distance: Checking NGF...")
+# measure distance and check derivative (nonparametric)
+ centeredGrid = getCellCenteredGrid(refImg)
+ centeredGrid = centeredGrid + 0.3 *rand(size(centeredGrid))
+ D,dD,d2D = ngfDistance(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true)
+ Dfunc(x) = ngfDistance(refImg,refImg,x)[1]
+ errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid,doPlot=true)
+@test checkErrorDecay(errquad)
+
 
 #Logging.info("Checking maskedSSD cell centered derivatives...")
 # measure distance and check derivative (nonparametric)

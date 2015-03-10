@@ -1,17 +1,21 @@
+using ImageRegistration
+using Images
+import ImageRegistration.Distance.ngfDistance
+
+
+
 function ngfDistance(referenceImage::Image,templateImage::Image,
-                     options::Dict,
-                     transformedGrid::Array{Float64,1}
+                     transformedGrid::Array{Float64,1};
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions()
                      )
 
     opt = options
 
-    doDerivative=opt["doDerivative"]
-    doHessian=opt["doHessian"]
-    edgeParameterR=opt["edgeParameterR"]
-    edgeParameterT=opt["edgeParameterT"]
+    edgeParameterR=options.edgeParameterR
+    edgeParameterT=options.edgeParameterT
     debug = (Logging.LogLevel == Logging.DEBUG) | (Logging.LogLevel == Logging.INFO)
-    useEdgeParameterInNumerator=opt["useEdgeParameterInNumerator"]
-    parametricOnly=opt["parametricOnly"]
+    useEdgeParameterInNumerator=options.useEdgeParameterInNumerator
+    parametricOnly=options.parametricOnly
 
     centeredGrid=getCellCenteredGrid(referenceImage)
 
@@ -22,13 +26,13 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
 
     #c,dTtuple = linearInter2D(templateImage.data, ΩT, mT, deformedGrid,doDerivative=doDerivative)
     if doDerivative
-      transformedImage, dY_transformedImage, dX_transformedImage =
-        linearImageInterpolationAtGridWithDerivative(templateImage,transformedGrid)
+      transformedImage, dX_transformedImage, dY_transformedImage =
+          interpolateImage(templateImage,transformedGrid,doDerivative=true)
       dT = spdiagm((dY_transformedImage, dX_transformedImage),[0,prod(size(transformedImage))])
 
     else
       transformedImage =
-        linearImageInterpolationAtGrid(templateImage,transformedGrid)
+          interpolateImage(templateImage,transformedGrid,doDerivative=false)
     end
 
 
@@ -79,7 +83,6 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
     rc  = r1 .* r2                            # combine things and finalize
 
     dFunctionValue = 0
-    d2FunctionValue = 0
     drc = 0
 
     if doDerivative
@@ -103,15 +106,21 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
       drc = spdiagm(r1)*dr2 + spdiagm(r2) * dr1
       dFunctionValue  = -2*prod(h)*rc'*drc*dT;
       if doHessian
-        d2FunctionValue =  2*prod(h) .* dT' * drc' * drc * dT   # note the missing minus sign is not a bug!
-      end
-    end
+        d2FunctionValue(x) =  (2*prod(h) .* dT' * drc' * drc * dT) * x   # note the missing minus sign is not a bug!
+			else
+			  d2FunctionValue = 0
+		  end
+	else
+		d2FunctionValue = 0
+	end
 
-    functionValue  = (prod(ΩR[2:2:end]-ΩR[1:2:end]) - prod(h) * (rc'*rc))[1]
+	functionValue  = (prod(ΩR[2:2:end]-ΩR[1:2:end]) - prod(h) * (rc'*rc))[1]
 
-    #return functionValue[1], dFunctionValue', d2FunctionValue, r1, 1.-(rc.^2)
-    return functionValue,dFunctionValue',d2FunctionValue, drc
-
+	if(ndims(dFunctionValue)>1)
+		dFunctionValue = vec(dFunctionValue)
+	end
+	#return functionValue[1], dFunctionValue', d2FunctionValue, r1, 1.-(rc.^2)
+	return functionValue,dFunctionValue,d2FunctionValue #, drc
 
 end
 
