@@ -21,7 +21,7 @@ test/{Parametric,Nonparametric}Registration.jl
 
 ## Features
 
-- Disance Measures: SSD, NGF (only nonparametric so far)
+- Disance Measures: SSD, NGF
 - Regularizer: Diffusive, Elastic
 - Optimization: Gauss-Newton/Armijo
 
@@ -36,6 +36,8 @@ Besides the mentioned packages the **ImageRegistration** module itself consists 
 * **.Optimization**: Gauss-Newton optimization with Armijo line search is provided by this submodule. A wrapper for the NLOpt package is in development.
 
 * **.ImageProcessing**: Different functions to create and load images and handle their properties.
+
+* **.Interpolation**: Linear interpolation, a specialized implementation and a generic based on the Grid package.
 
 * **.Transformation**: Convenience functions to create cell-centered and staggered grids, to convert between them and to transform them.
 
