@@ -25,7 +25,8 @@ function optimizeGaussNewton(Jfunc::Function,
         cgIterations=0
         Logging.debug("dJ: ",dJ)
         Logging.debug("d2J: ",d2J)
-        if(length(y)<10)
+
+        if(length(y)<10 && (typeof(d2J)!=Function))
             dy=d2J\-dJ
         else
             dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG)[1:4]
@@ -47,10 +48,10 @@ function optimizeGaussNewton(Jfunc::Function,
 
         if(cgIterations==0)
           s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
-          Logging.debug(s)
+          Logging.info(s)
         else
           s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
-          Logging.debug(s)
+          Logging.info(s)
         end
 
         # update parameter y
