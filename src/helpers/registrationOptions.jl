@@ -34,7 +34,7 @@ type regOptions
     edgeParameterT = 0.01
     useEdgeParameterInNumerator = true
     regularizerWeight = 1
-    maxIterGaussNewton = 10
+    maxIterGaussNewton = 30
     maxIterCG = 2000
     additionalOptions = Dict()
     new(parametricOnly,matrixFree,levels,centeredGrid,
