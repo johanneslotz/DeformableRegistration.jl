@@ -17,6 +17,7 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
                                   affineParameters = [1.0,0,0,0,1.0,0],
                                   measureDistance = ssdDistance)
 
+	options.parametricOnly = true
   # start multilevel registration
   for level in options.levels
 
@@ -43,6 +44,8 @@ end
 function registerImagesNonparametric(referenceImage,templateImage,options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistance)
+
+	options.parametricOnly = false
 
   # define variables
   referenceGrid = []; deformedGrid = []; imageSize = []; spatialDomain = []
