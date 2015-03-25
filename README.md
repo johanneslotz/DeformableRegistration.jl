@@ -1,6 +1,7 @@
 # Image Registration.jl
 
-[![wercker status](https://app.wercker.com/status/6e79cb4e56aefa2c386d4f14cd2e3a0f/m "wercker status")](https://app.wercker.com/project/bykey/6e79cb4e56aefa2c386d4f14cd2e3a0f)
+[![Build Status](https://magnum.travis-ci.com/FraunhoferMEVIS/ImageRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq)](https://magnum.travis-ci.com/FraunhoferMEVIS/ImageRegistration.jl)
+
 
 This is a first step towards an image registration package written in Julia. Much of this code is still in a very early stage, lacks a lot of features and even has some bugs. Basic registration is possible though and pull-requests adding features or fixing bugs are explicitly welcome. :)
 
