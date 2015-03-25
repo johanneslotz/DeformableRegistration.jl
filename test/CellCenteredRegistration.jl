@@ -62,4 +62,4 @@ displacement = interpolateDeformationField(displacement,imageSize,spatialDomain,
 #figure()
 #visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
 
-@test_approx_eq_eps sum(displacement) -189175.77072168788 1e-1
+@test_approx_eq_eps sum(displacement) -189210.65 1e0
