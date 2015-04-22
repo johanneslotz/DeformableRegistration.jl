@@ -120,13 +120,13 @@ function interpolateDeformationField(deformationField::Array{Float64,2}, spatial
 
 end
 
-function interpolateDeformationField(deformationField::Array{Float64,1}, gridSize, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1})
+function interpolateDeformationField(deformationField::Array{Float64,1}, gridSize, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1}; interpolationScheme = InterpLinear)
 
     deformationFieldX = reshape(deformationField[1:prod(gridSize)],gridSize[1],gridSize[2])
     deformationFieldY = reshape(deformationField[prod(gridSize)+1:end],gridSize[1],gridSize[2])
 
-    return [interpolateDeformationField(deformationFieldX,spatialDomain,newPoints),
-            interpolateDeformationField(deformationFieldY,spatialDomain,newPoints)]
+    return [interpolateDeformationField(deformationFieldX,spatialDomain,newPoints, interpolationScheme = interpolationScheme),
+            interpolateDeformationField(deformationFieldY,spatialDomain,newPoints,interpolationScheme = interpolationScheme)]
 
 end
 
