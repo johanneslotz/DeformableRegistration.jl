@@ -97,7 +97,7 @@ function InterpLinearFast(image::Image,transformedGrid::Array{Float64,1};
 
 end
 
-function interpolateDeformationField(deformationField::Array{Float64,2}, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1})
+function interpolateDeformationField(deformationField::Array{Float64,2}, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1}; interpolationScheme = InterpLinear)
 
     # determine number of new points and pixel spacing
     numberOfPoints::Int = int(size(newPoints,1)/2)
@@ -105,10 +105,11 @@ function interpolateDeformationField(deformationField::Array{Float64,2}, spatial
                                       (spatialDomain[4]-spatialDomain[3])/size(deformationField)[2]]
 
     # define interpolation grid
-    deformationFieldInt = InterpGrid(deformationField, BCreflect, InterpLinear)
+    deformationFieldInt = InterpGrid(deformationField, BCreflect, interpolationScheme)
 
     # interpolate deformation at new points
-    deformationFieldAtNewPoints=Array(Float64, numberOfPoints); y=0.0; x=0.0;
+    deformationFieldAtNewPoints=Array(Float64, numberOfPoints);
+    y=0.0; x=0.0;
     for i=1:numberOfPoints
         x = (newPoints[i] - spatialDomain[3]) / pixelSpacing[2] + .5
         y = (newPoints[numberOfPoints+i] - spatialDomain[1]) / pixelSpacing[1] + .5
