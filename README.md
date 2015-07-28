@@ -13,12 +13,6 @@ Some of the code is inspired by the [FAIR](http://www.mic.uni-luebeck.de/de/peop
 Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl")
 Pkg.clone("https://github.com/johanneslotz/ImageRegistration.jl")
 ```
-Due to interface changes in the KrylovMethods module, currently you have to manually checkout a previous revision of there code:
-
-```
-cd ~/.julia/v0.3/KrylovMethods/
-git checkout 53302b2d3a59587ec30399b1ea820353e634309d
-```
 
 To get started, compute a first registration based on the example code in
 
