@@ -1,6 +1,8 @@
 language: cpp
 compiler:
   - clang
+notifications:
+  slack: fraunhofermevis:CNP5iT4mQADEUzpJm8VMJNoN
 env:
   matrix: 
     - JULIAVERSION="juliareleases" 
