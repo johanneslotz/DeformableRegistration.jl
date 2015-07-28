@@ -7,9 +7,6 @@ build:
          julia --version
          julia -e 'Pkg.clone("https://github.com/JuliaLang/IterativeSolvers.jl")'
          julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
-         cd ~/.julia/v0.3/KrylovMethods/
-         git checkout 53302b2d3a59587ec30399b1ea820353e634309d
-         cd $WERCKER_SOURCE_DIR
          julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("ImageRegistration"))`); Pkg.pin("ImageRegistration"); Pkg.resolve()'
          julia -e 'using ImageRegistration; @assert isdefined(:ImageRegistration); @assert typeof(ImageRegistration) === Module'
          julia --code-coverage ./test/runtests.jl
