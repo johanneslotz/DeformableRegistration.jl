@@ -40,6 +40,7 @@ dataT = conv2([0.2 0.5 0.2
 			 0.5 1.0 0.5
 			 0.2 0.5 0.2],dataT)[1:120,1:120]
 refImg = createImage(dataT)
+
 options.levels = [4,3,2]
  options.edgeParameterR = 1
  options.edgeParameterT = options.edgeParameterR
@@ -57,7 +58,7 @@ ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationFiel
 # println(ssdvalue)
 
 # visualize results
-#using ImageRegistration.Visualization
-# using PyPlot; pygui(true); close("all")
-# figure()
-# visualizeResults(refImg,temImg,deformationField=deformationField)
+using ImageRegistration.Visualization
+using PyPlot; pygui(true); close("all")
+figure()
+visualizeResults(refImg,temImg,deformationField=deformationField)

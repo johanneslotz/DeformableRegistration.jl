@@ -63,7 +63,7 @@ function InterpLinearFast(image::Image,transformedGrid::Array{Float64,1};
   x::Float64 = 0.0; y::Float64 = 0.0;
   xf::Int = 0; yf::Int = 0;
 
-  # interpola image at new points
+  # interpolate image at new points
   for i=1:numberOfPoints
 
     x = (transformedGrid[i]   - spatialDomain[3]) / pixelSpacing[2] + .5
@@ -120,6 +120,7 @@ function interpolateDeformationField(deformationField::Array{Float64,2}, spatial
 
 end
 
+# is it allowed to have two functions with the same name?
 function interpolateDeformationField(deformationField::Array{Float64,1}, gridSize, spatialDomain::Array{Float64,1}, newPoints::Array{Float64,1}; interpolationScheme = InterpLinear)
 
     deformationFieldX = reshape(deformationField[1:prod(gridSize)],gridSize[1],gridSize[2])

@@ -7,21 +7,26 @@ using ImageRegistration
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 
-function optimizeGaussNewton(Jfunc::Function,
+function optimizeGaussNewton(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, options::regOptions)
 
+    # Initilization of
+      # JRef: reference value of objective Function
+      # y0: initial guess
+      # JOld: old value of objective Function
     JRef = Jfunc(y)[1]; y0=y; JOld = Inf
 
     output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
 
     for iter = 1:options.maxIterGaussNewton
 
-        # get derivatives of objective function
+        # get derivatives of objective function (Zielfunktion)
         J, dJ, d2J = Jfunc(y,doDerivative=true,doHessian=true)
 
         # solve system of linear equations d2J*dy=-dJ
+          # (dy: change of the variables / search direction)
         # number of parameters < 10 => use backslash operator
-        # else use cg method
+        # else (large systems) => use conjugate gradient (cg) method
         cgIterations=0
 
         if(length(y)<10 && (typeof(d2J)!=Function))
@@ -36,7 +41,7 @@ function optimizeGaussNewton(Jfunc::Function,
             Logging.warn("Changing sign of computed descent direction. This is a suspicious move.")
 		    end
 
-        # armijo line search method
+        # armijo line search (LS) method
         stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy)
         if(LSfailed)
             break
@@ -73,8 +78,8 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
                           Jc::Float64,             # Jc = Jfunc(y)
                           dJ::Array{Float64,1},    # gradient of the objective funtion
                           y::Array{Float64,1},     # old variables
-                          dy::Array{Float64,1};    # search direction
-                          tolLS::Float64 = 1e-4)
+                          dy::Array{Float64,1};    # change of the variables / search direction
+                          tolLS::Float64 = 1e-4)   # tolerance
 
     stepLength = 1.0; LSiter = 1; LSfailed = false;
 
@@ -107,14 +112,19 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
                                tolJ = 1e-3,    # tolerance: change of the objective function
                                tolY = 1e-2,    # tolerance: change of the variables
                                tolG = 1e-2,    # tolerance: change of the gradient
+                               tolQ = 1e-4,    # tolerance: change of quotient
                                printActiveStoppingCirteria = false)
 
-    STOP = Array(Bool,4); STOP[:] = false
+    # Initialize STOP-Array with false
+    STOP = Array(Bool,5); STOP[:] = false
 
+    # Either STOP[1:3] or STOP[4]
     STOP[1] = abs(JOld-J) <= tolJ  * (1+abs(JRef))
     STOP[2] = norm(dy)    <= tolY  * (1+norm(y0))
     STOP[3] = norm(dJ)    <= tolG  * (1+abs(JRef))
     STOP[4] = norm(dJ)    <= 1e6 * eps()
+    STOP[5] = abs((JOld-J)/(JRef-J)) <= tolQ
+
 
     if( printActiveStoppingCirteria & all(STOP[1:3]) )
 	      @printf("STOPPING CRITERIA:\n")
@@ -127,7 +137,12 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
         @printf("   4. norm(dJ) = %5e <= %5e \n",norm(dJ), 1e6*eps())
     end
 
-    return all(STOP[1:3]) | STOP[4]
+   if( printActiveStoppingCirteria & STOP[5] )
+	       @printf("STOPPING CRITERIA:\n")
+         @printf("   5. abs((JOld-J)/(JRef-J))= %5e <= %5e \n",abs((JOld-J)/(JRef-J)), tolQ)
+     end
+
+    return all(STOP[1:3]) | STOP[4] | STOP[5]
 
 end
 
