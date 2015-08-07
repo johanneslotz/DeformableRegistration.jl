@@ -30,13 +30,13 @@ staggeredGridFromCenteredGrid = cen2stg(centeredGrid,gridSize)
 Logging.info("Transformation: cen2stg ✔")
 
 # visualize cell centered grid
-using ImageRegistration.Visualization
-using PyPlot
-pygui(true); close("all"); PyPlot.svg(true)
-imgdata = rand(gridSize[1],gridSize[2])
-img = createImage(imgdata,spatialDomain=spatialDomain)
-centeredGrid = getCellCenteredGrid(img)
-figure()
-showImage(img)
-showGrid(spatialDomain,gridSize,centeredGrid,showPoints=true,showIndices=true)
+#using ImageRegistration.Visualization
+#using PyPlot
+#pygui(true); close("all"); PyPlot.svg(true)
+#imgdata = rand(gridSize[1],gridSize[2])
+#img = createImage(imgdata,spatialDomain=spatialDomain)
+#centeredGrid = getCellCenteredGrid(img)
+#figure()
+#showImage(img)
+#showGrid(spatialDomain,gridSize,centeredGrid,showPoints=true,showIndices=true)
 
