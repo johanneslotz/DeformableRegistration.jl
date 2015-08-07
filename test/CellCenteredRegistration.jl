@@ -31,6 +31,7 @@ for level in options.levels
   T = restrictResolutionToLevel(templateImage,level)
 
   identityGrid = getCellCenteredGrid(R)
+  displacementInitial = 0.0 .* getCellCenteredGrid(R)
 
   if(level==options.levels[1])
     displacement = 0.0 .* getCellCenteredGrid(R)
@@ -50,7 +51,7 @@ for level in options.levels
     options.regularizerWeight * regularizer(displacement,regulizerMatrix)
 
   # gauss newton method
-  displacement = optimizeGaussNewton(JntObjtvFctn,displacement,options)
+  displacement = optimizeGaussNewton(JntObjtvFctn,displacement,displacementInitial, options)
 
 end
 
@@ -62,4 +63,4 @@ displacement = interpolateDeformationField(displacement,imageSize,spatialDomain,
 #figure()
 #visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
 
-@test_approx_eq_eps sum(displacement) -189210.65 1e0
+@test_approx_eq_eps sum(displacement) -189332.07 1e-2

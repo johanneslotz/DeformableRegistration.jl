@@ -32,6 +32,7 @@ function getStaggeredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int,1}
     return [repmat(x,1,gridSize[1])'[:],repmat(y,1,gridSize[2])[:]]
 end
 
+# staggered grid to Cellcentered grid
 function stg2cen(staggeredGrid::Array{Float64,1},gridSize::Array{Int,1})
     N = prod(gridSize)
     M = gridSize[1]*(gridSize[2]+1)
@@ -45,6 +46,7 @@ function stg2cen(staggeredGrid::Array{Float64,1},gridSize::Array{Int,1})
     return centeredGrid
 end
 
+# Cellcentered grid to staggeredGrid
 function cen2stg(centeredGrid::Array{Float64,1},gridSize::Array{Int64,1})
     NX = (gridSize[2]+1)*gridSize[1]
     NY = (gridSize[1]+1)*gridSize[2]

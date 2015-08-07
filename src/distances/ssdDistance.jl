@@ -22,7 +22,7 @@ function ssdDistance(referenceImage::Image,templateImage::Image,
       interpolateImage(templateImage,transformedGrid,doDerivative=true)
 
   # measure the ssd distance
-  N = prod(getSize(referenceImage))
+  N = prod(getSize(referenceImage)) # product of sizes
   pixelSize = prod(getPixelSpacing(referenceImage))
   residual = transformedImage .- referenceImage.data[:]
   functionValue = 0.5 * pixelSize * BLAS.dot(N,residual,1,residual,1)[1]

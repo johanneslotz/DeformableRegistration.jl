@@ -17,7 +17,9 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
                                   affineParameters = [1.0,0,0,0,1.0,0],
                                   measureDistance = ssdDistance)
 
+  affineParametersInitial = affineParameters
 	options.parametricOnly = true
+
   # start multilevel registration
   for level in options.levels
 
@@ -33,7 +35,7 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
     Jfunc(param;doDerivative=false,doHessian=false) = measureDistance(R,T,transformGridAffine(centeredGrid,param),doDerivative=doDerivative,doHessian=doHessian,options=options)
 
     # gauss newton method
-    affineParameters = optimizeGaussNewton(Jfunc,affineParameters,options)
+    affineParameters = optimizeGaussNewton(Jfunc,affineParameters,affineParametersInitial,options)
 
   end
 
@@ -45,6 +47,7 @@ function registerImagesNonparametric(referenceImage,templateImage,options::regOp
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistance)
 
+  affineParametersInitial = affineParameters
 	options.parametricOnly = false
 
   # define variables
@@ -58,6 +61,9 @@ function registerImagesNonparametric(referenceImage,templateImage,options::regOp
     centeredGrid = getCellCenteredGrid(R); options.centeredGrid = centeredGrid;
     spatialDomain = getSpatialDomain(R)
     T = restrictResolutionToLevel(templateImage,level)
+
+    # define initial Grid
+    affineParametersInitialGrid = transformGridAffine(centeredGrid,affineParametersInitial)
 
     if(level==options.levels[1])
       # initial deformedGrid
@@ -76,6 +82,7 @@ function registerImagesNonparametric(referenceImage,templateImage,options::regOp
     # centered to staggered grid
     referenceGrid = cen2stg(referenceGrid,imageSize)
     deformedGrid = cen2stg(deformedGrid,imageSize)
+    affineParametersInitialGrid = cen2stg(affineParametersInitialGrid, imageSize)
 
     # output
     Logging.debug("level ",level,": [",size(R)[1],"]x[",size(R)[2],"]")
@@ -85,7 +92,7 @@ function registerImagesNonparametric(referenceImage,templateImage,options::regOp
     Jfunc(grid;doDerivative=false,doHessian=false) = cen2stg(measureDistance(R,T,stg2cen(grid,imageSize),doDerivative=doDerivative,doHessian=doHessian,options=options),R) + options.regularizerWeight * regularizer(grid-referenceGrid,regularizerMatrix)
 
     # gauss newton method
-    deformedGrid = optimizeGaussNewton(Jfunc,deformedGrid,options)
+    deformedGrid = optimizeGaussNewton(Jfunc,deformedGrid,affineParametersInitialGrid,options)
 
   end
 
@@ -97,3 +104,4 @@ function registerImagesNonparametric(referenceImage,templateImage,options::regOp
 end
 
 end
+
