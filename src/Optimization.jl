@@ -8,13 +8,12 @@ using ImageRegistration
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 
 function optimizeGaussNewton(Jfunc::Function,  # objective Function
-                             y::Array{Float64,1}, options::regOptions)
+                             y::Array{Float64,1}, yInitial::Array{Float64,1}, options::regOptions)
 
     # Initilization of
       # JRef: reference value of objective Function
-      # y0: initial guess
       # JOld: old value of objective Function
-    JRef = Jfunc(y)[1]; y0=y; JOld = Inf
+    JRef = Jfunc(yInitial)[1]
 
     output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
 
@@ -27,12 +26,13 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
           # (dy: change of the variables / search direction)
         # number of parameters < 10 => use backslash operator
         # else (large systems) => use conjugate gradient (cg) method
+
         cgIterations=0
 
         if(length(y)<10 && (typeof(d2J)!=Function))
             dy=d2J\-dJ
         else
-            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG)[1:4]
+            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
         end
 
 		    # check descent direction
@@ -61,7 +61,7 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         #Logging.debug("y: ",y)
 
         # stopping criteria
-        if checkStoppingCriteria(J[1],JOld[1],JRef[1],dJ,y0,y,stepLength*dy,printActiveStoppingCirteria=output)
+        if ((iter>1) && checkStoppingCriteria(J[1],JOld[1],JRef[1],dJ,y,stepLength*dy)) #printActiveStoppingCirteria=output
             break
         end
 
@@ -106,7 +106,6 @@ end
 
 function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective function J(y+dy), the old J(y) and the reference J(y0)
                                dJ,             # gradient of the objective funtion
-                               y0,             # intial guess
                                y,              # old variables
                                dy;             # change of the variables / search direction
                                tolJ = 1e-3,    # tolerance: change of the objective function
@@ -115,31 +114,41 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
                                tolQ = 1e-4,    # tolerance: change of quotient
                                printActiveStoppingCirteria = false)
 
+
     # Initialize STOP-Array with false
     STOP = Array(Bool,5); STOP[:] = false
 
     # Either STOP[1:3] or STOP[4]
-    STOP[1] = abs(JOld-J) <= tolJ  * (1+abs(JRef))
-    STOP[2] = norm(dy)    <= tolY  * (1+norm(y0))
-    STOP[3] = norm(dJ)    <= tolG  * (1+abs(JRef))
+
+    STOP[1] = abs(JOld-J) <= tolJ  * (1+abs(JOld))
+    STOP[2] = norm(dy)    <= tolY  * (1+norm(y))
+    STOP[3] = norm(dJ)    <= tolG  * (1+abs(JOld))
     STOP[4] = norm(dJ)    <= 1e6 * eps()
     STOP[5] = abs((JOld-J)/(JRef-J)) <= tolQ
 
 
     if( printActiveStoppingCirteria & all(STOP[1:3]) )
-	      @printf("STOPPING CRITERIA:\n")
-        @printf("   1. |JOld-J| = %5e <= %5e \n",abs(JOld-J), tolJ*(1+abs(JRef)) )
-	      @printf("   2. norm(dy) = %5e <= %5e \n",norm(dy),    tolY*(1+norm(y0))  )
-	      @printf("   3. norm(dJ) = %5e <= %5e \n",norm(dJ),    tolG*(1+abs(JRef)) )
+	    s = @sprintf("STOPPING CRITERIA:\n")
+      Logging.info(s)
+      s = @sprintf("   1. |JOld-J| = %5e <= %5e \n",abs(JOld-J), tolJ*(1+abs(JOld)) )
+      Logging.info(s)
+	    s = @sprintf("   2. ||dy|| = %5e <= %5e \n",norm(dy),    tolY*(1+norm(y))  )
+      Logging.info(s)
+	    s = @sprintf("   3. ||dJ|| = %5e <= %5e \n",norm(dJ),    tolG*(1+abs(JOld)) )
+      Logging.info(s)
     end
     if( printActiveStoppingCirteria & STOP[4] )
-	      @printf("STOPPING CRITERIA:\n")
-        @printf("   4. norm(dJ) = %5e <= %5e \n",norm(dJ), 1e6*eps())
+	     s = @sprintf("STOPPING CRITERION:\n")
+       Logging.info(s)
+       s = @sprintf("   4. ||dJ|| = %5e <= %5e \n",norm(dJ), 1e6*eps())
+       Logging.info(s)
     end
 
    if( printActiveStoppingCirteria & STOP[5] )
-	       @printf("STOPPING CRITERIA:\n")
-         @printf("   5. abs((JOld-J)/(JRef-J))= %5e <= %5e \n",abs((JOld-J)/(JRef-J)), tolQ)
+	       s = @sprintf("STOPPING CRITERION:\n")
+         Logging.info(s)
+         s = @sprintf("   5. |(JOld-J)/(JRef-J)|= %5e <= %5e \n",abs((JOld-J)/(JRef-J)), tolQ)
+         Logging.info(s)
      end
 
     return all(STOP[1:3]) | STOP[4] | STOP[5]

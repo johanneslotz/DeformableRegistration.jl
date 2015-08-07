@@ -21,8 +21,8 @@ options.matrixFree = true;
 deformationField = registerImagesNonparametric(refImg,temImg,options)
 ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
-@test_approx_eq_eps ssdvalue 124.077 1e-1
-@test_approx_eq_eps ngfvalue 663.522 1e-1
+@test_approx_eq_eps ssdvalue 124.521 1e-1
+@test_approx_eq_eps ngfvalue 662.843 1e-1
 Logging.info("Regression test passed (nonparametric): ", ssdDistance)
 
 ngfDistance(refImg, temImg, getCellCenteredGrid(refImg), options=options, doDerivative=true, doHessian = true)
@@ -42,23 +42,27 @@ dataT = conv2([0.2 0.5 0.2
 refImg = createImage(dataT)
 
 options.levels = [4,3,2]
- options.edgeParameterR = 1
- options.edgeParameterT = options.edgeParameterR
- options.regularizerWeight = 0.01
- @time deformationField = registerImagesNonparametric(refImg,temImg,options,measureDistance=ngfDistance)
+options.edgeParameterR = 1
+options.edgeParameterT = options.edgeParameterR
+options.regularizerWeight = 0.01
+@time deformationField = registerImagesNonparametric(refImg,temImg,options,measureDistance=ngfDistance)
 ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 
 # These results seem to depend on the current phase of the moon, your platform or something similar.
 # This seems to be a bug in ngfDistance or at least in there and is notet in an issue in GitHub. Please
 # make the test more specific once this is solved.
-@test_approx_eq_eps ssdvalue 496.054 2e2
-@test_approx_eq_eps ngfvalue 444.766 2e2
+
+@test_approx_eq_eps ssdvalue 498.07 2e2
+@test_approx_eq_eps ngfvalue 399.403 2e2
+
 # println("SSD value after nonlinear NGF registration:")
 # println(ssdvalue)
 
 # visualize results
+
 using ImageRegistration.Visualization
 using PyPlot; pygui(true); close("all")
 figure()
 visualizeResults(refImg,temImg,deformationField=deformationField)
+
