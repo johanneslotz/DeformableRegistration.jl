@@ -6,6 +6,7 @@ export createImage, loadImage, setImageProperties
 export restrictResolutionToLevel
 export getSize, getSpatialDomain, getPixelSpacing
 
+# load image and convert it into gray image
 function loadImage(pathToFile;
                    spatialDomain = [0.0,0.0,0.0,0.0])
 
