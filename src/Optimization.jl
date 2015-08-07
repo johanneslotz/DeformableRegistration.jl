@@ -10,9 +10,7 @@ export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 function optimizeGaussNewton(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yInitial::Array{Float64,1}, options::regOptions)
 
-    # Initilization of
-      # JRef: reference value of objective Function
-      # JOld: old value of objective Function
+    # Initilization of JRef: reference value of objective Function
     JRef = Jfunc(yInitial)[1]
 
     output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
@@ -104,7 +102,7 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
 
 end
 
-function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective function J(y+dy), the old J(y) and the reference J(y0)
+function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective function J(y+dy), the old J(y) and the reference J(yInital)
                                dJ,             # gradient of the objective funtion
                                y,              # old variables
                                dy;             # change of the variables / search direction
@@ -122,7 +120,7 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
 
     STOP[1] = abs(JOld-J) <= tolJ  * (1+abs(JOld))
     STOP[2] = norm(dy)    <= tolY  * (1+norm(y))
-    STOP[3] = norm(dJ)    <= tolG  * (1+abs(JOld))
+    STOP[3] = norm(dJ)    <= tolG  * (1+abs(JRef))
     STOP[4] = norm(dJ)    <= 1e6 * eps()
     STOP[5] = abs((JOld-J)/(JRef-J)) <= tolQ
 

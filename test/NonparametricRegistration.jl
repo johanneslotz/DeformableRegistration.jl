@@ -21,8 +21,8 @@ options.matrixFree = true;
 deformationField = registerImagesNonparametric(refImg,temImg,options)
 ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
 ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationField)[1]
-@test_approx_eq_eps ssdvalue 124.521 1e-1
-@test_approx_eq_eps ngfvalue 662.843 1e-1
+@test_approx_eq_eps ssdvalue 125.89 1e-1
+@test_approx_eq_eps ngfvalue 661.54 1e-1
 Logging.info("Regression test passed (nonparametric): ", ssdDistance)
 
 ngfDistance(refImg, temImg, getCellCenteredGrid(refImg), options=options, doDerivative=true, doHessian = true)
@@ -60,9 +60,9 @@ ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationFiel
 # println(ssdvalue)
 
 # visualize results
-
 using ImageRegistration.Visualization
 using PyPlot; pygui(true); close("all")
 figure()
 visualizeResults(refImg,temImg,deformationField=deformationField)
+
 
