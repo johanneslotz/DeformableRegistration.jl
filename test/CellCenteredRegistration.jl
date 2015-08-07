@@ -59,8 +59,8 @@ end
 displacement = interpolateDeformationField(displacement,imageSize,spatialDomain,getCellCenteredGrid(referenceImage))
 
 # add this visualization if needed
-using PyPlot; pygui(true); close("all")
-figure()
-visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
+#using PyPlot; pygui(true); close("all")
+#figure()
+#visualizeResults(referenceImage,templateImage,deformationField=displacement,numberOfGridLinesX=20,numberOfGridLinesY=20)
 
 @test_approx_eq_eps sum(displacement) -189332.07 1e-2
