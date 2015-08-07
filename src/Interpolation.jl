@@ -63,7 +63,7 @@ function InterpLinearFast(image::Image,transformedGrid::Array{Float64,1};
   x::Float64 = 0.0; y::Float64 = 0.0;
   xf::Int = 0; yf::Int = 0;
 
-  # interpola image at new points
+  # interpolate image at new points
   for i=1:numberOfPoints
 
     x = (transformedGrid[i]   - spatialDomain[3]) / pixelSpacing[2] + .5
