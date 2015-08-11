@@ -104,9 +104,11 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
       #drc = (    spdiag((r2 .* (AvgX * gradRx) + dr2Partial .* (AvgX * gradTx) )[:]) * AvgX * G1
       #         + spdiag((r2 .* (AvgY * gradRy) + dr2Partial .* (AvgY * gradTy) )[:]) * AvgY * G2 )
       drc = spdiagm(r1)*dr2 + spdiagm(r2) * dr1
-      dFunctionValue  = -2*prod(h)*rc'*drc*dT;
+      drc_times_dT = drc*dT;
+      dFunctionValue  = -2*prod(h)*rc'*drc_times_dT;
+
       if doHessian
-        d2FunctionValue(x) =  (2*prod(h) .* dT' * drc' * drc * dT) * x   # note the missing minus sign is not a bug!
+        d2FunctionValue(x) =  (2*prod(h) .* drc_times_dT' * drc_times_dT) * x   # note the missing minus sign is not a bug!
 			else
 			  d2FunctionValue = 0
 		  end
