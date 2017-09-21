@@ -1,4 +1,4 @@
-# Image Registration.jl
+# DeformableRegistration.jl
 
 [![Build Status](https://magnum.travis-ci.com/FraunhoferMEVIS/ImageRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq)](https://magnum.travis-ci.com/FraunhoferMEVIS/ImageRegistration.jl)
 
@@ -11,7 +11,7 @@ Some of the code is inspired by the [FAIR](http://www.mic.uni-luebeck.de/de/peop
 
 ```
 Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl")
-Pkg.clone("https://github.com/johanneslotz/ImageRegistration.jl")
+Pkg.clone("https://github.com/johanneslotz/DeformableRegistration.jl")
 ```
 
 To get started, compute a first registration based on the example code in
@@ -29,7 +29,7 @@ test/{Parametric,Nonparametric}Registration.jl
 
 ## Module organization
 
-Besides the mentioned packages the **ImageRegistration** module itself consists of a few submodules:
+Besides the mentioned packages the **DeformableRegistration** module itself consists of a few submodules:
 
 * **.Distance**: Sum of Squared Differences (SSD), masked SSD, Normalized Gradient Fields (NGF)
 
