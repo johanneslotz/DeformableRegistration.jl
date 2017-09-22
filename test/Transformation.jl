@@ -1,5 +1,5 @@
-using ImageRegistration.Transformation
-using ImageRegistration.ImageProcessing
+using DeformableRegistration.Transformation
+using DeformableRegistration.ImageProcessing
 using Base.Test
 using Logging
 
@@ -30,7 +30,7 @@ staggeredGridFromCenteredGrid = cen2stg(centeredGrid,gridSize)
 Logging.info("Transformation: cen2stg ✔")
 
 # visualize cell centered grid
-#using ImageRegistration.Visualization
+#using DeformableRegistration.Visualization
 #using PyPlot
 #pygui(true); close("all"); PyPlot.svg(true)
 #imgdata = rand(gridSize[1],gridSize[2])

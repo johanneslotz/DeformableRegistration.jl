@@ -1,9 +1,9 @@
-using ImageRegistration
-using ImageRegistration.Distance
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
-using ImageRegistration.Visualization
+using DeformableRegistration
+using DeformableRegistration.Distance
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using DeformableRegistration.Visualization
 using Base.Test
 using PyPlot
 using Images
@@ -38,7 +38,7 @@ errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
 Logging.info("Distance: SSD nonparametric matrixfree derivative ✔")
 # measure distance and check derivative (parametic)
 centeredGrid = getCellCenteredGrid(refImg)
-options = ImageRegistration.regOptions()
+options = DeformableRegistration.regOptions()
 options.parametricOnly=true
 evaluationPoint = [1,0,0,0,1,0]+0.1*rand(6)
 D,dD,d2D = ssdDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint),doDerivative=true,doHessian=true,options=options)
@@ -79,12 +79,12 @@ Logging.info("Distance: NGF parametric derivative ...")
 #mask = ones(refImg.data)[:]
 #evaluationPoint = getCellCenteredGrid(refImg)
 #evaluationPoint = evaluationPoint + 0.3 *rand(size(centeredGrid))
-#options = ImageRegistration.regOptions()
+#options = DeformableRegistration.regOptions()
 #options.doDerivative=true
 #options.parametricOnly=false
 #D,dD,d2D = maskedSsdDistance(refImg,refImg,evaluationPoint,mask,options)
 
-#optNoDeriv = ImageRegistration.regOptions()
+#optNoDeriv = DeformableRegistration.regOptions()
 #optNoDeriv.doDerivative=false
 #optNoDeriv.parametricOnly=false
 #Dfunc(x) = maskedSsdDistance(refImg,refImg,x,mask,optNoDeriv)[1]

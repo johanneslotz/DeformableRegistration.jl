@@ -3,7 +3,7 @@ module Optimization
 using Logging
 using KrylovMethods
 
-using ImageRegistration
+using DeformableRegistration
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
 

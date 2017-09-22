@@ -1,4 +1,4 @@
-module ImageRegistration
+module DeformableRegistration
 
 # helping functions
 include("helpers/matrixFreeHelpers.jl")

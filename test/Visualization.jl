@@ -1,6 +1,6 @@
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Transformation
-using ImageRegistration.Visualization
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Transformation
+using DeformableRegistration.Visualization
 using PyPlot
 using Base.Test
 

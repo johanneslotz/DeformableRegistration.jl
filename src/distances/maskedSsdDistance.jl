@@ -1,4 +1,4 @@
-function maskedSsdDistance(referenceImage::Image,templateImage::Image,
+function maskedSsdDistance(referenceImage::ImageMeta,templateImage::ImageMeta,
                            transformedGrid::Array{Float64,1},
                            mask::Array{Float64,1},
                            o::regOptions)

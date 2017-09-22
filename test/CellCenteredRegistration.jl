@@ -1,12 +1,12 @@
-using ImageRegistration
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Examples
-using ImageRegistration.Distance
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
-using ImageRegistration.Visualization
-using ImageRegistration.Regularizer
-using ImageRegistration.Optimization
+using DeformableRegistration
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Examples
+using DeformableRegistration.Distance
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using DeformableRegistration.Visualization
+using DeformableRegistration.Regularizer
+using DeformableRegistration.Optimization
 using Base.Test
 
 # create test images

@@ -1,4 +1,4 @@
-function ssdDistance(referenceImage::Image,templateImage::Image,
+function ssdDistance(referenceImage::ImageMeta,templateImage::ImageMeta,
                      transformedGrid::Array{Float64,1};
                      doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions())
 
