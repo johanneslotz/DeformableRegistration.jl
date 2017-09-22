@@ -10,12 +10,12 @@ type regOptions
 
   # distance
   # ngf parameter
-  edgeParameterR::FloatingPoint
-  edgeParameterT::FloatingPoint
+  edgeParameterR::Float64
+  edgeParameterT::Float64
   useEdgeParameterInNumerator::Bool
 
   # regularizer
-  regularizerWeight::FloatingPoint
+  regularizerWeight::Float64
 
   # optimization
   maxIterGaussNewton::Int
