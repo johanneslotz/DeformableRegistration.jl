@@ -1,6 +1,6 @@
-#using ImageRegistration.ImageProcessing
-using ImageRegistration.Regularizer
-using ImageRegistration.Transformation
+#using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Regularizer
+using DeformableRegistration.Transformation
 using Base.Test
 
 # setup logging

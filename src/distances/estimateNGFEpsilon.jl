@@ -1,8 +1,8 @@
-using ImageRegistration.Visualization
+using DeformableRegistration.Visualization
 using Stats
 using PyPlot
 
-function estimateNGFEpsilon(referenceImage::Image;cutoffPercent = 80)
+function estimateNGFEpsilon(referenceImage::ImageMeta;cutoffPercent = 80)
   m = size(referenceImage)
   h = getPixelSpacing(referenceImage)
   Rc = referenceImage.data

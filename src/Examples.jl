@@ -3,13 +3,13 @@ module Examples
 using Images
 using Logging
 
-using ImageRegistration
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
-using ImageRegistration.Distance
-using ImageRegistration.Regularizer
-using ImageRegistration.Optimization
+using DeformableRegistration
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using DeformableRegistration.Distance
+using DeformableRegistration.Regularizer
+using DeformableRegistration.Optimization
 
 export registerImagesParametric, registerImagesNonparametric
 

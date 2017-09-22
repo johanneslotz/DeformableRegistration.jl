@@ -1,14 +1,14 @@
 module Transformation
 
 using Images
-using Grid
+using Interpolations
 
-using ImageRegistration.ImageProcessing
+using DeformableRegistration.ImageProcessing
 
 export getCellCenteredGrid, getStaggeredGrid, stg2cen, cen2stg, checkStaggered, getCellCenteredGridRanges
 export transformGridAffine, transformWorldCoordinate
 
-function getCellCenteredGrid(I::Image)
+function getCellCenteredGrid(I::ImageMeta)
   return getCellCenteredGrid(getSpatialDomain(I),getSize(I))
 end
 
@@ -20,7 +20,7 @@ function getCellCenteredGrid(spatialDomain::Array{Float64,1},gridSize::Array{Int
     return [repmat(x,1,gridSize[1])'[:],repmat(y,1,gridSize[2])[:]]
 end
 
-function getStaggeredGrid(image::Image)
+function getStaggeredGrid(image::ImageMeta)
   return getStaggeredGrid(getSpatialDomain(I),getSize(I))
 end
 
@@ -79,7 +79,7 @@ function cen2stg(centeredGrid::Array{Float64,1},gridSize::Array{Int64,1})
     return staggeredGrid
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},Function,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},Function,Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = cen2stg(distanceOutput[2],getSize(refImg))
   d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
@@ -87,14 +87,14 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},Function,(Array{Float6
   return(D, dD, d2D, dTransformedImage)
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},Function), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},Function}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = cen2stg(distanceOutput[2],getSize(refImg))
   d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
 	return(D, dD, d2D)
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},(Array{Float64,1},Array{Float64,1})), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = cen2stg(distanceOutput[2],getSize(refImg))
   d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
@@ -102,14 +102,14 @@ function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float6
   return(D, dD, d2D, dTransformedImage)
 end
 
-function cen2stg(distanceOutput::(Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64}), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64}}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = cen2stg(distanceOutput[2],getSize(refImg))
   d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
   return(D, dD, d2D)
 end
 
-function cen2stg(distanceOutput::(Number,Any,Any,(Array{Float64,1},Array{Float64,1})), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Any,Any,Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = distanceOutput[2]
   d2D = distanceOutput[3]
@@ -117,14 +117,14 @@ function cen2stg(distanceOutput::(Number,Any,Any,(Array{Float64,1},Array{Float64
   return(D, dD, d2D, dTransformedImage)
 end
 
-function cen2stg(distanceOutput::(Number,Number,Number), refImg::Image)
+function cen2stg(distanceOutput::Tuple{Number,Number,Number}, refImg::ImageMeta)
   D = distanceOutput[1]
   dD = distanceOutput[2]
   d2D = distanceOutput[3]
   return(D, dD, d2D)
 end
 
-function checkStaggered(I::Image,grid::Array{Float64,1})
+function checkStaggered(I::ImageMeta,grid::Array{Float64,1})
   if( 2*prod(size(I)) == size(grid,1) )
       return false
   else
@@ -132,7 +132,7 @@ function checkStaggered(I::Image,grid::Array{Float64,1})
   end
 end
 
-function getCellCenteredGridRanges(I::Image)
+function getCellCenteredGridRanges(I::ImageMeta)
     spatialDomain = getSpatialDomain(I)
     pixelSpacing = getPixelSpacing(I)
     y = spatialDomain[1]+pixelSpacing[1]/2:pixelSpacing[1]:spatialDomain[2]
@@ -140,7 +140,7 @@ function getCellCenteredGridRanges(I::Image)
     return y,x
 end
 
-function transformWorldCoordinate(I::Image,y::Float64,x::Float64)
+function transformWorldCoordinate(I::ImageMeta,y::Float64,x::Float64)
     spatialDomain = getSpatialDomain(I)
     pixelSpacing = getPixelSpacing(I)
     yNew = (y - spatialDomain[1]) / pixelSpacing[1] + .5
@@ -148,7 +148,7 @@ function transformWorldCoordinate(I::Image,y::Float64,x::Float64)
     return yNew,xNew
 end
 
-function transformWorldCoordinate(I::Image,grid::Array{Float64,1})
+function transformWorldCoordinate(I::ImageMeta,grid::Array{Float64,1})
     spatialDomain = getSpatialDomain(I)
     pixelSpacing = getPixelSpacing(I)
     N = size(grid,1)

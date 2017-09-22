@@ -1,6 +1,6 @@
-using ImageRegistration.Transformation
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Interpolation
+using DeformableRegistration.Transformation
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Interpolation
 using Base.Test
 using Logging
 using Grid
@@ -84,7 +84,7 @@ Logging.info("Interpolation: Own linear interpolation with derivative is at leas
 
 # visualisation
 #using PyPlot
-#using ImageRegistration.Visualization
+#using DeformableRegistration.Visualization
 #pygui(true); close("all")
 #figure(figsize=(10,10));
 #subplot(2,2,1)

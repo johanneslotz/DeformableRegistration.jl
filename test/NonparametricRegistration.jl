@@ -1,7 +1,7 @@
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Examples
-using ImageRegistration.Distance
-using ImageRegistration.Transformation
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Examples
+using DeformableRegistration.Distance
+using DeformableRegistration.Transformation
 using Base.Test
 
 # setup logging
@@ -13,7 +13,7 @@ data = zeros(120,120); data[31:90,21:60] = 1
 temImg = createImage(data) 
 data[41:80,41:90] = 1
 refImg = createImage(data)
-options = ImageRegistration.regOptions()
+options = DeformableRegistration.regOptions()
 options.levels = [4,3,2]
 options.matrixFree = true;
 
@@ -61,7 +61,7 @@ ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg)+deformationFiel
 
 # visualize results
 
-# using ImageRegistration.Visualization
+# using DeformableRegistration.Visualization
 # using PyPlot; pygui(true); close("all")
 # figure()
 # visualizeResults(refImg,temImg,deformationField=deformationField)

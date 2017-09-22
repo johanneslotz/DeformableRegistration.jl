@@ -1,9 +1,9 @@
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Distance
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
-using ImageRegistration.Examples
-using ImageRegistration.Distance
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Distance
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using DeformableRegistration.Examples
+using DeformableRegistration.Distance
 using Base.Test
 using Logging
 
@@ -23,7 +23,7 @@ temImg = interpolateImage(refImg,transformedGrid)
 temImg = createImage(temImg)
 
 # set options
-options = ImageRegistration.regOptions()
+options = DeformableRegistration.regOptions()
 options.parametricOnly = true;
 options.matrixFree = true;
 options.useEdgeParameterInNumerator
@@ -60,7 +60,7 @@ options.levels = [7,6,5,4]
 options.edgeParameterR = 0.1
 options.edgeParameterT = options.edgeParameterR
 options.maxIterGaussNewton = 100
-@time affineParameters = ImageRegistration.Examples.registerImagesParametric(refImg,temImg,options,measureDistance=ngfDistance)
+@time affineParameters = DeformableRegistration.Examples.registerImagesParametric(refImg,temImg,options,measureDistance=ngfDistance)
 finalDistanceSSD = ssdDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters))
 finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,affineParameters), doDerivative=false)
 
@@ -73,7 +73,7 @@ finalDistanceNGF = ngfDistance(refImg,temImg,transformGridAffine(centeredGrid,af
 
 
 # visualize
-#using ImageRegistration.Visualization
+#using DeformableRegistration.Visualization
 #using PyPlot; pygui(true); close("all")
 #figure()
 #visualizeResults(refImg,temImg,affineParameters=affineParameters)

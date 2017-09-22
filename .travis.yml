@@ -16,8 +16,8 @@ script:
   - julia --version
   - julia -e 'Pkg.clone("https://github.com/JuliaLang/IterativeSolvers.jl")'
   - julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
-  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("ImageRegistration"))`); Pkg.pin("ImageRegistration"); Pkg.resolve()'
-  - julia -e 'using ImageRegistration; @assert isdefined(:ImageRegistration); @assert typeof(ImageRegistration) === Module'
+  - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("DeformableRegistration"))`); Pkg.pin("DeformableRegistration"); Pkg.resolve()'
+  - julia -e 'using DeformableRegistration; @assert isdefined(:DeformableRegistration); @assert typeof(DeformableRegistration) === Module'
   - julia --code-coverage ./test/runtests.jl
 after_success:
-- julia -e 'cd(Pkg.dir("ImageRegistration")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+- julia -e 'cd(Pkg.dir("DeformableRegistration")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

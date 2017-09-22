@@ -3,8 +3,8 @@ module Visualization
 using PyPlot
 using Images
 
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
 
 export showImage, showGrid, visualizeResults
 
@@ -13,7 +13,7 @@ PyPlot.rc("legend",fontsize=20)
 PyPlot.rc("xtick", labelsize=10, color="black", direction="out")
 PyPlot.rc("ytick", labelsize=10, color="black", direction="out")
 
-function showImage(image::Image;name="")
+function showImage(image::ImageMeta;name="")
     showImage(image.data,spatialDomain=image["spatialdomain"],name=name)
 end
 

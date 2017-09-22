@@ -3,10 +3,10 @@ module Distance
 using Images
 using Logging
 
-using ImageRegistration
-using ImageRegistration.Transformation
-using ImageRegistration.Interpolation
-using ImageRegistration.ImageProcessing
+using DeformableRegistration
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using DeformableRegistration.ImageProcessing
 
 export ssdDistance, maskedSsdDistance, ngfDistance, estimateNGFEpsilon
 export calculateHessianStaggered

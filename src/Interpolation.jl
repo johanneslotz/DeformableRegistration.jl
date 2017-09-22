@@ -1,15 +1,15 @@
 module Interpolation
 
 using Images
-using Grid
+using Interpolations
 
-using ImageRegistration.ImageProcessing
-using ImageRegistration.Transformation
+using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Transformation
 
 export interpolateImage,InterpLinearFast
 export interpolateDeformationField
 
-function interpolateImage(image::Image,transformedGrid::Array{Float64,1};
+function interpolateImage(image::ImageMeta,transformedGrid::Array{Float64,1};
                           doDerivative=false,InterpFunction=InterpLinearFast)
 
   # use faster linear interpolation as default
@@ -45,7 +45,7 @@ function interpolateImage(image::Image,transformedGrid::Array{Float64,1};
 
 end
 
-function InterpLinearFast(image::Image,transformedGrid::Array{Float64,1};
+function InterpLinearFast(image::ImageMeta,transformedGrid::Array{Float64,1};
                           doDerivative=false)
 
   # determine number of new points, pixel spacing and spatial domain of the image

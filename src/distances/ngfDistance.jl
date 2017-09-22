@@ -1,10 +1,10 @@
-using ImageRegistration
+using DeformableRegistration
 using Images
-import ImageRegistration.Distance.ngfDistance
+import DeformableRegistration.Distance.ngfDistance
 
 
 # Normalized gradient field distance
-function ngfDistance(referenceImage::Image,templateImage::Image,
+function ngfDistance(referenceImage::ImageMeta,templateImage::ImageMeta,
                      transformedGrid::Array{Float64,1};
                      doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions()
                      )
