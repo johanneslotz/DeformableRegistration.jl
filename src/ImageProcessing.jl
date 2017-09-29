@@ -8,10 +8,11 @@ export getSize, getSpatialDomain, getPixelSpacing
 export regImage
 
 struct regImage
-           image::ImageMeta
-           voxelsize::Array{Float64,1}
-           shift::Array{Float64,1}
+           data::ImageMeta
+           voxelsize::Array{Float64, 1}
+           shift::Array{Float64, 1}
 end
+
 
 
 # load image and convert it into gray image
@@ -20,6 +21,7 @@ function loadImage(pathToFile;
 
     # load image
     image = Images.load(pathToFile)
+    #image = permutedims(image, (2,1))
 
     # convert image to gray image
     image = Images.Gray.(image)
@@ -44,11 +46,10 @@ function createImage(imageData;
 end
 
 
-
 function restrictResolutionToLevel(image::regImage,level)
 
     # copy restrict image, there seems to be a bug in the image copy method, take care of the deepcopy here
-    im = deepcopy(image.image)
+    im = deepcopy(image.data)
     maxlevel = 0;
     for l=1:level
         if( (width(im)>2) && (height(im)>2) )
@@ -58,7 +59,7 @@ function restrictResolutionToLevel(image::regImage,level)
 
     voxelsizeNew = zeros(2)
     for xy = 1:2
-        voxelsizeNew[xy] = (image.voxelsize[xy] * size(image.image,xy))/size(im,xy)
+        voxelsizeNew[xy] = (image.voxelsize[xy] * size(image.data,xy))/size(im,xy)
     end
 
     return regImage(im,voxelsizeNew,image.shift)
@@ -66,7 +67,7 @@ function restrictResolutionToLevel(image::regImage,level)
 end
 
 function getSize(I::regImage)
-  return [height(I.image), width(I.image)]
+  return [height(I.data), width(I.data)]
 end
 
 

@@ -1,12 +1,13 @@
 using DeformableRegistration.Visualization
 using Stats
 using PyPlot
+using Logging
 
-function estimateNGFEpsilon(referenceImage::ImageMeta;cutoffPercent = 80)
-  m = size(referenceImage)
-  h = getPixelSpacing(referenceImage)
+function estimateNGFEpsilon(referenceImage::regImage;cutoffPercent = 80)
+  m = size(referenceImage.data)
+  h = referenceImage.voxelsize
   Rc = referenceImage.data
-  ΩR = getSpatialDomain(referenceImage)
+
 
   shortFiniteDiffX = spdiagm((-ones(m[1]-1,1),ones(m[1]-2,1)),[0, 1],m[1]-1,m[1])/(2*h[1])
   #shortFiniteDiffX[1] = shortFiniteDiffX[2]
@@ -25,8 +26,8 @@ function estimateNGFEpsilon(referenceImage::ImageMeta;cutoffPercent = 80)
   AvgX = sparse(kron(speye(m[2]),averageX));
   AvgY = sparse(kron(averageY,speye(m[1])));
 
-  gradTx  = G1*referenceImage[:]
-  gradTy  = G2*referenceImage[:]
+  gradTx  = G1*referenceImage.data[:]
+  gradTy  = G2*referenceImage.data[:]
 
   quantileX = percentile(AvgX * (gradTx.^2),cutoffPercent)
   quantileY = percentile(AvgY * (gradTy.^2),cutoffPercent)
@@ -48,12 +49,11 @@ function estimateNGFEpsilon(referenceImage::ImageMeta;cutoffPercent = 80)
     clf()
     plt.hist(lengthGT,bins=100)
   catch err
-    Logging.warn("Error while plotting. This is normal if it happens in the automated test framework.")
-    Logging.warn(err)
+    warn("Error while plotting. This is normal if it happens in the automated test framework.")
+    println(err)
   end
 
   return (estimatedEps,vectorlength)
 
 
 end
-
