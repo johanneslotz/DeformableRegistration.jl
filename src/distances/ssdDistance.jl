@@ -1,40 +1,41 @@
-function ssdDistance(referenceImage::ImageMeta,templateImage::ImageMeta,
+function ssdDistance(referenceImage::regImage,templateImage::regImage,
                      transformedGrid::Array{Float64,1};
-                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions())
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::Array{Float64,1}=zeros(1))
 
   # get relevant options
   parametricOnly = options.parametricOnly
   matrixFree = options.matrixFree
-  centeredGrid = options.centeredGrid
-
-  # check grid
-  if(checkStaggered(referenceImage,transformedGrid))
-    error("StaggeredGrids are not supported. Please transform to cell centered first.")
-  end
 
   # check centered grid
   if(size(centeredGrid)[1]==1)
-    centeredGrid = getCellCenteredGrid(referenceImage)
+    centeredGrid = getCellCenteredGrid(referenceImage).data
   end
 
+  # check grid
+  if(checkForOddNumberOfGridPoints(referenceImage.data,transformedGrid))
+    error("StaggeredGrids are not supported. Please transform to cell centered first.")
+  end
+
+
+
   # interpolation of the template image at transformed grid points
-  transformedImage, dY_transformedImage, dX_transformedImage =
+  transformedImage, dX_transformedImage, dY_transformedImage =
       interpolateImage(templateImage,transformedGrid,doDerivative=true)
 
   # measure the ssd distance
-  N = prod(getSize(referenceImage)) # product of sizes
-  pixelSize = prod(getPixelSpacing(referenceImage))
-  residual = transformedImage .- referenceImage.data[:]
-  functionValue = 0.5 * pixelSize * BLAS.dot(N,residual,1,residual,1)[1]
+  N = prod(size(referenceImage.data)) # product of sizes
 
+  residual = Array(transformedImage .- referenceImage.data)[:]
+  prodH = prod(referenceImage.voxelsize)
+  functionValue = 0.5 * prodH * residual' * residual
   # calculate ssd derivatives matrix free?
   if(matrixFree)
-    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly,doDerivative,doHessian)
+    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
   else
-    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,pixelSize,N,parametricOnly,doDerivative,doHessian)
+    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
   end
 
-  return functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)
+  return [functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)]
 
 end
 

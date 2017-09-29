@@ -4,15 +4,16 @@ using Base.Test
 
 function checkImageProperties(img::regImage)
     # check if image has two dimensions
-    @test ndims(img.image) == 2
+    @test ndims(img.data) == 2
 
     # check if image values are between 0 and 1
-    @test float64(minfinite(img.image))>=0.0
-    @test float64(maxfinite(img.image))<=1.0
+    @test float64(minfinite(img.data))>=0.0
+    @test float64(maxfinite(img.data))<=1.0
     # check if colorspace is float
-    @test eltype(img.image) <: Float64
+    @test eltype(img.data) <: Float64
 end
 
+@testset "ImageProcessing" begin
 @testset "load or create image" begin
     # test loadImage
     testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
@@ -58,9 +59,10 @@ end
     img = createImage(imgdata)
     # load image, write image, load the written image and compare it
     testimagewrite = dirname(Base.source_path()) * "/testdata/testimage_write.png"
-    FileIO.save(testimagewrite, img.image')
+    FileIO.save(testimagewrite, img.data)
     imgwritten = loadImage(testimagewrite)
-    A = convert(Array{Float64,2},img.image)
-    B = convert(Array{Float64,2},imgwritten.image)
+    A = convert(Array{Float64,2},img.data)
+    B = convert(Array{Float64,2},imgwritten.data)
     @test norm(A .- B) < 0.03
+end
 end

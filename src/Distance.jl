@@ -1,7 +1,6 @@
 module Distance
 
 using Images
-using Logging
 
 using DeformableRegistration
 using DeformableRegistration.Transformation

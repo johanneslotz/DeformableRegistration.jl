@@ -1,98 +1,150 @@
-using DeformableRegistration.Transformation
-using DeformableRegistration.ImageProcessing
-using DeformableRegistration.Interpolation
-using Base.Test
-using Logging
-using Grid
+using DeformableRegistration: Transformation, ImageProcessing, Interpolation
+ using Base.Test
+ using Interpolations: BSpline, Linear, Cubic, Free
+ using Logging
 
-# setup logging
-Logging.configure(level = Logging.INFO) # set to DEBUG to see error tables
+@testset "Interpolation" begin
+##
+@testset "Interpolation: interpolation" begin
+    ## load reference image
 
-# define check derivative
-include("helpers/checkDerivative.jl")
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    img = loadImage(testimage)
+    centeredGrid = getCellCenteredGrid(img)
+    affineParameters = [0.5,0.4,50,0,0.5,100]
+    deformationField = zeros(prod(size(img.data))*2)
+    deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
+    deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
+    transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
+    transformedImageOnly = interpolateImage(img,transformedGrid)
+    transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true)
+    transformedImageRef,dY_transformedImageRef,dX_transformedImageRef = interpolateImage(img,transformedGrid,doDerivative=true,interpolationScheme=BSpline(Linear()))
 
-# load reference image
-testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    ##using PyPlot
+    #dY_transformedImage = reshape(dY_transformedImage, size(img.data))
+    #dY_transformedImageRef = reshape(dY_transformedImageRef, size(img.data))
+    #imshow(dY_transformedImage-dY_transformedImageRef)
+    @test norm(transformedImageOnly - transformedImageRef) ≈ 0 atol=0.5
+    @test transformedImageOnly[1:10] ≈ transformedImageRef[1:10]
 
-# check interpolation againt Grid.jl
-Logging.info("Interpolation: Checking own linear interpolation against the linear interpolation of the Grid.jl package...")
-img = loadImage(testimage)
-centeredGrid = getCellCenteredGrid(img)
-affineParameters = [0.5,0.4,50,0,0.5,100]
-deformationField = zeros(prod(size(img))*2)
-deformationField[prod(size(img))+1:end] = 10*sin(0.01*centeredGrid[1:prod(size(img))])
-transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-transformedImageOnly = interpolateImage(img,transformedGrid)
-transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true)
-transformedImageRef,dY_transformedImageRef,dX_transformedImageRef = interpolateImage(img,transformedGrid,doDerivative=true,InterpFunction=InterpLinear)
-@test_approx_eq transformedImageOnly transformedImageRef
-@test_approx_eq transformedImage transformedImageRef
-Logging.info("Interpolation: Transformed images are equal ✔")
-@test_approx_eq dY_transformedImage dY_transformedImageRef
-@test_approx_eq dX_transformedImage dX_transformedImageRef
-Logging.info("Interpolation: Derivatives of the transformed images are equal ✔")
+    @test norm(transformedImage - transformedImageRef) ≈ 0  atol=0.5
+    @test transformedImage[1:10] ≈ transformedImageRef[1:10]
 
-# check image derivative
-Logging.info("Interpolation: Checking image derivatives...")
-centeredGrid = getCellCenteredGrid(img) + 0.1
-Ifunc(x) = interpolateImage(img,x)[:]
-transformedImage, dY_transformedImage, dX_transformedImage = interpolateImage(img,centeredGrid,doDerivative=true)
-dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0, prod(size(img))])
-errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
-@test checkErrorDecay(errquad)
-Logging.info("Interpolation: Sufficient error decay of taylor approximation ✔")
+    @test norm(dY_transformedImage - dY_transformedImageRef) ≈ 0 atol=20
+    @test dY_transformedImage[1:10] ≈ dY_transformedImageRef[1:10]
 
-# check timing
-Logging.info("Interpolation: Comparing timings of linear interpolation...")
-Logging.info("Interpolation: Image and grid size: 1024x1024")
-img = createImage(rand(1024,1024))
-centeredGrid = getCellCenteredGrid(img)
-affineParameters = [0.5,0.4,50,0,0.5,100]
-deformationField = zeros(prod(size(img))*2)
-deformationField[prod(size(img))+1:end] = 10*sin(0.01*centeredGrid[1:prod(size(img))])
-transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-# InterpLinearFast
-tic();
-for i=1:5
-  interpolateImage(img,transformedGrid)
+    @test norm(dX_transformedImage - dX_transformedImageRef) ≈ 0 atol=20
+    @test dX_transformedImage[1:10] ≈ dX_transformedImageRef[1:10]
 end
-timing = toq()/5;
-Logging.info("Interpolation: interpolateImage (InterpLinearFast) took ",timing," seconds.")
-# InterpLinear (Grid.jl)
-tic();
-for i=1:5
-  interpolateImage(img,transformedGrid,InterpFunction=InterpLinear)
-end
-timingGrid = toq()/5;
-Logging.info("Interpolation: interpolateImage (InterpLinear, Grid.jl) took ",timingGrid," seconds.")
-# InterpLinearFast with derivative
-tic();
-for i=1:5
-  interpolateImage(img,transformedGrid,doDerivative=true)
-end
-timing = toq()/5;
-Logging.info("Interpolation: interpolateImage with derivative (InterpLinearFast) took ",timing," seconds.")
-# InterpLinear (Grid.jl) with derivative
-tic();
-for i=1:5
-  interpolateImage(img,transformedGrid,InterpFunction=InterpLinear,doDerivative=true)
-end
-timingGrid = toq()/5;
-Logging.info("Interpolation: interpolateImage with derivative (InterpLinear, Grid.jl) took ",timingGrid," seconds.")
-@test timingGrid>10*timing
-Logging.info("Interpolation: Own linear interpolation with derivative is at least ten times faster ✔")
 
-# visualisation
-#using PyPlot
-#using DeformableRegistration.Visualization
-#pygui(true); close("all")
-#figure(figsize=(10,10));
-#subplot(2,2,1)
-#showImage(img,name="image and transformed grid")
-#showGrid(img.properties["spatialdomain"],size(img),centeredGrid,affineParameters=affineParameters,deformationField=deformationField,gridColor="red")
-#subplot(2,2,2)
-#showImage(transformedImage,name="image at grid points")
-#subplot(2,2,3)
-#showImage(dY_transformedImage,name="dy")
-#subplot(2,2,4)
-#showImage(dX_transformedImage,name="dx")
+##
+@testset "Interpolation: check derivatives" begin
+    include("helpers/checkDerivative.jl")
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    img = loadImage(testimage)
+
+    # check image derivative
+    centeredGrid = getCellCenteredGrid(img).data + 0.1
+    Ifunc(x) = interpolateImage(img,x)[:]
+    transformedImage, dX_transformedImage, dY_transformedImage = interpolateImage(img,centeredGrid,doDerivative=true)
+    dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0, prod(size(img.data))])
+    errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
+    @test checkErrorDecay(errquad)
+end
+##
+@testset "Interpolation: check timing of linear interpolation" begin
+    using Interpolations: BSpline, Linear
+    # check timing
+    img = createImage(rand(1024,1024))
+    centeredGrid = getCellCenteredGrid(img)
+    affineParameters = [0.5,0.4,50,0,0.5,100]
+    deformationField = zeros(prod(size(img.data))*2)
+    deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
+    deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
+    transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
+    # InterpLinearFast
+    tic();
+    for i=1:5
+      interpolateImage(img,transformedGrid)
+    end
+    timing = toq()/5;
+    Logging.info("Interpolation: interpolateImage (InterpLinearFast) took ",timing," seconds.")
+    # InterpLinear (Grid.jl)
+    tic();
+    for i=1:5
+      interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()))
+    end
+    timingGrid = toq()/5;
+    Logging.info("Interpolation: interpolateImage (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
+    # InterpLinearFast with derivative
+    tic();
+    for i=1:5
+      interpolateImage(img,transformedGrid,doDerivative=true)
+    end
+    timing = toq()/5;
+    Logging.info("Interpolation: interpolateImage with derivative (InterpLinearFast) took ",timing," seconds.")
+    # InterpLinear (Grid.jl) with derivative
+    tic();
+    for i=1:5
+      interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()),doDerivative=true)
+    end
+    timingGrid = toq()/5;
+    Logging.info("Interpolation: interpolateImage with derivative (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
+    @test timingGrid>timing
+    #Logging.info("Interpolation: Own linear interpolation with derivative is faster ✔")
+end
+##
+@testset "compare different interpolation types on real data" begin
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    refImg = loadImage(testimage)
+    # define a cell centered grid, transform it and create a template image
+    centeredGrid = getCellCenteredGrid(refImg)
+    affineParametersInitial = [1.2,0.0,-50,0.0,1.2,-0]
+    transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
+    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
+    temImg = createImage(temImg)
+    ##
+
+    temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Cubic(Free())))
+    temImg2 = createImage(temImg2)
+
+
+    if Logging.LogLevel == Logging.DEBUG
+    using PyPlot
+    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    end
+
+    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 20
+end
+
+@testset "compare different interpolation types on real data" begin
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    refImg = loadImage(testimage)
+    # define a cell centered grid, transform it and create a template image
+    centeredGrid = getCellCenteredGrid(refImg)
+    affineParametersInitial = [1.2,0.0,-50,0.0,1.2,-0]
+    transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
+    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
+    temImg = createImage(temImg)
+
+    temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Linear()))
+    temImg2 = createImage(temImg2)
+
+    if Logging.LogLevel == Logging.DEBUG
+    using PyPlot
+    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    end
+    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 10
+end
+
+##
+@testset "interpolation with identity grid results in orgiginal data: $scheme" for scheme in (InterpLinearFast, BSpline(Linear()), BSpline(Cubic(Free())))
+    data = [1.0 2; 3 4]
+    testimage = createImage(data)
+    g = getCellCenteredGrid(testimage)
+    dataInterpolated = interpolateImage(testimage, g, interpolationScheme=scheme)
+    @test data ≈ dataInterpolated
+end
+
+
+end
