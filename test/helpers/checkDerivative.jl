@@ -1,5 +1,10 @@
-using PyPlot
 using Logging
+
+# try
+#   using PyPlot
+# catch e
+#   println("caught: ", e)
+# end
 
 function checkDerivative(f,df,x;doPlot::Bool=false)
     N = 17
@@ -14,19 +19,20 @@ function checkDerivative(f,df,x;doPlot::Bool=false)
         s = @sprintf(" h: %5e  ||f(x+h*v)||: %5e   elin: %5e   equad: %5e \n",h[i], norm(f(x+h[i]*v)), errlin[i],errquad[i])
         Logging.info(s)
     end
-    if(doPlot)
-      PyPlot.rc("legend",fontsize=10)
-      PyPlot.rc("xtick", labelsize=10, color="black", direction="in")
-      PyPlot.rc("ytick", labelsize=10, color="black", direction="in")
-      fig = figure(figsize=(6,5),facecolor="white")
-      plot(h,errlin,label=L"$||f(x) - f(x+hv)||$")
-      plot(h,errquad,".-",label=L"$||f(x) + h \nabla f v - f(x+hv)||$")
-      yscale("log")
-      xscale("log")
-      xlabel(L"$h$")
-      ylabel(L"$error$")
-      legend(loc="upper left")
-    end
+    #
+    # if(doPlot)
+    #   PyPlot.rc("legend",fontsize=10)
+    #   PyPlot.rc("xtick", labelsize=10, color="black", direction="in")
+    #   PyPlot.rc("ytick", labelsize=10, color="black", direction="in")
+    #   fig = figure(figsize=(6,5),facecolor="white")
+    #   plot(h,errlin,label=L"$||f(x) - f(x+hv)||$")
+    #   plot(h,errquad,".-",label=L"$||f(x) + h \nabla f v - f(x+hv)||$")
+    #   yscale("log")
+    #   xscale("log")
+    #   xlabel(L"$h$")
+    #   ylabel(L"$error$")
+    #   legend(loc="upper left")
+    # end
     return errlin, errquad
 end
 

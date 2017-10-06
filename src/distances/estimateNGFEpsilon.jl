@@ -1,6 +1,4 @@
-using DeformableRegistration.Visualization
 using Stats
-using PyPlot
 using Logging
 
 function estimateNGFEpsilon(referenceImage::regImage;cutoffPercent = 80)

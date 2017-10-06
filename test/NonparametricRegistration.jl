@@ -1,7 +1,10 @@
 
-using DeformableRegistration: Regularizer, Visualization, Examples, ImageProcessing, Transformation, Interpolation, Distance
+using DeformableRegistration: Regularizer, Examples, ImageProcessing, Transformation, Interpolation, Distance
  using DeformableRegistration.regOptions
  using Base.Test
+
+#using DeformableRegistration.Visualization # does not work on travis-ci
+
 
 # setup logging
 
@@ -22,7 +25,7 @@ using DeformableRegistration: Regularizer, Visualization, Examples, ImageProcess
     displacement = registerImagesNonParametric(refImg, temImg, options) # regularizerOperator=createDiffusiveOperatorCentered
     ssdvalue = ssdDistance(refImg, temImg, getCellCenteredGrid(refImg).data + displacement.data, options=options)[1]
     ngfvalue = ngfDistance(refImg, temImg, getCellCenteredGrid(refImg).data + displacement.data, options=options)[1]
-    visualizeResults(refImg, temImg, displacement=displacement)
+    #visualizeResults(refImg, temImg, displacement=displacement)
 
     @test ssdvalue ≈ 42.63 atol=1e-1
     @test ngfvalue ≈ 365.01 atol=1e-1
@@ -60,7 +63,7 @@ end
     # These results seem to depend on the current phase of the moon, your platform or something similar.
 	# This seems to be a bug in ngfDistance or at least in there and is notet in an issue in GitHub. Please
 	# make the test more specific once this is solved.
-    visualizeResults(refImg, temImg, displacement=displacement)
+    # visualizeResults(refImg, temImg, displacement=displacement)
 
 	@test_skip ssdvalue ≈ 498.07 atol=2e2
 	@test_skip ngfvalue ≈ 399.403 atol=2e2
