@@ -8,10 +8,13 @@ julia:
   #- nightly
 env:
   - PYTHON=""
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; sudo apt-get install -qq zlib-bin; fi
 install:
   - julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
-  - #julia -e 'Pkg.add("Conda")'
-  - #julia -e 'using Conda; Conda.add("mkl=2017"); Conda.add("matplotlib"); Conda.add("zlib")'
+  - julia -e 'Pkg.add("Conda"); Pkg.add("PyCall"); Pkg.add("PyPlot")'
+  - julia -e 'using Conda; Conda.add("mkl=2017"); Conda.add("matplotlib"); Conda.add("zlib"); Pkg.update(); Pkg.build("PyCall"); using PyPlot'
+  - julia -e 'Pkg.add("ImageMagick")'
 matrix:
   allow_failures:
     - julia: nightly
