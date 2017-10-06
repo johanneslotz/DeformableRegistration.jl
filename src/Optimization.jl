@@ -112,7 +112,7 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
                                tolJ = 1e-3,    # tolerance: change of the objective function
                                tolY = 1e-2,    # tolerance: change of the variables
                                tolG = 1e-2,    # tolerance: change of the gradient
-                               tolQ = 1e-5     # tolerance: change of quotient
+                               tolQ = 1e-4     # tolerance: change of quotient
                                )
 
 

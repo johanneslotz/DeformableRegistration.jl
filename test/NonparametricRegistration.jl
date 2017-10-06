@@ -71,7 +71,7 @@ end
 end
 
 ##
-@testset "SSD/NGF shifted"  begin
+@testset "SSD shifted"  begin
     for D=[ssdDistance]#, ngfDistance]
 ##
 	testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
