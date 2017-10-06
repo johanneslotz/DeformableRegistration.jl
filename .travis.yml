@@ -5,13 +5,11 @@ os:
   - osx
 julia:
   - 0.6
-  #- nightly
+  - nightly
 env:
   - PYTHON=""
 install:
   - julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
-  - julia -e 'Pkg.add("Conda");'
-#  - julia -e ''
   - julia -e 'Pkg.add("ImageMagick")'
 matrix:
   allow_failures:
