@@ -10,8 +10,8 @@ env:
   - PYTHON=""
 install:
   - julia -e 'Pkg.clone("https://github.com/lruthotto/KrylovMethods.jl.git")'
-  - julia -e 'Pkg.add("Conda")'
-  - julia -e 'using Conda; Conda.add("mkl=2017"); Conda.add("matplotlib"); Conda.add("zlib=1.2.9")'
+  - #julia -e 'Pkg.add("Conda")'
+  - #julia -e 'using Conda; Conda.add("mkl=2017"); Conda.add("matplotlib"); Conda.add("zlib")'
 matrix:
   allow_failures:
     - julia: nightly

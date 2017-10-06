@@ -110,8 +110,8 @@ end
 
 
     if Logging.LogLevel == Logging.DEBUG
-    using PyPlot
-    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    #using PyPlot
+    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
     end
 
     @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 20
@@ -131,8 +131,8 @@ end
     temImg2 = createImage(temImg2)
 
     if Logging.LogLevel == Logging.DEBUG
-    using PyPlot
-    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    #using PyPlot
+    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
     end
     @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 10
 end

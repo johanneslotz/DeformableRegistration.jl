@@ -1,6 +1,6 @@
 using DeformableRegistration: Distance, ImageProcessing, Transformation, Interpolation, Visualization, regOptions
  using Base.Test
- using PyPlot
+ #using PyPlot
  using Logging
 #Logging.configure(level=INFO)
 # define check derivative

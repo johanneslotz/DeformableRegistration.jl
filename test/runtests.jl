@@ -9,7 +9,7 @@ Logging.configure(level = Logging.WARNING) # set to DEBUG to see error tables
     include("Interpolation.jl")
     include("Distance.jl")
     include("Regularizer.jl")
-    include("Visualization.jl")
+    #include("Visualization.jl")
 end
 
 # test full parametric and nonparametric image registration
