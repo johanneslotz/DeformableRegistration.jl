@@ -1,6 +1,6 @@
 # DeformableRegistration.jl
 
-[![Build Status](https://magnum.travis-ci.com/FraunhoferMEVIS/DeformableRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq)](https://magnum.travis-ci.com/FraunhoferMEVIS/DeformableRegistration.jl)
+[![Build Status](https://travis-ci.com/johanneslotz/DeformableRegistration.jl.svg?token=rpbV4sPrj6BdxqGJ84cq&branch=master)](https://travis-ci.com/johanneslotz/DeformableRegistration.jl)
 
 
 This is a first step towards an image registration package written in Julia. Much of this code is still in a very early stage, lacks a lot of features and even has some bugs. Basic registration is possible though and pull-requests adding features or fixing bugs are explicitly welcome. :)
@@ -44,4 +44,3 @@ Besides the mentioned packages the **DeformableRegistration** module itself cons
 * **.Transformation**: Convenience functions to create cell-centered and staggered grids, to convert between them and to transform them.
 
 * **.Visualization**
-
