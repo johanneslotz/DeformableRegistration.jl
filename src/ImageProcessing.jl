@@ -5,92 +5,70 @@ using Images
 export createImage, loadImage, setImageProperties
 export restrictResolutionToLevel
 export getSize, getSpatialDomain, getPixelSpacing
+export regImage
+
+struct regImage
+           data::ImageMeta
+           voxelsize::Array{Float64, 1}
+           shift::Array{Float64, 1}
+end
+
+
 
 # load image and convert it into gray image
 function loadImage(pathToFile;
-                   spatialDomain = [0.0,0.0,0.0,0.0])
+                   voxelsize = [1.0,1.0], shift = [0.0, 0.0])
 
     # load image
-    image = Images.imread(pathToFile)
-    image.data = image.data'
+    image = Images.load(pathToFile)
+    #image = permutedims(image, (2,1))
 
     # convert image to gray image
-    image = convert(Image{Gray}, image)
+    image = Images.Gray.(image)
 
     # convert image data to float (easier access)
-    image = grayim(convert(Array{Float64,2},image.data))
+    image = convert(Array{Float64,2},image)
 
     # set image properties
-    setImageProperties(image,spatialDomain = spatialDomain)
 
-    return image
+    return regImage(image, voxelsize, shift)
 
 end
 
 function createImage(imageData;
-                     spatialDomain = [0.0,0.0,0.0,0.0])
+                     voxelsize = [1.0,1.0], shift = [0.0, 0.0])
 
     # load image
-    image = grayim(copy(imageData))
+    #image = grayim(copy(imageData))
 
-    # set image properties
-    setImageProperties(image,spatialDomain = spatialDomain)
-
-    return image
+    return regImage(imageData, voxelsize, shift)
 
 end
 
-function setImageProperties(image;
-                            spatialDomain = [0.0,0.0,0.0,0.0])
 
-    # define spatial order
-    # y: vertical axis
-    # x: horizontal axis
-    image["spatialorder"] = ["y","x"]
-
-    # set spatial domain
-    # vertical direction:   spatialDomain[1] to spatialDomain[2]
-    # horizontal direction: spatialDomain[3] to spatialDomain[4]
-    if(spatialDomain==[0.0,0.0,0.0,0.0])
-        spatialDomain[2] = size(image)[1]
-        spatialDomain[4] = size(image)[2]
-    end
-    image["spatialdomain"] = spatialDomain
-
-    return image
-
-end
-
-function restrictResolutionToLevel(image,level)
+function restrictResolutionToLevel(image::regImage,level)
 
     # copy restrict image, there seems to be a bug in the image copy method, take care of the deepcopy here
-    restrictedImage = Image(copy(image.data), deepcopy(image.properties))
+    im = deepcopy(image.data)
     maxlevel = 0;
     for l=1:level
-        if( (width(restrictedImage)>2) && (height(restrictedImage)>2) )
-            restrictedImage = restrict(restrictedImage)
-            maxlevel = l
+        if( (width(im)>2) && (height(im)>2) )
+            im = restrict(im)
         end
     end
 
-    return restrictedImage
+    voxelsizeNew = zeros(2)
+    for xy = 1:2
+        voxelsizeNew[xy] = (image.voxelsize[xy] * size(image.data,xy))/size(im,xy)
+    end
+
+    return regImage(im,voxelsizeNew,image.shift)
 
 end
 
-function getSize(I::Image)
-  return [height(I), width(I)]
+function getSize(I::regImage)
+  return [height(I.data), width(I.data)]
 end
 
-function getSpatialDomain(I::Image)
-    return I["spatialdomain"]
-end
-
-function getPixelSpacing(I::Image)
-    # vertical direction:   getPixelSpacing(image)[1]
-    # horizontal direction: getPixelSpacing(image)[2]
-    return [(I["spatialdomain"][2]-I["spatialdomain"][1])/height(I),
-            (I["spatialdomain"][4]-I["spatialdomain"][3])/width(I)]
-end
 
 end
-

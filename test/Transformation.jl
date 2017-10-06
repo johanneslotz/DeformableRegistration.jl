@@ -1,36 +1,43 @@
-using ImageRegistration.Transformation
-using ImageRegistration.ImageProcessing
-using Base.Test
-using Logging
+using DeformableRegistration.Transformation
+ using DeformableRegistration.ImageProcessing
+ using Base.Test
 
-# setup logging
-Logging.configure(level = Logging.INFO) # set to DEBUG to see error tables
-Logging.info("Transformation: Testing grid points creation, transformation and grid changes...")
+@testset "Transformation" begin
+@testset "grid creation" begin
+    # test getCellCenteredGrid
+    spatialDomain = [-0.1,5.2,-1.1,3.3]
+    gridSize=(5,8)
+    voxelsize = [(spatialDomain[2]-spatialDomain[1])/gridSize[1],(spatialDomain[4]-spatialDomain[3])/gridSize[2]]
+    shift = spatialDomain[1:2:3]
+    centeredGrid = getCellCenteredGrid(voxelsize, shift ,gridSize)
 
-# test getCellCenteredGrid
-spatialDomain = [-0.1,5.2,-1.1,3.3]
-gridSize=[5,8]
-centeredGrid = getCellCenteredGrid(spatialDomain,gridSize)
-pixelSpacing = [(spatialDomain[2]-spatialDomain[1])/gridSize[1],(spatialDomain[4]-spatialDomain[3])/gridSize[2]]
-# test first point
-# x-direction
-@test centeredGrid[1] == (spatialDomain[3] + pixelSpacing[2]/2)
-# y-direction
-@test centeredGrid[prod(gridSize)+1] == (spatialDomain[1]+pixelSpacing[1]/2)
-Logging.info("Transformation: getCellCenteredGrid ✔")
+    @test length(centeredGrid.data) == prod(gridSize)*2
 
-# test staggeredGrid and stg2cen
-staggeredGrid = getStaggeredGrid(spatialDomain,gridSize)
-centeredGridFromStaggered = stg2cen(staggeredGrid,gridSize)
-@test_approx_eq centeredGrid centeredGridFromStaggered
-Logging.info("Transformation: getStaggeredGrid, stg2cen ✔")
+    @test centeredGrid.data[1] == (shift[1] + voxelsize[1]/2)
+    @test centeredGrid.data[prod(gridSize)+1] == (shift[2]+voxelsize[2]/2)
 
-# test cen2stg
-staggeredGridFromCenteredGrid = cen2stg(centeredGrid,gridSize)
-Logging.info("Transformation: cen2stg ✔")
+    nodalGrid = getNodalGrid(voxelsize,shift,gridSize)
+    @test length(nodalGrid.data) == (gridSize[1]+1)*(gridSize[2]+1)*2
+
+
+end
+end
+
+
+# @testset "stg <-> cen conversion" begin
+#     gridSize=(5,8)
+#     voxelsize = [1.06,0.55]
+#     shift = [-0.1,-1.1]
+#     centeredGrid = getCellCenteredGrid(voxelsize, shift ,gridSize)
+#     staggeredGrid = getStaggeredGrid(voxelsize,shift,gridSize)
+#     centeredGridFromStaggered = stg2cen(staggeredGrid,gridSize)
+#     @test_approx_eq centeredGrid centeredGridFromStaggered
+#     # test cen2stg
+#     staggeredGridFromCenteredGrid = cen2stg(centeredGrid,gridSize)
+# end
 
 # visualize cell centered grid
-#using ImageRegistration.Visualization
+#using DeformableRegistration.Visualization
 #using PyPlot
 #pygui(true); close("all"); PyPlot.svg(true)
 #imgdata = rand(gridSize[1],gridSize[2])
@@ -39,4 +46,3 @@ Logging.info("Transformation: cen2stg ✔")
 #figure()
 #showImage(img)
 #showGrid(spatialDomain,gridSize,centeredGrid,showPoints=true,showIndices=true)
-

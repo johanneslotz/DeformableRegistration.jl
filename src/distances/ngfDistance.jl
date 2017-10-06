@@ -1,32 +1,35 @@
-using ImageRegistration
+using DeformableRegistration
 using Images
-import ImageRegistration.Distance.ngfDistance
+using Logging
+import DeformableRegistration.Distance.ngfDistance
 
 
 # Normalized gradient field distance
-function ngfDistance(referenceImage::Image,templateImage::Image,
+function ngfDistance(referenceImage::regImage,templateImage::regImage,
                      transformedGrid::Array{Float64,1};
-                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions()
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(), centeredGrid::Array{Float64,1}=zeros(1)
                      )
 
     opt = options
 
     edgeParameterR=options.edgeParameterR
     edgeParameterT=options.edgeParameterT
-    debug = (Logging.LogLevel == Logging.DEBUG) | (Logging.LogLevel == Logging.INFO)
+    debug = false
     useEdgeParameterInNumerator=options.useEdgeParameterInNumerator
     parametricOnly=options.parametricOnly
 
-    centeredGrid=getCellCenteredGrid(referenceImage)
+    if(size(centeredGrid)[1]==1)
+      centeredGrid = getCellCenteredGrid(referenceImage).data
+    end
 
-    if(checkStaggered(referenceImage,transformedGrid))
+    if(checkForOddNumberOfGridPoints(referenceImage.data,transformedGrid))
       error("StaggeredGrids are not supported. Please transform to cell centered first.")
     end
 
 
     #c,dTtuple = linearInter2D(templateImage.data, ΩT, mT, deformedGrid,doDerivative=doDerivative)
     if doDerivative
-      transformedImage, dY_transformedImage, dX_transformedImage =
+      transformedImage, dX_transformedImage, dY_transformedImage =
           interpolateImage(templateImage,transformedGrid,doDerivative=true)
       dT = spdiagm((dX_transformedImage, dY_transformedImage),[0,prod(size(transformedImage))])
 
@@ -35,16 +38,12 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
           interpolateImage(templateImage,transformedGrid,doDerivative=false)
     end
 
+    Logging.debug("\n\n edgeParameterR: %5e    edgeParameterT %5e \n", edgeParameterR, edgeParameterT)
 
-
-    if debug==true
-      @printf("\n\n edgeParameterR: %5e    edgeParameterT %5e \n", edgeParameterR, edgeParameterT)
-    end
-
-    m = size(referenceImage)
-    h = getPixelSpacing(referenceImage)
-    Rc = referenceImage.data
-    ΩR = getSpatialDomain(referenceImage)
+    m = size(referenceImage.data)
+    h = referenceImage.voxelsize
+    Rc = Array(referenceImage.data)
+    shift = referenceImage.shift
 
     shortFiniteDiffX = spdiagm((-ones(m[1]-1,1),ones(m[1]-2,1)),[0, 1],m[1]-1,m[1])/(2*h[1])
     #shortFiniteDiffX[1] = shortFiniteDiffX[2]
@@ -69,8 +68,8 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
     gradRx  = G1*Rc[:]
     gradRy =  G2*Rc[:]
 
-    lengthGT = sqrt(sum(AvgX * (gradTx.^2) + AvgY * (gradTy.^2), 2) + edgeParameterT^2) #epsilon-norm
-    lengthGR = sqrt(sum(AvgX * (gradRx.^2) + AvgY * (gradRy.^2), 2) + edgeParameterR^2)
+    lengthGT = sqrt.(sum(AvgX * (gradTx.^2) + AvgY * (gradTy.^2), 2) + edgeParameterT^2) #epsilon-norm
+    lengthGR = sqrt.(sum(AvgX * (gradRx.^2) + AvgY * (gradRy.^2), 2) + edgeParameterR^2)
 
     if useEdgeParameterInNumerator
       r1  = sum(AvgX * (gradRx.*gradTx) +
@@ -105,7 +104,7 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
       #         + spdiag((r2 .* (AvgY * gradRy) + dr2Partial .* (AvgY * gradTy) )[:]) * AvgY * G2 )
       drc = spdiagm(r1)*dr2 + spdiagm(r2) * dr1
       drc_times_dT = drc*dT;
-      dFunctionValue  = -2*prod(h)*rc'*drc_times_dT;
+      dFunctionValue  = Array(-2.0*prod(h)*rc'*drc_times_dT)
 
       if doHessian
         d2FunctionValue(x) =  (2*prod(h) .* drc_times_dT' * drc_times_dT) * x   # note the missing minus sign is not a bug!
@@ -116,13 +115,12 @@ function ngfDistance(referenceImage::Image,templateImage::Image,
 		d2FunctionValue = 0
 	end
 
-	functionValue  = (prod(ΩR[2:2:end]-ΩR[1:2:end]) - prod(h) * (rc'*rc))[1]
+	functionValue  = (length(rc)*prod(h) - prod(h) * (rc'*rc))[1]
 
 	if(ndims(dFunctionValue)>1)
 		dFunctionValue = vec(dFunctionValue)
 	end
 	#return functionValue[1], dFunctionValue', d2FunctionValue, r1, 1.-(rc.^2)
-	return functionValue,dFunctionValue,d2FunctionValue #, drc
+	return [functionValue,dFunctionValue,d2FunctionValue] #, drc
 
 end
-

@@ -6,16 +6,16 @@ type regOptions
   parametricOnly::Bool
   matrixFree::Bool
   levels::Array{Int,1}
-  centeredGrid::Array{Float64,1}
+  interpolateToReferenceImage::Bool
 
   # distance
   # ngf parameter
-  edgeParameterR::FloatingPoint
-  edgeParameterT::FloatingPoint
+  edgeParameterR::Float64
+  edgeParameterT::Float64
   useEdgeParameterInNumerator::Bool
 
   # regularizer
-  regularizerWeight::FloatingPoint
+  regularizerWeight::Float64
 
   # optimization
   maxIterGaussNewton::Int
@@ -29,7 +29,7 @@ type regOptions
     parametricOnly = false
     matrixFree = false
     levels = [5,4,3]
-    centeredGrid = zeros(1)
+    interpolateToReferenceImage = false
     edgeParameterR = 0.01
     edgeParameterT = 0.01
     useEdgeParameterInNumerator = true
@@ -37,7 +37,7 @@ type regOptions
     maxIterGaussNewton = 30
     maxIterCG = 2000
     additionalOptions = Dict()
-    new(parametricOnly,matrixFree,levels,centeredGrid,
+    new(parametricOnly,matrixFree,levels, interpolateToReferenceImage,
         edgeParameterR,edgeParameterT,useEdgeParameterInNumerator,
         regularizerWeight,
         maxIterGaussNewton,maxIterCG,

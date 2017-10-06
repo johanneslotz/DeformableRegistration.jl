@@ -1,9 +1,9 @@
-module ImageRegistration
+module DeformableRegistration
 
 # helping functions
 include("helpers/matrixFreeHelpers.jl")
 include("helpers/registrationOptions.jl");
-include("helpers/objectiveFunctionCreation.jl")
+#include("helpers/objectiveFunctionCreation.jl")
 
 # submodules
 include("ImageProcessing.jl")

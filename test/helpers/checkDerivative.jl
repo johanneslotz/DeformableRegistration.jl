@@ -3,7 +3,7 @@ using Logging
 
 function checkDerivative(f,df,x;doPlot::Bool=false)
     N = 17
-    h = exp10(2:-1:-N)
+    h = exp10.(2:-1:-N)
     v = randn(size(x)).-0.5
     fx = f(x)
     errquad = zeros(length(h))
@@ -12,7 +12,7 @@ function checkDerivative(f,df,x;doPlot::Bool=false)
         errlin[i]  = norm(fx             - f(x+h[i]*v))
         errquad[i] = norm(fx + h[i]*df*v - f(x+h[i]*v))
         s = @sprintf(" h: %5e  ||f(x+h*v)||: %5e   elin: %5e   equad: %5e \n",h[i], norm(f(x+h[i]*v)), errlin[i],errquad[i])
-        Logging.debug(s)
+        Logging.info(s)
     end
     if(doPlot)
       PyPlot.rc("legend",fontsize=10)
@@ -31,7 +31,7 @@ function checkDerivative(f,df,x;doPlot::Bool=false)
 end
 
 function checkErrorDecay(errquad::Vector)
-  errorReduction = log10(errquad[1:end-1]./errquad[2:end])
-  errorReduction[isinf(errorReduction)]=1
+  errorReduction = log10.(errquad[1:end-1]./errquad[2:end])
+  errorReduction[isinf.(errorReduction)]=1
   return sum(errorReduction[errorReduction.>1.7])>6
 end
