@@ -61,7 +61,11 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
 
         # stopping criteria
         if (iter>1)
-            if checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy) #printActiveStoppingCirteria=output
+            if checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
+                    tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
+                    tolY = options.stopping["tolY"],    # tolerance: change of the variables
+                    tolG = options.stopping["tolG"],    # tolerance: change of the gradient
+                    tolQ = options.stopping["tolQ"])    # tolerance: change of quotient)
                 break
             end
         end
@@ -129,25 +133,25 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
     if(all(STOP[1:3]))
         s = @sprintf("STOPPING CRITERIA:\n")
         Logging.info(s)
-        s = @sprintf("   1. |JOld-J| = %5e <= %5e \n",abs(JOld-J), tolJ*(1+abs(JOld)) )
+        s = @sprintf("   1. |JOld-J| = %3e <= %3e (tolJ * (1 + |JOld|)) \n",abs(JOld-J), tolJ*(1+abs(JOld)) )
         Logging.info(s)
-        s = @sprintf("   2. ||dy|| = %5e <= %5e \n",norm(dy),    tolY*(1+norm(y))  )
+        s = @sprintf("   2. ||dy||   = %3e <= %3e (tolY * (1 + ||y||))\n",norm(dy),    tolY*(1+norm(y))  )
         Logging.info(s)
-        s = @sprintf("   3. ||dJ|| = %5e <= %5e \n",norm(dJ),    tolG*(1+abs(JOld)) )
+        s = @sprintf("   3. ||dJ||   = %3e <= %3e (tolG * (1 + |JOld|)) \n",norm(dJ),    tolG*(1+abs(JOld)) )
         Logging.info(s)
     end
 
     if(STOP[4])
         s = @sprintf("STOPPING CRITERION:\n")
         Logging.info(s)
-        s = @sprintf("   4. ||dJ|| = %5e <= %5e \n",norm(dJ), 1e6*eps())
+        s = @sprintf("   4. ||dJ|| = %3e <= %3e (1e6*eps)\n",norm(dJ), 1e6*eps())
         Logging.info(s)
     end
 
     if(STOP[5])
         s = @sprintf("STOPPING CRITERION:\n")
         Logging.info(s)
-        s = @sprintf("   5. |(JOld-J)/(JRef-J)|= %5e <= %5e \n",abs((JOld-J)/(JRef-J)), tolQ)
+        s = @sprintf("   5. |(JOld-J)/(JRef-J)|= %3e <= %3e (tolQ)\n",abs((JOld-J)/(JRef-J)), tolQ)
         Logging.info(s)
     end
 
