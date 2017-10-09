@@ -5,7 +5,7 @@ using Images
 
 using DeformableRegistration: Transformation, Interpolation, ImageProcessing
 
-export showImage, plotGrid, visualizeResults
+export showImage, plotGrid, visualizeResults, clf
 
 # plotting properties
 PyPlot.rc("legend",fontsize=20)
@@ -51,6 +51,7 @@ function visualizeResults(referenceImage,templateImage;
                           affineParameters=[1,0,0,0,1,0.0],
                           numberOfGridLines = 20)
 
+
     subplot(2,3,1)
     showImage(referenceImage)
     title("Reference")
@@ -79,6 +80,20 @@ function visualizeResults(referenceImage,templateImage;
     showImage(createImage(differenceImage))
     xlabel("max: $(maximum(differenceImage[:]))")
     title("Template[y]-Reference")
+
+    if (displacement.data != zeros(2*prod(size(referenceImage.data))))
+        shape = displacement.dimensions
+        tX = reshape(displacement.data[1:Int(length(displacement.data)/2)],shape)
+        tY = reshape(displacement.data[Int(length(displacement.data)/2+1):end],shape)
+
+        figure()
+        subplot(1,2,1)
+        imshow(tX)
+        colorbar()
+        subplot(1,2,2)
+        imshow(tY)
+        colorbar()
+    end
 
 end
 
