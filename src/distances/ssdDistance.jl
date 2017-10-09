@@ -34,7 +34,9 @@ function ssdDistance(referenceImage::regImage,templateImage::regImage,
   else
     dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
   end
-
+  if doHessian
+      Logging.debug("ssd = ", functionValue)
+  end
   return [functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)]
 
 end
