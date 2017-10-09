@@ -95,3 +95,48 @@ end
 
     end
 end
+
+
+@testset "initial guess"  begin
+    for D=[ssdDistance]#, ngfDistance]
+##
+	testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+	referenceImage = loadImage(testimage)
+	# define a cell centered grid, transform it and create a template image
+	centeredGrid = getCellCenteredGrid(referenceImage)
+	affineParametersInitial = [1.0,0.0,-50,0.0,1.0,-50]
+	transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
+	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)
+	templateImage = createImage(temImg)
+	options = regOptions()
+	options.levels = [6,5]
+	options.parametricOnly = false;
+	options.regularizerWeight = 100
+	options.matrixFree = true;
+	options.useEdgeParameterInNumerator = true
+
+
+    options.maxIterGaussNewton = 5
+    options.interpolateToReferenceImage = false
+	displacement = registerImagesNonParametric(referenceImage, templateImage, options, measureDistance=D)
+    ssdvalue1 = ssdDistance(restrictResolutionToLevel(referenceImage, 5),
+                           restrictResolutionToLevel(templateImage, 5) ,
+                           getCellCenteredGrid(displacement).data+displacement.data)[1]
+
+    options.maxIterGaussNewton = 1
+    options.maxIterCG = 1
+    options.levels = [5]
+    oldLoggingLevel = Logging._root.level
+    #Logging.configure(level=Logging.DEBUG)
+    Logging.debug("ssd after first reg = ", ssdvalue1)
+    displacement2 = registerImagesNonParametric(referenceImage, templateImage, options, measureDistance=D, initialDisplacement=displacement)
+    ssdvalue2 = ssdDistance(restrictResolutionToLevel(referenceImage, 5),
+                           restrictResolutionToLevel(templateImage, 5) ,
+                           getCellCenteredGrid(displacement2).data+displacement2.data)[1]
+    Logging.debug("ssd after second reg (and one more iteration) = ", ssdvalue2)
+
+    Logging.configure(level=oldLoggingLevel)
+
+    @test ssdvalue1 ≈ ssdvalue2 atol=5
+    end
+end

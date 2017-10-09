@@ -11,7 +11,7 @@ export transformGridAffine, transformWorldCoordinate, scaledArray, + , - , *
 
 struct scaledArray
            data::Array{Float64, 1}
-           dimensions::Tuple{Int64, Int64}
+           dimensions::Tuple{Vararg{Int64}}
            voxelsize::Array{Float64, 1}
            shift::Array{Float64, 1}
 end

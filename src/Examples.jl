@@ -42,7 +42,8 @@ end
 function registerImagesNonParametric(referenceImage, templateImage, options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistance,
-                                     regularizerOperator=createCurvatureOperatorCentered)
+                                     regularizerOperator=createCurvatureOperatorCentered,
+                                     initialDisplacement=scaledArray(zeros(1),(1,),[],[]))
 
   affineParametersInitial = affineParameters
   options.parametricOnly = false
@@ -58,9 +59,14 @@ function registerImagesNonParametric(referenceImage, templateImage, options::reg
     # define initial Grid
   	affineParametersInitialGrid = transformGridAffine(centeredGrid,affineParametersInitial)
   	if level==options.levels[1]
-  	      # initial deformedGrid
-  	      referenceGrid = transformGridAffine(centeredGrid,affineParameters)
-  	      deformedGrid = referenceGrid
+        if initialDisplacement.data == zeros(1)
+  	        # initial deformedGrid
+            referenceGrid = transformGridAffine(centeredGrid,affineParameters)
+            deformedGrid = referenceGrid
+        else
+            referenceGrid = transformGridAffine(centeredGrid,affineParameters)
+    	    deformedGrid = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=InterpLinearFast) + referenceGrid
+        end
   	else
   	      #deformation field interpolation
   	      displacementField = deformedGrid - referenceGrid
