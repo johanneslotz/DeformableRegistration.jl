@@ -15,8 +15,6 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
     JRef = Jfunc(yInitial)[1]
     JOld = NaN
 
-    output = (Logging.LogLevel == Logging.DEBUG) |  (Logging.LogLevel == Logging.INFO)
-
     for iter = 1:options.maxIterGaussNewton
 
         # get derivatives of objective function
@@ -35,11 +33,11 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
             dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
         end
 
-		    # check descent direction
-		    if( (dJ'*dy)[1] > 0)
+	    # check descent direction
+	    if( (dJ'*dy)[1] > 0)
             dy = -dy
             warn("Changing sign of computed descent direction. This is a suspicious move.")
-		    end
+	    end
 
         # armijo line search (LS) method
         stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy)
@@ -88,7 +86,7 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
 
     stepLength = 1.0; LSiter = 1; LSfailed = false;
 
-    while( (Jfunc(y+stepLength*dy)[1]) >= (Jc + (stepLength.*tolLS.*dJ'*dy)[1]) )
+    while( Jfunc(y+stepLength*dy)[1] >= (Jc + (stepLength.*tolLS.*dJ'*dy)[1]) )
 
         if(stepLength < 1e-5)
             LSfailed = true
@@ -101,7 +99,7 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
     end
 
     if(LSfailed)
-        s = @sprintf("   0. Line search failed after %2d iterations.",LSiter)
+        s = @sprintf("   Line search failed after %2d iterations.",LSiter)
         Logging.debug(s)
     end
 
