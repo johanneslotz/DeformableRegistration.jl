@@ -6,7 +6,88 @@ using KrylovMethods
 using DeformableRegistration
 include("helpers/objectiveFunctionCreation.jl")
 
-export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton
+export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton, optimizeGaussNewtonAugmentedLagrangian
+
+
+function augmentedLagrangian(x, λ, μ, c::Function)
+    m = length(x)
+    F = - λ'*c(x)[1] + μ/2 * c(x)[1]'*c(x)[1]
+    dF = - c(x)[2]*λ   + μ * c(x)[2]'*c(x)[1]
+    d2F = spzeros(m,m)#pdiagm(-λ, 0)  +  μ * c(x)[2]'*c(x)[2] + μ * spdiagm(c(x)[1],0)
+    return [F, dF, d2F]
+end
+
+function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Function
+                             y::Array{Float64,1}, options::regOptions;
+                             constraint::Function = x-> [0, 0], #no constraint by default
+                             constraintObjectiveFunction= (x,λ,μ,c) -> [0, 0, 0]) #no constraint by default, try = lagrangian, = augmentedLagrangian
+
+    c = constraint
+    L(x, λ, μ; doDerivative=false, doHessian=false) = Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) + constraintObjectiveFunction(x, λ, μ, c)
+
+    λ = zeros(size(y))
+    μ = 1
+
+    JRef = L(y, λ, μ)[1]
+    JOld = NaN
+    oldNormCy = norm(c(y)[1], Inf)
+
+    for iter = 1:options.maxIterGaussNewton
+
+        λ = λ - μ * c(y)[1]
+        if norm(c(y)[1], Inf) >  1.2 * oldNormCy;
+            debug("... norm(c(y)[1], Inf) >  0.5 * oldNormCy: ",   @sprintf("%3.3e > %3.3e",norm(c(y)[1], Inf), oldNormCy))
+            debug("... updating μ = 2 * μ = ", 2*μ)
+            μ = 2 * μ;
+        end
+        oldNormCy = norm(c(y)[1], Inf)
+        J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
+        dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
+
+	    # check descent direction
+	    if( (dJ'*dy)[1] > 0)
+            dy = -dy
+            warn("Changing sign of computed descent direction. This is a suspicious move.")
+	    end
+
+        # armijo line search (LS) method
+        stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy)
+
+        #if(LSfailed)
+        #    break
+        #end
+
+        # output
+        s = @sprintf("%03d: J %8.4e   λ!=0: %d  |c(y)|= %2.2e  LSiter: %2d   CGiter: %3d   J/Jref: %1.2f", iter, J[1], sum(λ.!=0), norm(c(y)[1], Inf), LSiter, cgIterations, J[1]/JRef[1])
+        info(s)
+        debug("  λ=", λ)
+        debug("  c=", c(y)[1])
+
+
+        # update parameter y
+        y = y + stepLength .* dy
+
+        # stopping criteria
+        if (iter>1)
+            if (checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
+                    tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
+                    tolY = options.stopping["tolY"],    # tolerance: change of the variables
+                    tolG = options.stopping["tolG"],    # tolerance: change of the gradient
+                    tolQ = options.stopping["tolQ"]))   # tolerance: change of quotient)
+                break
+            end
+        end
+
+        # updating JOld
+        JOld = J[1]
+        info("\n")
+    end
+
+    return y
+
+end
+
+
 
 function optimizeGaussNewton(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yInitial::Array{Float64,1}, options::regOptions)
