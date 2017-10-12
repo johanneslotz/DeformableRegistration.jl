@@ -6,6 +6,11 @@ using Logging
 #   println("caught: ", e)
 # end
 
+function checkDerivative(fullF::Function,x;doPlot::Bool=false)
+    df = fullF(x)[2]'
+    f(x) = fullF(x)[1]
+    return checkDerivative(f,df,x,doPlot=doPlot)
+end
 function checkDerivative(f,df,x;doPlot::Bool=false)
     N = 17
     h = exp10.(2:-1:-N)
