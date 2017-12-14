@@ -36,10 +36,18 @@ function plotGrid(transformedGrid::Array{Float64,1}, shape::Tuple{Int64,Int64}; 
     for i = convert(Array{Int}, round.(linspace(1,size(tX,1), numberOfGridLines)))
         plot(tY[i,:], tX[i,:],"k", linewidth=1.0)
     end
+    axis("equal")
+    return tX, tY
 end
 
 function plotGrid(g::scaledArray; numberOfGridLines=20)
-    plotGrid(g.data, g.dimensions, numberOfGridLines=numberOfGridLines)
+    return plotGrid(g.data, g.dimensions, numberOfGridLines=numberOfGridLines)
+end
+
+function setFigSize()
+    f = PyPlot.gcf()
+    f["set_size_inches"](12,7)
+    f["set_dpi"](150)
 end
 
 function visualizeResults(referenceImage,templateImage;
@@ -51,7 +59,7 @@ function visualizeResults(referenceImage,templateImage;
                           affineParameters=[1,0,0,0,1,0.0],
                           numberOfGridLines = 20,
                           showDeformationImage = false,
-                          suptitle = "")
+                          suptitle = "", cmap = "gray", filename = "")
 
 
     subplot(2,3,1)
@@ -83,6 +91,10 @@ function visualizeResults(referenceImage,templateImage;
     xlabel("max: $(maximum(differenceImage[:]))")
     title("Template[y]-Reference")
     PyPlot.suptitle(suptitle)
+    setFigSize()
+    if filename != ""
+        savefig(filename[1:end-4]*"-A-"*filename[end-4:end])
+    end
 
     if showDeformationImage && (displacement.data != zeros(2*prod(size(referenceImage.data))))
         shape = displacement.dimensions
@@ -91,12 +103,16 @@ function visualizeResults(referenceImage,templateImage;
 
         figure()
         subplot(1,2,1)
-        imshow(tX)
+        imshow(tX, cmap=cmap)
         colorbar()
         subplot(1,2,2)
-        imshow(tY)
+        imshow(tY, cmap=cmap)
         colorbar()
         PyPlot.suptitle(suptitle)
+        setFigSize()
+        if filename != ""
+            savefig(filename[1:end-4]*"-B-"*filename[end-4:end])
+        end
     end
 
 end
