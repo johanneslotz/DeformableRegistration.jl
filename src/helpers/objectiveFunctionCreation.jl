@@ -5,3 +5,7 @@ function +(a::Function, b::SparseMatrixCSC)
 	f(x) = a(x) + b*x
 	return f
 end
+function +(b::Function, a::Function)
+	f(x) = a(x) + b(x)
+	return f
+end

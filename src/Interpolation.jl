@@ -83,11 +83,11 @@ function InterpLinearFast(data::Array{Float64,2}, voxelsize::Array{Float64,1}, s
 
   # setup variables
   transformedImage = zeros(numberOfPoints)
-  dY_transformedImage = zeros(numberOfPoints)
   dX_transformedImage = zeros(numberOfPoints)
+  dY_transformedImage = zeros(numberOfPoints)
   p = zeros(4)
-  sizeY= size(data)[2]
   sizeX = size(data)[1]
+  sizeY= size(data)[2]
   x::Float64 = 0.0; y::Float64 = 0.0;
   xf::Int = 0; yf::Int = 0;
 
@@ -101,13 +101,20 @@ function InterpLinearFast(data::Array{Float64,2}, voxelsize::Array{Float64,1}, s
       continue
     end
 
-    xf = floor(Int64,x)
-    yf = floor(Int64,y)
+    xf = floor(Int64,x);
+    yf = floor(Int64,y);
 
-    p[1] = ((xf<1)          | (yf<1))        ?   0.0: data[xf,yf]
-    p[2] = ((xf+1>sizeX)    | (yf<1))        ?   0.0: data[xf+1,yf]
-    p[3] = ((xf<1)          | (yf+1>sizeY))  ?   0.0: data[xf,yf+1]
-    p[4] = ((xf+1>sizeX)    | (yf+1>sizeY))  ?   0.0: data[xf+1,yf+1]
+    # p[1] = ((xf<1)          | (yf<1))        ?   0.0: data[xf,yf]
+    # p[2] = ((xf+1>sizeX)    | (yf<1))        ?   0.0: data[xf+1,yf]
+    # p[3] = ((xf<1)          | (yf+1>sizeY))  ?   0.0: data[xf,yf+1]
+    # p[4] = ((xf+1>sizeX)    | (yf+1>sizeY))  ?   0.0: data[xf+1,yf+1]
+    boundsX(v) = max(1, min(sizeX, v))
+    boundsY(v) = max(1, min(sizeY, v))
+
+    p[1] = data[boundsX(xf), boundsY(yf)]
+    p[2] = data[boundsX(xf+1), boundsY(yf)]
+    p[3] = data[boundsX(xf), boundsY(yf+1)]
+    p[4] = data[boundsX(xf+1), boundsY(yf+1)]
 
     x = x - xf
     y = y - yf

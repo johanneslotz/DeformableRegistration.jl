@@ -20,7 +20,7 @@ function ssdDistance(referenceImage::regImage,templateImage::regImage,
 
   # interpolation of the template image at transformed grid points
   transformedImage, dX_transformedImage, dY_transformedImage =
-      interpolateImage(templateImage,transformedGrid,doDerivative=true)
+      interpolateImage(templateImage,transformedGrid,doDerivative=doDerivative)
 
   # measure the ssd distance
   N = prod(size(referenceImage.data)) # product of sizes
@@ -29,14 +29,17 @@ function ssdDistance(referenceImage::regImage,templateImage::regImage,
   prodH = prod(referenceImage.voxelsize)
   functionValue = 0.5 * prodH * residual' * residual
   # calculate ssd derivatives matrix free?
-  if(matrixFree)
-    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
+  if(doDerivative)
+      if(matrixFree)
+          dFunctionValue,d2FunctionValue = ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
+      else
+          dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
+      end
   else
-    dFunctionValue,d2FunctionValue = ssdDerivativesMatrixBased(dX_transformedImage,dY_transformedImage,residual,centeredGrid,prodH,N,parametricOnly,doDerivative,doHessian)
+      dFunctionValue,d2FunctionValue = 0,0
   end
-  if doHessian
-      Logging.debug("ssd = ", functionValue)
-  end
+
+
   return [functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)]
 
 end

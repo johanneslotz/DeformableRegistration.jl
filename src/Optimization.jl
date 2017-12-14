@@ -17,18 +17,23 @@ function augmentedLagrangian(x, λ, μ, c::Function)
     return [F, dF, d2F]
 end
 
+"""
+optimizeGaussNewtonAugmentedLagrangian(Jfunc, y, yReference, options; constraint)
+
+Augmented lagrangian implementation following Nocelda & Wright, 2006, p. 515 (Framework 17.3)
+"""
 function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Function
-                             y::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x-> [0, 0], #no constraint by default
-                             constraintObjectiveFunction= (x,λ,μ,c) -> [0, 0, 0]) #no constraint by default, try = lagrangian, = augmentedLagrangian
+                             y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
+                             constraint::Function = x -> [0, 0, 0]) #no constraint by default,
 
     c = constraint
-    L(x, λ, μ; doDerivative=false, doHessian=false) = Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) + constraintObjectiveFunction(x, λ, μ, c)
+    L(x, λ, μ; doDerivative=false, doHessian=false) = Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) + augmentedLagrangian(x, λ, μ, c)
 
-    λ = zeros(size(y))
+    λ = spzeros(size(y)...)
     μ = 1
 
-    JRef = L(y, λ, μ)[1]
+    JRef = L(yReference, λ, μ)[1]
+    debug(@sprintf("... JRef = %3.3e", JRef))
     JOld = NaN
     oldNormCy = norm(c(y)[1], Inf)
 
