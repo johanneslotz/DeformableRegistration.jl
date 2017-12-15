@@ -27,8 +27,8 @@
       println("(", cl/tl*100, "%) covered")'
 
 # Name a test and select an appropriate image.
-test:0.6.2:
-  image: julialang/julia:v0.6.2
+test:0.6.0-dev:
+  image: julialang/julia:v0.6.0-dev
   <<: *test_definition
 
 # REMARK: Do not forget to enable the coverage feature for your project, if you
