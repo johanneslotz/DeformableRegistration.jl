@@ -14,8 +14,8 @@ function interpolateImage(
     I::regImage,transformedGrid::scaledArray;
     doDerivative=false,interpolationScheme=InterpLinearFast)
 
-    return interpolateImage(I, transformedGrid.data, doDerivative=doDerivative,
-                            interpolationScheme=interpolationScheme)
+    return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid.data, transformedGrid.dimensions;
+                            doDerivative=doDerivative,interpolationScheme=interpolationScheme)
 end
 
 function interpolateImage(
