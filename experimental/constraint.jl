@@ -6,6 +6,24 @@ using DeformableRegistration.regOptions
 using Interpolations
 include("../src/helpers/objectiveFunctionCreation.jl")
 
+function matchInitialDisplacementAtIndex(x::Array{Float64,1}, initialDisplacement::scaledArray, side; β = 0.01)
+    index = spzeros(initialDisplacement.dimensions...)
+    if (side == "left") || (side == 1)
+        index[:,end-1:end] = 1
+    elseif (side == "right") || (side == 2)
+        index[:,1:2] = 1
+    elseif (side == "boundary")
+        index[[1, end],:] = 1
+        index[:,[1, end]] = 1
+    else
+        throw("side needs to be left or right")
+    end
+    index = vcat(index[:], index[:])
+    f = β * 0.5 * index .* (x - initialDisplacement.data).^2
+    dF = β * spdiagm(index .* (x - initialDisplacement.data),0)
+    return [f, dF]
+end
+
 # function lagrangian(x, λ, μ, c::Function)
 #     m = length(x)
 #     F = - λ'*c(x)[1]
@@ -25,13 +43,80 @@ include("../src/helpers/objectiveFunctionCreation.jl")
 #         return [functionValue, dfunctionValue, d2functionValue]
 # end
 
+function registerNonParametricFixedGridResolution(referenceImage, templateImage, options::regOptions;
+                                     affineParameters = [1.0,0,0,0,1.0,0],
+                                     measureDistance = ssdDistance,
+                                     regularizerOperator=createCurvatureOperatorCentered,
+                                     initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
+                                     constraint = 0,
+                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false)#BSpline(Linear()))
+
+  doConstraints = constraint != 0
+
+  affineParametersInitial = affineParameters
+  options.parametricOnly = false
+  referenceGrid = []; deformedGrid = []; imageSize = [];
+  R_level1 = restrictResolutionToLevel(referenceImage, options.levels[1])
+  T_level1 = restrictResolutionToLevel(templateImage,  options.levels[1])
+
+  regularizerMatrix = regularizerOperator(R_level1.voxelsize, getSize(R_level1))
+
+  if initialDisplacement.data == zeros(1)
+      centeredGrid = getCellCenteredGrid(R);
+      referenceGrid = transformGridAffine(centeredGrid,affineParameters)
+      deformedGrid = referenceGrid
+  else
+      referenceGrid = transformGridAffine(centeredGrid,affineParameters)
+      deformedGrid = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
+  end
+
+
+  # start multilevel registration
+  for level = options.levels
+
+  	R = restrictResolutionToLevel(referenceImage,level)
+  	T = restrictResolutionToLevel(templateImage,level)
+
+  	imageSize = getSize(R)
+  	Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+
+  	# define objective function
+  	Jfunc(grid;doDerivative=false,doHessian=false) =
+        measureDistance(R, T, grid, doDerivative=doDerivative,
+            doHessian=doHessian, options=options, centeredGrid=centeredGrid.data)[1:3] +
+            options.regularizerWeight * regularizer(grid-referenceGrid.data,regularizerMatrix)
+    fValues(grid) = [measureDistance(R, T, grid, doDerivative=false, doHessian=false, options=options, centeredGrid=centeredGrid.data)[1:3],
+        options.regularizerWeight , regularizer(grid-referenceGrid.data,regularizerMatrix)]
+  	## gauss newton method
+    if doConstraints
+        initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
+        c(x) = constraint(x, initialDisplacementCoarse)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+    else
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+    end
+    deformedGrid = scaledArray(deformedGrid, size(R_level1.data), R_level1.voxelsize, R_level1.shift)
+  end
+
+  # return deformation field
+  displacementField = deformedGrid-referenceGrid
+  if options.interpolateToReferenceImage
+      referenceGrid = transformGridAffine(getCellCenteredGrid(referenceImage),affineParameters)
+      return interpolateDeformationField(displacementField, referenceGrid, interpolationScheme=interpolationScheme)
+  else
+      return displacementField
+  end
+
+end
+
+
 function registerNonParametricConstraint(referenceImage, templateImage, options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistance,
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
                                      constraint = 0,
-                                     interpolationScheme=InterpLinearFast)#BSpline(Linear()))
+                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false)#BSpline(Linear()))
 
   doConstraints = constraint != 0
 
@@ -69,6 +154,7 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
 
   	# define objective function
   	regularizerMatrix = regularizerOperator(R.voxelsize, imageSize)
+
   	Jfunc(grid;doDerivative=false,doHessian=false) =
         measureDistance(R, T, grid, doDerivative=doDerivative,
             doHessian=doHessian, options=options, centeredGrid=centeredGrid.data)[1:3] +
@@ -79,9 +165,9 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
     if doConstraints
         initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         c(x) = constraint(x, initialDisplacementCoarse)
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
     end
     deformedGrid = scaledArray(deformedGrid, size(R.data), R.voxelsize, R.shift)
   end
@@ -103,7 +189,7 @@ function augmentedLagrangian(x, λ, μ, c::Function)
     cx, ∇c = c(x)
     F = - λ' * cx + μ/2 * cx' * cx
     ∇F = - ∇c * λ   + μ * ∇c' * cx
-    ∇2F(y) = μ * ∇c' * ∇c * y 
+    ∇2F(y) = μ * ∇c' * ∇c * y
     return [F, ∇F, ∇2F]
 end
 
@@ -111,9 +197,10 @@ end
 
 function opt(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x -> [0, 0, 0], printFunction=x->[]) #no constraint by default, try = lagrangian, = augmentedLagrangian
+                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false) #no constraint by default
 
     c = constraint
+    computeConstraint = ! (c == x -> [0, 0, 0])
 
     L(x, λ, μ; doDerivative=true, doHessian=true) = (c(y) != [0, 0, 0]) ? Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) +
         augmentedLagrangian(x, λ, μ, c) : Jfunc(x, doDerivative=doDerivative, doHessian=doHessian)
@@ -129,19 +216,29 @@ function opt(Jfunc::Function,  # objective Function
 
 
     for iter = 1:options.maxIterGaussNewton
+        if computeConstraint
+            λ = λ - μ * c(y)[1]
 
-        λ = λ - μ * c(y)[1]
+            "Enforce reduction of infeasability"
+            τReduction = 0.8
+            if norm(c(y)[1], Inf) >  τReduction * oldNormCy;
+                debug(@sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy))
+                debug("... updating μ = 2 * μ = ", 2*μ)
+                μ = 2 * μ;
+            end
+            oldNormCy = norm(c(y)[1], Inf)
 
-        "Enforce reduction of infeasability"
-        τReduction = 0.8
-        if norm(c(y)[1], Inf) >  τReduction * oldNormCy;
-            debug(@sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy))
-            debug("... updating μ = 2 * μ = ", 2*μ)
-            μ = 2 * μ;
         end
-        oldNormCy = norm(c(y)[1], Inf)
+
         J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
-        dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
+
+        debug(d2J(-dJ))
+        if gradientDescentOnly
+            dy = -dJ
+            cgIterations = -1
+        else
+            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-4)[1:4]
+        end
 
 	    # check descent direction
 	    if( (dJ'*dy)[1] > 0)
@@ -150,7 +247,7 @@ function opt(Jfunc::Function,  # objective Function
 	    end
 
         # armijo line search (LS) method
-        stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy)
+        stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
 
         if(LSfailed)
             info("STOPPING after line search failed.")

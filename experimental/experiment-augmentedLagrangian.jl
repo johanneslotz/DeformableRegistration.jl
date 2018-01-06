@@ -9,23 +9,26 @@ using Images
  include("./test-helpers.jl")
 
 
-function matchInitialDisplacementAtIndex(x::Array{Float64,1}, initialDisplacement::scaledArray, side; β = 0.01)
-    index = spzeros(initialDisplacement.dimensions...)
-    if (side == "left") || (side == 1)
-        index[:,end-1:end] = 1
-    elseif (side == "right") || (side == 2)
-        index[:,1:2] = 1
-    else
-        throw("side needs to be left or right")
-    end
-    index = vcat(index[:], index[:])
-    f = β * 0.5 * index .* (x - initialDisplacement.data).^2
-    dF = β * spdiagm(index .* (x - initialDisplacement.data),0)
-    return [f, dF]
-end
+# function matchInitialDisplacementAtIndex(x::Array{Float64,1}, initialDisplacement::scaledArray, side; β = 0.01)
+#     index = spzeros(initialDisplacement.dimensions...)
+#     if (side == "left") || (side == 1)
+#         index[:,end-1:end] = 1
+#     elseif (side == "right") || (side == 2)
+#         index[:,1:2] = 1
+#     elseif (side == "boundary")
+#         index[[1, end],:] = 1
+#         index[:,[1, end]] = 1
+#     else
+#         throw("side needs to be left or right")
+#     end
+#     index = vcat(index[:], index[:])
+#     f = β * 0.5 * index .* (x - initialDisplacement.data).^2
+#     dF = β * spdiagm(index .* (x - initialDisplacement.data),0)
+#     return [f, dF]
+# end
 
 function preRegistrationAsBoundaryConstraint(;plot=true,showDeformationImage=false)
-    reg = createCurvatureOperatorCentered
+    reg = createDiffusiveOperatorCentered
     refImg, temImg, options = constructTestImages()
     options.stopping["tolQ"] = 1e-10
 
@@ -78,7 +81,7 @@ function preRegistrationAsBoundaryConstraint(;plot=true,showDeformationImage=fal
     options.levels = [4, 3, 2]
     options.regularizerWeight = 10
     @time fineDisplacement = registerNonParametricConstraint(refImg, temImg, options,regularizerOperator=reg) # regularizerOperator=createDiffusiveOperatorCentered
-    plot ? (figure();  visualizeResults(refImg, plotTemImg, displacement= initialDisplacement, showDeformationImage=showDeformationImage, suptitle="Fine full registration", filename = "resultImg-fine.png");) : 0
+    plot ? (figure();  visualizeResults(refImg, plotTemImg, displacement= fineDisplacement, showDeformationImage=showDeformationImage, suptitle="Fine full registration", filename = "resultImg-fine.png");) : 0
     ssdFine = ssdDistance(refImg, temImg, (fineDisplacement+getCellCenteredGrid(refImg)).data, doDerivative=true)[1]
 
     @printf("\n")
@@ -119,7 +122,7 @@ patch w/ constraints:  %3.3e
 patch free:            %3.3e
 fine full registration %3.3e\n",
 norm(initialDisplacement.data - fineDisplacement.data),
-norm(dispalcement_constraint.data - fineDisplacement.data),
+norm(displacement_constraint.data - fineDisplacement.data),
 norm(displacement_free.data - fineDisplacement.data),
 norm(fineDisplacement.data - fineDisplacement.data))
 
