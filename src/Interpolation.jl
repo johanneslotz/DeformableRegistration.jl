@@ -21,7 +21,7 @@ end
 function interpolateImage(
     I::regImage,transformedGrid::Array{Float64,1};
     doDerivative=false,interpolationScheme=InterpLinearFast)
-
+    @assert prod(size(I.data.data))==length(transformedGrid)/2
     return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid, size(I.data);
                             doDerivative=doDerivative,interpolationScheme=interpolationScheme)
 end

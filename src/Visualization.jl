@@ -46,7 +46,7 @@ end
 
 function setFigSize()
     f = PyPlot.gcf()
-    f["set_size_inches"](12,7)
+    f["set_size_inches"](10,6)
     f["set_dpi"](150)
 end
 
@@ -57,7 +57,7 @@ function visualizeResults(referenceImage,templateImage;
                             referenceImage.voxelsize,
                             referenceImage.shift),
                           affineParameters=[1,0,0,0,1,0.0],
-                          numberOfGridLines = 20,
+                          numberOfGridLines = 40,
                           showDeformationImage = false,
                           suptitle = "", cmap = "gray", filename = "")
 

@@ -44,5 +44,7 @@ end
 function checkErrorDecay(errquad::Vector)
   errorReduction = log10.(errquad[1:end-1]./errquad[2:end])
   errorReduction[isinf.(errorReduction)]=1
+  Logging.debug("# errorReduction.>1.7 = ", sum(errorReduction.>1.7))
+  Logging.debug("sum(errorReduction...) = ", sum(errorReduction[errorReduction.>1.7]), "   (needs >6)")
   return sum(errorReduction[errorReduction.>1.7])>6
 end

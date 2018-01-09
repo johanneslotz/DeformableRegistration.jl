@@ -19,11 +19,16 @@ end
 import Base.+
 import Base.-
 import Base.*
+import Base.size
 
 function +(a::scaledArray, b::scaledArray)
     @assert a.voxelsize == b.voxelsize "Array's world matrices must match"
     @assert a.shift == b.shift "Array's world matrices must match"
     return(scaledArray(a.data+b.data, a.dimensions, a.voxelsize, a.shift))
+end
+
+function +(a::scaledArray, b::Array{Float64,1}) # for derivative check
+    return(scaledArray(a.data+b, a.dimensions, a.voxelsize, a.shift))
 end
 
 function -(a::scaledArray, b::scaledArray)
@@ -34,6 +39,10 @@ function *(s::Number, a::scaledArray)
     b = deepcopy(a)
     b.data[:] = s * b.data[:]
     return b
+end
+
+function size(a::scaledArray)
+    return size(a.data)
 end
 
 function getCellCenteredGrid(I::regImage)

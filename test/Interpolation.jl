@@ -2,6 +2,7 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation
  using Base.Test
  using Interpolations: BSpline, Linear, Cubic, Free
  using Logging
+ Logging.configure(level=INFO)
 
 @testset "Interpolation" begin
 ##
@@ -16,18 +17,18 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation
     deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
     deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
     transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-    transformedImageOnly = interpolateImage(img,transformedGrid)
+    transformedImageOnly,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true)
     transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true)
     transformedImageRef,dY_transformedImageRef,dX_transformedImageRef = interpolateImage(img,transformedGrid,doDerivative=true,interpolationScheme=BSpline(Linear()))
 
-    ##using PyPlot
+    ## using PyPlot
     #dY_transformedImage = reshape(dY_transformedImage, size(img.data))
     #dY_transformedImageRef = reshape(dY_transformedImageRef, size(img.data))
     #imshow(dY_transformedImage-dY_transformedImageRef)
-    @test norm(transformedImageOnly - transformedImageRef) ≈ 0 atol=0.5
+    @test norm(transformedImageOnly - transformedImageRef) < 1.0
     @test transformedImageOnly[1:10] ≈ transformedImageRef[1:10]
 
-    @test norm(transformedImage - transformedImageRef) ≈ 0  atol=0.5
+    @test norm(transformedImage - transformedImageRef) < 1.0
     @test transformedImage[1:10] ≈ transformedImageRef[1:10]
 
     @test norm(dY_transformedImage - dY_transformedImageRef) ≈ 0 atol=20
@@ -110,8 +111,8 @@ end
 
 
     if Logging.LogLevel == Logging.DEBUG
-    #using PyPlot
-    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    using PyPlot
+    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
     end
 
     @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 20
@@ -132,7 +133,7 @@ end
 
     if Logging.LogLevel == Logging.DEBUG
     #using PyPlot
-    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data, clim=[0,1])
+    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
     end
     @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 10
 end
