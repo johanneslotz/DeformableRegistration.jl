@@ -5,7 +5,7 @@ using Images
  using DeformableRegistration.regOptions
  using Base.Test
  using DeformableRegistration.Optimization.augmentedLagrangian
- Logging.configure(level=Logging.DEBUG)
+ Logging.configure(level=Logging.INFO)
 ##
 
 include("./fixedGridRegistration.jl")
@@ -25,10 +25,22 @@ include("./fixedGridRegistration.jl")
                          # options::regOptions=regOptions(),centeredGrid::scaledArray=scaledArray(zeros(1),(0,),[0,],[0,])))
     @test functionValue == 0
 
+
     imageData = rand(n,n)
     referenceImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
     templateImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
     transformedGrid = getCellCenteredGrid(referenceImage)
+    # voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridSize::Tuple{Int64,Int64}
+    functionValue,dFunctionValue,d2FunctionValue,d_transformedImage =
+        ssdDistanceArbitraryGrid(referenceImage, templateImage, transformedGrid)
+    @test functionValue == 0
+
+    imageData = rand(n,n)
+    referenceImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
+    templateImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
+    transformedGrid = getCellCenteredGrid(restrictResolutionToLevel(referenceImage,2))
+    debug("-------- transformedGrid")
+    debug(transformedGrid)
     # voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridSize::Tuple{Int64,Int64}
     functionValue,dFunctionValue,d2FunctionValue,d_transformedImage =
         ssdDistanceArbitraryGrid(referenceImage, templateImage, transformedGrid)
@@ -52,43 +64,56 @@ end
                          # doDerivative::Bool=false,doHessian::Bool=false,
                          # options::regOptions=regOptions(),centeredGrid::scaledArray=scaledArray(zeros(1),(0,),[0,],[0,])))
     @test functionValue == 0
-    @test size(dFunctionValue) == prod(gridSize)*2
+    @test size(dFunctionValue)... == prod(gridSize)*2
 
 end
 
 
-@testset "constrainmts are met" begin
-    x = ones(10)*2;
-    index = zeros(size(x))
-    index[1:3] = 1
-    #x[index.==1]=0
-    function zerosConstraintAtIndex(x::Array{Float64,1}, index)
-        f = 0.5 * x .* x
-        f[.!(index.==1)] = 0
-        dF = spdiagm(x .* index,0)
-        return [f, dF]
-    end
-    c(x) = zerosConstraintAtIndex(x, index)
-
-    function J(x; doDerivative=true, doHessian=true)
-        r = (x - Array(1:10))
-        f = 0.5 * (r'*r)
-        df = r
-        d2F = speye(10)
-        return [f, df, d2F]
+@testset "smoothing" begin
+    for x = [ones(10,11)*2, rand(63,26)]
+        x = ones(10,11)*2;
+        xnew = smoothArray(x)
+        @test sum(x[:])  == sum(xnew[:])
     end
 
-    options = regOptions()
-    options.maxIterCG =100
-    options.maxIterGaussNewton =100
-    options.stopping["tolQ"]= 1e-20
-    yopt = optimizeGaussNewtonAugmentedLagrangian(J, x, options, constraint=c, constraintObjectiveFunction=augmentedLagrangian)
-    debug(@sprintf("... constraint norm:         %1.3e", norm(c(yopt)[1])))
-    debug(@sprintf("... objective function norm: %1.3e", J(yopt)[1]))
-    y_true = Array(1:10)
-    y_true[index.==1] = 0
-    debug(         "... error:                   ",yopt - y_true)
-    debug(@sprintf("... mean error:              %1.3e",mean(abs.(yopt - y_true))))
-    debug(@sprintf("... error norm:              %1.3e",norm(yopt - y_true)))
-    @test norm(yopt - y_true)^2 < 0.15
+end
+
+@testset "ssdResampling_derivatives" begin
+
+include("../test/helpers/checkDerivative.jl")
+
+
+refImg = createImage(100*rand(50,60))
+ refImg.data.data = smoothArray(refImg.data.data,11)
+# measure distance and check derivative (nonparametric)
+centeredGrid = getCellCenteredGrid(refImg)
+ centeredGrid.data[:] = centeredGrid.data[:] + 0.3 *rand(size(centeredGrid.data))
+ options = regOptions()
+ options.matrixFree = true;
+ D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+ Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+ errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+ @test checkErrorDecay(errquad)
+
+gridSize = (30,30)
+ voxelsize = size(refImg.data)./gridSize[1]
+ vs = voxelsize
+ centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+ centeredGrid.data[:] = centeredGrid.data[:] + 0.3 *rand(size(centeredGrid.data))
+  D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+  Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+  errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+  @test checkErrorDecay(errquad)
+
+gridSize = (10,10)
+  voxelsize = size(refImg.data)./gridSize[1]
+  vs = voxelsize
+  centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+  centeredGrid.data[:] = centeredGrid.data[:] + 0.1/vs[1] *rand(size(centeredGrid.data))
+   D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+   Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+   errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+   @test checkErrorDecay(errquad)
+
+
 end
