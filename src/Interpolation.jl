@@ -42,7 +42,7 @@ function interpolateArray(
   imageIntNoScaling = interpolate(data, interpolationScheme, OnCell())
 
   xRange = shift[1]+voxelsize[1]/2:voxelsize[1]:shift[1]+voxelsize[1]*(size(data,1))
-  yRange = shift[2]+voxelsize[1]/2:voxelsize[2]:shift[2]+voxelsize[2]*(size(data,2))
+  yRange = shift[2]+voxelsize[2]/2:voxelsize[2]:shift[2]+voxelsize[2]*(size(data,2))
 
   imageIntTmp = extrapolate(imageIntNoScaling, 0.0)
   imageInt = scale(imageIntTmp, xRange, yRange)
@@ -134,6 +134,7 @@ end
 
 
 function interpolateDeformationField(deformationField::scaledArray, newPoints::scaledArray; interpolationScheme = InterpLinearFast)# BSpline(Linear())
+
     dims = deformationField.dimensions
     deformationFieldX = reshape(deformationField.data[1:prod(dims)], dims[1], dims[2])
     deformationFieldY = reshape(deformationField.data[prod(dims)+1:end], dims[1], dims[2])
