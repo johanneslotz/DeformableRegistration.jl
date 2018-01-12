@@ -70,50 +70,100 @@ end
 
 
 @testset "smoothing" begin
-    for x = [ones(10,11)*2, rand(63,26)]
-        x = ones(10,11)*2;
-        xnew = smoothArray(x)
-        @test sum(x[:])  == sum(xnew[:])
+    for k=[3,5,7,11]
+        for x = [ones(10,11)*2, rand(63,26)]
+            x = ones(10,11)*2;
+            xnew = smoothArray(x,k, Float64(k))
+            @test sum(x[:])  == sum(xnew[:])
+        end
     end
 
 end
 
+##
 @testset "ssdResampling_derivatives" begin
 
 include("../test/helpers/checkDerivative.jl")
 
+smoothrand(x::Array{Float64,1}) = smoothArray(rand(size(x)),5, 5.0)
 
 refImg = createImage(100*rand(50,60))
- refImg.data.data = smoothArray(refImg.data.data,11)
-# measure distance and check derivative (nonparametric)
-centeredGrid = getCellCenteredGrid(refImg)
- centeredGrid.data[:] = centeredGrid.data[:] + 0.3 *rand(size(centeredGrid.data))
- options = regOptions()
- options.matrixFree = true;
- D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
- Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
- errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
- @test checkErrorDecay(errquad)
+    refImg.data.data = smoothArray(refImg.data.data,11, 11.0)
+    centeredGrid = getCellCenteredGrid(refImg)
+    centeredGrid.data[:] = centeredGrid.data[:] + 10 *smoothrand(centeredGrid.data)
+    options = regOptions()
+    options.matrixFree = true;
+    D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+    @test checkErrorDecay(errquad)
 
-gridSize = (30,30)
- voxelsize = size(refImg.data)./gridSize[1]
- vs = voxelsize
- centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
- centeredGrid.data[:] = centeredGrid.data[:] + 0.3 *rand(size(centeredGrid.data))
-  D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
-  Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
-  errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
-  @test checkErrorDecay(errquad)
+
+gridSize = (90,60)
+    voxelsize = size(refImg.data)./gridSize
+    vs = voxelsize
+    centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+    centeredGrid.data[:] = centeredGrid.data[:] + 10 *smoothrand(centeredGrid.data)
+    D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+    #@test
+    checkErrorDecay(errquad)
+
+gridSize = (25,30)
+    voxelsize = size(refImg.data)./gridSize
+    vs = voxelsize
+    centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+    centeredGrid.data[:] = centeredGrid.data[:] + 10 * smoothrand(centeredGrid.data)
+    D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+    @test checkErrorDecay(errquad)
+
+gridSize = (25,30)
+    vs = size(refImg.data)./gridSize
+    centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+    disp = 10 * ones(gridSize)
+    disp[4:6,4:6]=0.0
+    testGrid = 0.0 * centeredGrid + vcat(disp[:], disp[:])
+    testGridInterp = interpolateDeformationField(testGrid, getCellCenteredGrid(refImg), interpolationScheme=BSpline(Constant()))
+    testGridInterp2 = interpolateDeformationField(testGridInterp, getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize), interpolationScheme=BSpline(Linear()))
+
+    # using PyPlot
+    # figure()
+    # subplot(1,3,1)
+    # imshow(reshape(testGrid.data[1:Int(end/2)],testGrid.dimensions))
+    # clim([0,10])
+    # subplot(1,3,2)
+    # imshow(reshape(testGridInterp.data[1:Int(end/2)],testGridInterp.dimensions))
+    # clim([0,10])
+    # subplot(1,3,3)
+    # imshow(reshape(testGridInterp2.data[1:Int(end/2)],testGridInterp2.dimensions))
+    # clim([0,10])
+
+    @test sum(testGrid.data[:]) ≈ sum(testGridInterp2.data[:]) atol=0.1
+
+
+gridSize = (45,45)
+    voxelsize = size(refImg.data)./gridSize[1]
+    vs = voxelsize
+    centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+    x= 0.3 * smoothrand(centeredGrid.data)
+    centeredGrid.data[:] = centeredGrid.data[:] + x
+    @profile D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+    @time errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid, smoothOffset=true )
+    @test checkErrorDecay(errquad)
 
 gridSize = (10,10)
-  voxelsize = size(refImg.data)./gridSize[1]
-  vs = voxelsize
-  centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
-  centeredGrid.data[:] = centeredGrid.data[:] + 0.1/vs[1] *rand(size(centeredGrid.data))
-   D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
-   Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
-   errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
-   @test checkErrorDecay(errquad)
-
+    voxelsize = size(refImg.data)./gridSize[1]
+    vs = voxelsize
+    centeredGrid = getCellCenteredGrid([vs[1]; vs[2]],[0.0,0.0],gridSize)
+    centeredGrid.data[:] = centeredGrid.data[:] + 1 *smoothrand(centeredGrid.data)
+    D,dD,d2D = ssdDistanceArbitraryGrid(refImg,refImg,centeredGrid,doDerivative=true,doHessian=true,options=options)
+    Dfunc(x) = ssdDistanceArbitraryGrid(refImg,refImg,x)[1]
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid)
+    @test checkErrorDecay(errquad)
 
 end

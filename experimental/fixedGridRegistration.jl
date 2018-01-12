@@ -6,92 +6,7 @@ using DeformableRegistration.regOptions
 using Interpolations
 import DeformableRegistration.Interpolation.interpolateArray
 include("../src/helpers/objectiveFunctionCreation.jl")
-
-#include("../src/distances/ssdDistance.jl")
-import DeformableRegistration.Distance.ssdDerivativesMatrixBased
-
-
-function smoothArray(a::Array{Float64,1}, kernelSize::Int)
-    a_smooth = zeros(size(a))
-    halfKernelSize = Int((kernelSize+1)/2)
-    for i = 1:halfKernelSize
-        a_smooth[i] = sum(a[1:i])/i
-        a_smooth[end-i+1] = sum(a[end-i+1:end])/i
-    end
-    for i=halfKernelSize:(length(a)-halfKernelSize)
-        a_smooth[i] = sum(a[(i-halfKernelSize+1):(i+halfKernelSize-1)])/kernelSize
-    end
-    return a_smooth
-end
-
-function smoothArray(a::Array{Float64,2}, kernelSize::Int)
-    a_smooth = zeros(size(a))
-    for i = 1:size(a,1)
-        a_smooth[i,:] = smoothArray(a[i,:], kernelSize)
-    end
-    for i = 1:size(a,2)
-        a_smooth[:,i] = smoothArray(a_smooth[:,i], kernelSize)
-    end
-    return a_smooth
-end
-
-function sampleArrayToGridWithSmoothing(a::scaledArray, newGrid::scaledArray)
-    @assert (a.dimensions[1] > newGrid.dimensions[1] &&
-        a.dimensions[2] > newGrid.dimensions[2]) "new Grid has to be coarser then current grid"
-
-    kernelSize = Int(round(a.dimensions[1]/newGrid.dimensions[1]))
-    if mod(kernelSize,2) == 0; kernelSize = kernelSize + 1; end
-    debug("kernelsize = ", kernelSize)
-    adata = reshape(a.data, a.dimensions)
-    adata = smoothArray(adata, kernelSize)
-
-    return interpolateArray(adata, a.voxelsize, a.shift, newGrid.data, newGrid.dimensions)
-end
-
-function ssdDistanceArbitraryGrid(referenceImage::regImage,templateImage::regImage,
-                     transformedGrid::scaledArray;
-                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::scaledArray=scaledArray(zeros(1),(0,),[0,],[0,]))
-
-  parametricOnly = options.parametricOnly
-
-  # check centered grid
-  if(size(centeredGrid.data)[1]==1)
-    centeredGrid = getCellCenteredGrid(referenceImage)
-  end
-
-  transformedGridUpsampled = interpolateDeformationField(transformedGrid-getCellCenteredGrid(transformedGrid), centeredGrid) + centeredGrid
-
-  # interpolation of the template image at transformed grid points
-  transformedImage, dX_transformedImage, dY_transformedImage =
-      interpolateImage(templateImage,transformedGridUpsampled,doDerivative=true)
-
-  # measure the ssd distance
-  residual = Array(transformedImage .- referenceImage.data)[:]
-
-  if transformedGrid.dimensions[1] < centeredGrid.dimensions[1] && transformedGrid.dimensions[2] < centeredGrid.dimensions[2]
-      debug("... resampling to grid resolution")
-      dX_transformedImage = scaledArray(dX_transformedImage, centeredGrid.dimensions, centeredGrid.voxelsize, centeredGrid.shift)
-      dX_transformedImage = sampleArrayToGridWithSmoothing(dX_transformedImage, getCellCenteredGrid(transformedGrid))[:]
-      dY_transformedImage = scaledArray(dY_transformedImage, centeredGrid.dimensions, centeredGrid.voxelsize, centeredGrid.shift)
-      dY_transformedImage = sampleArrayToGridWithSmoothing(dY_transformedImage, getCellCenteredGrid(transformedGrid))[:]
-      residual = scaledArray(residual,  centeredGrid.dimensions, centeredGrid.voxelsize, centeredGrid.shift)
-      residual = sampleArrayToGridWithSmoothing(residual, getCellCenteredGrid(transformedGrid))[:]
-  end
-
-  prodH = prod(transformedGrid.voxelsize)
-  functionValue = 0.5 * prodH * residual' * residual
-  N = prod(transformedGrid.dimensions) # product of sizes
-
-  if(doDerivative)
-      dFunctionValue,d2FunctionValue = DeformableRegistration.Distance.ssdDerivativesMatrixFree(dX_transformedImage,dY_transformedImage,residual,[1.0],prodH,N,false,doDerivative,doHessian)
-  else
-      dFunctionValue,d2FunctionValue = 0,0
-  end
-
-  return [functionValue,dFunctionValue,d2FunctionValue,(dX_transformedImage,dY_transformedImage)]
-
-end
-
+include("ssdDistanceCoarseGrid.jl")
 
 function registerNonParametricFixedGridResolution(referenceImage, templateImage, options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
@@ -99,15 +14,15 @@ function registerNonParametricFixedGridResolution(referenceImage, templateImage,
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
                                      constraint = 0,
-                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false)#BSpline(Linear()))
+                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false, gridLevel=4)#BSpline(Linear()))
 
   doConstraints = constraint != 0
 
   affineParametersInitial = affineParameters
   options.parametricOnly = false
   referenceGrid = []; deformedGrid = []; imageSize = [];
-  R_level1 = restrictResolutionToLevel(referenceImage, options.levels[2])
-  T_level1 = restrictResolutionToLevel(templateImage,  options.levels[2])
+  R_level1 = restrictResolutionToLevel(referenceImage, gridLevel)
+  T_level1 = restrictResolutionToLevel(templateImage,  gridLevel)
   gridVoxelSize = R_level1.voxelsize
   regularizerMatrix = regularizerOperator(gridVoxelSize, getSize(R_level1))
 
