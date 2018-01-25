@@ -62,7 +62,7 @@ end
     options.parametricOnly = true
     D,dD,d2D = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint).data,doDerivative=true,doHessian=true,options=options)
     Dfunc(p) = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,p).data,options=options)[1]
-    errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=true)
+    errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=false)
     @test checkErrorDecay(errquad)
 
     evaluationPoint = [1,0,0,0,1,0.0]+0.1*rand(6)
@@ -74,7 +74,7 @@ end
     options.parametricOnly = true
     D,dD,d2D = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,evaluationPoint).data,doDerivative=true,doHessian=true,options=options)
     Dfunc(p) = ngfDistance(refImg,refImg,transformGridAffine(centeredGrid,p).data,options=options)[1]
-    errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=true)
+    errlin,errquad = checkDerivative(Dfunc,dD',evaluationPoint,doPlot=false)
     @test checkErrorDecay(errquad)
 end
 
@@ -91,7 +91,7 @@ end
     options.parametricOnly = false
     D,dD,d2D = ngfDistance(refImg,refImg,centeredGrid.data,doDerivative=true,doHessian=true,options=options)
     Dfunc(grid) = ngfDistance(refImg,refImg,grid,options=options)[1]
-    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid.data,doPlot=true)
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid.data,doPlot=false)
     @test checkErrorDecay(errquad)
 
     centeredGrid = getCellCenteredGrid(refImg)
@@ -103,7 +103,7 @@ end
     options.parametricOnly = false
     D,dD,d2D = ngfDistance(refImg,refImg,centeredGrid.data,doDerivative=true,doHessian=true,options=options)
     Dfunc(grid) = ngfDistance(refImg,refImg,grid,options=options)[1]
-    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid.data,doPlot=true)
+    errlin,errquad = checkDerivative(Dfunc,dD',centeredGrid.data,doPlot=false)
     @test checkErrorDecay(errquad)
 
 end
