@@ -13,8 +13,6 @@ struct regImage
            shift::Array{Float64, 1}
 end
 
-
-
 # load image and convert it into gray image
 function loadImage(pathToFile;
                    voxelsize = [1.0,1.0], shift = [0.0, 0.0])
