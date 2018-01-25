@@ -9,6 +9,11 @@
 # [1]: http://julialang.org/
 # [2]: http://julia.readthedocs.org/
 
+
+before_script:
+- apt update
+- apt install bzip2
+
 # Below is the template to run your tests in Julia
 .test_template: &test_definition
   # Uncomment below if you would like to run the tests on specific references
@@ -19,17 +24,22 @@
   script:
     # Let's run the tests. Substitute `coverage = false` below, if you do not
     # want coverage results.
-    - /opt/julia/bin/julia -e 'Pkg.clone(pwd()); Pkg.test("DeformableRegistration",
+    - julia -e 'Pkg.clone(pwd()); Pkg.test("DeformableRegistration",
       coverage = true)'
     # Comment out below if you do not want coverage results.
-    - /opt/julia/bin/julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("DeformableRegistration"));
+    - julia -e 'Pkg.add("Coverage"); cd(Pkg.dir("DeformableRegistration"));
       using Coverage; cl, tl = get_summary(process_folder());
       println("(", cl/tl*100, "%) covered")'
 
 # Name a test and select an appropriate image.
-test:0.6.0-dev:
-  image: julialang/julia:v0.6.0-dev
+#test:0.6.0-dev:
+#  image: julialang/julia:v0.6.0-dev
+#  <<: *test_definition
+
+test:0.6.2-dev:
+  image: julia:0.6.2
   <<: *test_definition
+
 
 # REMARK: Do not forget to enable the coverage feature for your project, if you
 # are using code coverage reporting above. This can be done by
