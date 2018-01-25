@@ -9,12 +9,21 @@ include("helpers/objectiveFunctionCreation.jl")
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton, optimizeGaussNewtonAugmentedLagrangian
 
 
+# function augmentedLagrangian(x, λ, μ, c::Function)
+#     m = length(x)
+#     F = - λ'*c(x)[1] + μ/2 * c(x)[1]'*c(x)[1]
+#     dF = - c(x)[2]*λ   + μ * c(x)[2]'*c(x)[1]
+#     d2F = spzeros(m,m)#pdiagm(-λ, 0)  +  μ * c(x)[2]'*c(x)[2] + μ * spdiagm(c(x)[1],0)
+#     return [F, dF, d2F]
+# end
+
 function augmentedLagrangian(x, λ, μ, c::Function)
     m = length(x)
-    F = - λ'*c(x)[1] + μ/2 * c(x)[1]'*c(x)[1]
-    dF = - c(x)[2]*λ   + μ * c(x)[2]'*c(x)[1]
-    d2F = spzeros(m,m)#pdiagm(-λ, 0)  +  μ * c(x)[2]'*c(x)[2] + μ * spdiagm(c(x)[1],0)
-    return [F, dF, d2F]
+    cx, ∇c = c(x)
+    F = - λ' * cx + μ/2 * cx' * cx
+    ∇F = - ∇c * λ   + μ * ∇c' * cx
+    ∇2F(y) = μ * ∇c' * ∇c * y
+    return [F, ∇F, ∇2F]
 end
 
 """
