@@ -31,6 +31,10 @@ function +(a::scaledArray, b::Array{Float64,1}) # for derivative check
     return(scaledArray(a.data+b, a.dimensions, a.voxelsize, a.shift))
 end
 
+function +(b::Number, a::scaledArray ) # for derivative check
+    return(scaledArray(a.data+b, a.dimensions, a.voxelsize, a.shift))
+end
+
 function -(a::scaledArray, b::scaledArray)
     return(a + (-1 * b))
 end
