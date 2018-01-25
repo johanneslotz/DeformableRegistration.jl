@@ -5,3 +5,5 @@ PyCall
 PyPlot
 Logging
 Stats
+ImageMagick
+KrylovMethods
