@@ -31,3 +31,12 @@ function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64)
     end
     return a_smooth
 end
+
+function smoothArray(a::scaledArray, kernelSize::Int, width::Float64)
+    x = reshape(a.data[1:Int(end/2)], a.dimensions)
+    xs = smoothArray(x, kernelSize, width)[:]
+    y = reshape(a.data[1+Int(end/2):end], a.dimensions)
+    ys = smoothArray(y, kernelSize, width)[:]
+
+    return scaledArray(vcat(xs,ys), a.dimensions, a.voxelsize, a.shift)
+end
