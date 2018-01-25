@@ -38,6 +38,77 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation
     @test dX_transformedImage[1:10] ≈ dX_transformedImageRef[1:10]
 end
 
+@testset "Interpolation: interpolation with target grid" begin
+    ## load reference image
+
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    img = loadImage(testimage)
+    img = restrictResolutionToLevel(img,1)
+    centeredGrid = getCellCenteredGrid(img)
+    affineParameters = [0.5,0.4,50,0,0.5,100]
+    deformationField = zeros(prod(size(img.data))*2)
+    deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
+    deformationField = scaledArray(deformationField, size(img.data), img.voxelsize, img.shift)
+    transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
+
+    targetGrid = getCellCenteredGrid(deformationField)
+
+
+    transformedImage,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true, interpolationScheme=BSpline(Linear()))
+    tic()
+    transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true, interpolationScheme=BSpline(Linear()))
+    timing = toc()
+
+    @test timing < 0.5
+    @test norm(transformedImage - transformedImageTG) < 1e-10
+    @test norm(dx - dxTG) < 1e-10
+    @test norm(dy - dyTG) < 1e-10
+
+    newSize = size(img.data)./2
+    newSize = (Int(ceil(newSize[1])), Int(ceil(newSize[2])))
+    targetGrid = getCellCenteredGrid(img.voxelsize*2, img.shift, newSize)
+    @time transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true)
+
+    transformedImageCoarse = transformedImage[1:2:end,1:2:end]
+    @test norm(transformedImageCoarse[:] - transformedImageTG[:]) < 4
+end
+
+
+@testset "Interpolation: interpolation of part of image with target grid" begin
+    ## load reference image
+
+    testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+    img = loadImage(testimage)
+    img = restrictResolutionToLevel(img,1)
+    centeredGrid = getCellCenteredGrid(img.voxelsize*3, img.shift, (200,200))
+    affineParameters = [0.5,0.4,25,0,0.5,50]
+    transformedGrid = transformGridAffine(centeredGrid,affineParameters)
+
+    # using PyPlot
+
+
+    @time transformedImage,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true, interpolationScheme=BSpline(Linear()))
+    # subplot(221)
+    # imshow(transformedImage)
+    # subplot(222)
+    # imshow(reshape(dx[1:200*200],transformedGrid.dimensions))
+
+    targetGrid = getCellCenteredGrid(img.voxelsize*6, img.shift, (100,100))
+    @time transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true)
+    # subplot(223)
+    # imshow(transformedImageTG)
+    # subplot(224)
+    # imshow(reshape(dxTG[1:100*100],targetGrid.dimensions))
+    @test norm(transformedImage[1:2:200,1:2:200] - transformedImageTG) < 1
+
+    targetGrid = getCellCenteredGrid(img.voxelsize*3, img.shift, (100,100))
+    @time transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true)
+    @test norm(transformedImage[1:100,1:100] - transformedImageTG) < 1
+
+
+end
+
+
 ##
 @testset "Interpolation: check derivatives" begin
     include("helpers/checkDerivative.jl")
@@ -105,8 +176,9 @@ end
     temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
     temImg = createImage(temImg)
     ##
-
-    temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Cubic(Free())))
+    targetGrid = getCellCenteredGrid(refImg)
+    targetGrid.data[:] = targetGrid.data[:] - 0
+    temImg2 = interpolateImage(refImg,transformedGrid,targetGrid,interpolationScheme=BSpline(Cubic(Free())))
     temImg2 = createImage(temImg2)
 
 
@@ -115,7 +187,12 @@ end
     figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
     end
 
-    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 20
+    # border pixels differe in both interpolation schemes, most likely due
+    # to InterpLinearFast padding the image too far...
+    # allowing 2 pixels around the border of the image to be different
+    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 32
+    nDifferentPixels = sum(abs.(Array(temImg2.data)[:]-temImg.data[:]) .> 0.01)
+    @test nDifferentPixels < maximum(size(refImg.data))*8
 end
 
 @testset "compare different interpolation types on real data" begin
@@ -135,7 +212,13 @@ end
     #using PyPlot
     #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
     end
-    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 10
+
+    # border pixels differe in both interpolation schemes, most likely due
+    # to InterpLinearFast padding the image too far...
+    # allowing 2 pixels around the border of the image to be different
+    @test norm(Array(temImg2.data)[:]-temImg.data[:])  < 32
+    nDifferentPixels = sum(abs.(Array(temImg2.data)[:]-temImg.data[:]) .> 0.01)
+    @test nDifferentPixels < maximum(size(refImg.data))*4
 end
 
 ##

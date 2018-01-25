@@ -3,7 +3,7 @@ using Images
 using Interpolations
 import Interpolations.Throw # see https://github.com/JuliaMath/Interpolations.jl/issues/127
 
-
+using Logging.debug
 using DeformableRegistration.Transformation
 using DeformableRegistration.ImageProcessing
 
@@ -19,6 +19,14 @@ function interpolateImage(
 end
 
 function interpolateImage(
+    I::regImage,transformedGrid::scaledArray, targetGrid::scaledArray;
+    doDerivative=false,interpolationScheme=BSpline(Cubic(Line())))
+
+    return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid, targetGrid;
+                            doDerivative=doDerivative,interpolationScheme=interpolationScheme)
+end
+
+function interpolateImage(
     I::regImage,transformedGrid::Array{Float64,1};
     doDerivative=false,interpolationScheme=InterpLinearFast)
     @assert prod(size(I.data.data))==length(transformedGrid)/2
@@ -30,6 +38,8 @@ function interpolateArray(
     data::Array{Float64,2}, voxelsize::Array{Float64,1},
     shift::Array{Float64,1}, transformedGrid::Array{Float64,1}, newDimensions::Tuple{Vararg{Int64}};
     doDerivative=false, interpolationScheme=InterpLinearFast)
+
+  debug("Calling interpolateArray without targetGrid will be removed in a future version.")
 
   # use faster linear interpolation as default
   if(interpolationScheme == InterpLinearFast)
@@ -60,13 +70,16 @@ function interpolateArray(
     dY_transformedImage = zeros(numberOfPoints)
     dX_transformedImage = zeros(numberOfPoints)
     for i=1:numberOfPoints
-        try # zero if outside boundary (extrapolate(..., 0.0) does not work with gradient)
-            dX_transformedImage[i],dY_transformedImage[i] = gradient(imageInt,transformedGrid[i],transformedGrid[i+numberOfPoints])
-        catch x
-            if isa(x, BoundsError)
-                #print(".")
-            else
-                throw(x)
+        if (xRange[1] <= transformedGrid[i] < xRange[end] + voxelsize[1]) &&
+            (yRange[1] <= transformedGrid[i+numberOfPoints] < yRange[end] + voxelsize[2])
+            try # zero if outside boundary (extrapolate(..., 0.0) does not work with gradient)
+                dX_transformedImage[i],dY_transformedImage[i] = gradient(imageInt,transformedGrid[i],transformedGrid[i+numberOfPoints])
+            catch x
+                if isa(x, BoundsError)
+                    #print(".")
+                else
+                    throw(x)
+                end
             end
         end
     end
@@ -74,6 +87,70 @@ function interpolateArray(
   end
   return reshape(transformedImage, newDimensions)
 end
+##
+function interpolateArray(
+    data::Array{Float64,2}, voxelsize::Array{Float64,1},
+    shift::Array{Float64,1}, transformedGrid::scaledArray,
+    targetGrid::scaledArray;
+    doDerivative=false, interpolationScheme=BSpline(Cubic(Line())))
+
+  # use faster linear interpolation as default (not supoported here yet)
+  # if(interpolationScheme == InterpLinearFast)
+  #   return InterpLinearFast(data, voxelsize, shift, transformedGrid, newDimensions, doDerivative=doDerivative)
+  # end
+
+  # determine number of new points, pixel spacing and spatial domain of the image
+  imageIntNoScaling = interpolate(data, interpolationScheme, OnCell())
+
+  xRange = shift[1]+voxelsize[1]/2:voxelsize[1]:shift[1]+voxelsize[1]*(size(data,1))
+  yRange = shift[2]+voxelsize[2]/2:voxelsize[2]:shift[2]+voxelsize[2]*(size(data,2))
+
+  imageIntTmp = extrapolate(imageIntNoScaling, 0.0)
+  imageInt = scale(imageIntTmp, xRange, yRange)
+
+  deformationAtTargetGrid = interpolateDeformationField(
+        transformedGrid-getCellCenteredGrid(transformedGrid),
+        targetGrid) + getCellCenteredGrid(targetGrid)
+
+  numberOfPoints::Int = prod(deformationAtTargetGrid.dimensions)
+
+
+  transformedImage = zeros(numberOfPoints);
+  for i=1:numberOfPoints
+      transformedImage[i] = imageInt[deformationAtTargetGrid.data[i],deformationAtTargetGrid.data[numberOfPoints+i]]
+  end
+  if(doDerivative)
+    imageIntTmp = extrapolate(imageIntNoScaling, Throw())
+    imageInt = scale(imageIntTmp, xRange, yRange)
+
+    dY_transformedImage = zeros(numberOfPoints)
+    dX_transformedImage = zeros(numberOfPoints)
+    for i=1:numberOfPoints
+        # first checking range ourselves (much faster then try-catch but result is different (check for . between comma in output))
+        if (xRange[1] <= deformationAtTargetGrid.data[i] < xRange[end] + voxelsize[1]) &&
+            (yRange[1] <= deformationAtTargetGrid.data[i+numberOfPoints] < yRange[end] + voxelsize[2])
+            try # zero if outside boundary (extrapolate(..., 0.0) does not work with gradient)
+                dX_transformedImage[i],dY_transformedImage[i] = gradient(imageInt,deformationAtTargetGrid.data[i],deformationAtTargetGrid.data[i+numberOfPoints])
+            catch x
+                if isa(x, BoundsError)
+                    #print(".")
+                else
+                    throw(x)
+                end
+            end
+        else
+            #print(",")
+        end
+
+    end
+
+    #println("<- loop over new grid (derivative).")
+
+    return reshape(transformedImage, targetGrid.dimensions), dX_transformedImage, dY_transformedImage
+  end
+  return reshape(transformedImage, targetGrid.dimensions)
+end
+##
 
 function InterpLinearFast(data::Array{Float64,2}, voxelsize::Array{Float64,1}, shift::Array{Float64,1},
                             transformedGrid::Array{Float64,1}, newDimensions::Tuple{Vararg{Int64}};doDerivative=false)
