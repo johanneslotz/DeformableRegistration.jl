@@ -33,68 +33,88 @@ Augmented lagrangian implementation following Nocelda & Wright, 2006, p. 515 (Fr
 """
 function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x -> [0, 0, 0]) #no constraint by default,
+                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false) #no constraint by default,
 
     c = constraint
-    L(x, λ, μ; doDerivative=false, doHessian=false) = Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) + augmentedLagrangian(x, λ, μ, c)
+    computeConstraint = ! (c == x -> [0, 0, 0])
+
+    L(x, λ, μ; doDerivative=true, doHessian=true) = (c(y) != [0, 0, 0]) ? Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) +
+     augmentedLagrangian(x, λ, μ, c) : Jfunc(x, doDerivative=doDerivative, doHessian=doHessian)
 
     λ = spzeros(size(y)...)
     μ = 1
 
     JRef = L(yReference, λ, μ)[1]
-    debug(@sprintf("... JRef = %3.3e", JRef))
     JOld = NaN
-    oldNormCy = norm(c(y)[1], Inf)
+    oldNormCy = 99 * norm(c(y)[1], Inf)
+
 
     for iter = 1:options.maxIterGaussNewton
+     if computeConstraint
+         λ = λ - μ * c(y)[1]
 
-        λ = λ - μ * c(y)[1]
-        if norm(c(y)[1], Inf) >  1.2 * oldNormCy;
-            debug("... norm(c(y)[1], Inf) >  0.5 * oldNormCy: ",   @sprintf("%3.3e > %3.3e",norm(c(y)[1], Inf), oldNormCy))
-            debug("... updating μ = 2 * μ = ", 2*μ)
-            μ = 2 * μ;
-        end
-        oldNormCy = norm(c(y)[1], Inf)
-        J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
-        dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
+         "Enforce reduction of infeasability"
+         τReduction = 0.8
+         if norm(c(y)[1], Inf) >  τReduction * oldNormCy;
+             debug(@sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy))
+             debug("... updating μ = 2 * μ = ", 2*μ)
+             μ = 2 * μ;
+         end
+         oldNormCy = norm(c(y)[1], Inf)
 
-	    # check descent direction
-	    if( (dJ'*dy)[1] > 0)
-            dy = -dy
-            warn("Changing sign of computed descent direction. This is a suspicious move.")
-	    end
+     end
 
-        # armijo line search (LS) method
-        stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy)
+     @time J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
 
-        #if(LSfailed)
-        #    break
-        #end
+     debug(d2J(-dJ))
+     if gradientDescentOnly
+         dy = -dJ
+         cgIterations = -1
+     else
+         @time dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-3)[1:4]
+     end
 
-        # output
-        s = @sprintf("%03d: J %8.4e   λ!=0: %d  |c(y)|= %2.2e  LSiter: %2d   CGiter: %3d   J/Jref: %1.2f", iter, J[1], sum(λ.!=0), norm(c(y)[1], Inf), LSiter, cgIterations, J[1]/JRef[1])
-        info(s)
-        debug("  λ=", λ)
-        debug("  c=", c(y)[1])
-
-
-        # update parameter y
-        y = y + stepLength .* dy
-
-        # stopping criteria
-        if (iter>1)
-            if (checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
-                    tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
-                    tolY = options.stopping["tolY"],    # tolerance: change of the variables
-                    tolG = options.stopping["tolG"],    # tolerance: change of the gradient
-                    tolQ = options.stopping["tolQ"]))   # tolerance: change of quotient)
-                break
-            end
+        # check descent direction
+        if( (dJ'*dy)[1] > 0)
+         dy = -dy
+         warn("Changing sign of computed descent direction. This is a suspicious move.")
         end
 
-        # updating JOld
-        JOld = J[1]
-        info("\n")
+     # armijo line search (LS) method
+     @time stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
+
+     if(LSfailed)
+         info("STOPPING after line search failed.")
+         break
+     end
+
+     # output
+     D, α, S = printFunction(y)
+     s = @sprintf("%03d | D %2.2e | S %2.2e | λ!=0: %d | |c(y)|= %2.2e | μ=%2.2e | LSiter: %2d | CGiter: %3d | J/Jref: %2.2e",
+         iter, D[1], S[1], sum(λ.!=0), norm(c(y)[1], Inf), μ,  LSiter, cgIterations, J[1]/JRef[1],
+         )
+     info(s)
+     debug("  λ=", λ)
+     debug("  c=", c(y)[1])
+
+
+     # update parameter y
+     y = y + stepLength .* dy
+
+     # stopping criteria
+     @time if (iter>1)
+         if (checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
+                 tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
+                 tolY = options.stopping["tolY"],    # tolerance: change of the variables
+                 tolG = options.stopping["tolG"],    # tolerance: change of the gradient
+                 tolQ = options.stopping["tolQ"]))   # tolerance: change of quotient)
+             break
+         end
+     end
+
+     # updating JOld
+     JOld = J[1]
+     info("\n")
     end
 
     return y
@@ -201,6 +221,17 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
     return stepLength,LSiter,LSfailed
 
 end
+
+# somehow slower with this signature
+# function checkStoppingCriteria(J::Float64,JOld::Float64,JRef::Float64,    # value of the current objective function J(y+dy), the old J(y) and the reference J(yInital)
+#                                dJ::Array{Float64,1},             # gradient of the objective funtion
+#                                y::Array{Float64,1},              # old variables
+#                                dy::Array{Float64,1};             # change of the variables / search direction
+#                                tolJ::Float64 = 1e-3,    # tolerance: change of the objective function
+#                                tolY::Float64 = 1e-2,    # tolerance: change of the variables
+#                                tolG::Float64 = 1e-2,    # tolerance: change of the gradient
+#                                tolQ::Float64 = 1e-4     # tolerance: change of quotient
+#                                )
 
 function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective function J(y+dy), the old J(y) and the reference J(yInital)
                                dJ,             # gradient of the objective funtion
