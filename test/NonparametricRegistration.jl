@@ -80,7 +80,7 @@ end
 	centeredGrid = getCellCenteredGrid(referenceImage)
 	affineParametersInitial = [1.0,0.0,-50,0.0,1.0,-50]
 	transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)
+	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)[1]
 	templateImage = createImage(temImg)
 	options = regOptions()
 	options.levels = [6,5,4,3]
@@ -106,7 +106,7 @@ end
 	centeredGrid = getCellCenteredGrid(referenceImage)
 	affineParametersInitial = [1.0,0.0,-50,0.0,1.0,-50]
 	transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)
+	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)[1]
 	templateImage = createImage(temImg)
 	options = regOptions()
 	options.levels = [6,5]

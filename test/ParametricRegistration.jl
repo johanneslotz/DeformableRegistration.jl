@@ -11,7 +11,7 @@ using DeformableRegistration: ImageProcessing, Distance, Transformation, Interpo
     centeredGrid = getCellCenteredGrid(refImg)
     affineParametersInitial = [1.2,0.0,-50,0.0,1.2,-0]
     transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
+    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)[1]
     temImg = createImage(temImg)
     options = regOptions()
     options.levels = [7,6,5,4]

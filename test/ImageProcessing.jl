@@ -53,9 +53,10 @@ end
 
 @testset "write image" begin
     import FileIO
-    imgdata = rand(64,128)
-    imgdata = imgdata - minimum(imgdata)
-    imgdata = imgdata / maximum(imgdata)
+    imgdata = round.(100*rand(64,128))
+    imgdata = convert(Array{Int64,2},imgdata)
+    #imgdata = imgdata - minimum(imgdata)
+    #imgdata = imgdata / maximum(imgdata)
     img = createImage(imgdata)
     # load image, write image, load the written image and compare it
     testimagewrite = dirname(Base.source_path()) * "/testdata/testimage_write.png"

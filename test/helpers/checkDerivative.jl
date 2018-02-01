@@ -7,7 +7,7 @@ function checkDerivative(fullF::Function,x;doPlot::Bool=false, smoothOffset::Boo
     f(x) = fullF(x)[1]
     return checkDerivative(f,df,x,doPlot=doPlot, smoothOffset=smoothOffset)
 end
-function checkDerivative(f,df,x;doPlot::Bool=false, smoothOffset::Bool=false)
+function checkDerivative(f::Function,df,x;doPlot::Bool=false, smoothOffset::Bool=false)
     N = 17
     h = exp10.(2:-1:-N)
     if smoothOffset
@@ -29,7 +29,8 @@ function checkDerivative(f,df,x;doPlot::Bool=false, smoothOffset::Bool=false)
       PyPlot.rc("legend",fontsize=10)
       PyPlot.rc("xtick", labelsize=10, color="black", direction="in")
       PyPlot.rc("ytick", labelsize=10, color="black", direction="in")
-      fig = PyPlot.figure(figsize=(6,5),facecolor="white")
+      #fig = PyPlot.figure(figsize=(6,5),facecolor="white")
+      PyPlot.clf()
       PyPlot.plot(h,errlin,label="||f(x) - f(x+hv)||")
       PyPlot.plot(h,errquad,".-",label="||f(x) + h nabla f v - f(x+hv)||")
       PyPlot.yscale("log")

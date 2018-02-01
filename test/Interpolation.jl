@@ -1,8 +1,9 @@
 using DeformableRegistration: Transformation, ImageProcessing, Interpolation
  using Base.Test
- using Interpolations: BSpline, Linear, Cubic, Free
+ using Interpolations: BSpline, Linear, Cubic, Line, Free
  using Logging
  Logging.configure(level=INFO)
+ include("../src/helpers/smoothing.jl")
 
 @testset "Interpolation" begin
 ##
@@ -60,7 +61,7 @@ end
     timing = toc()
 
     # @test timing < 0.3 not working on CI server :(
-    
+
     @test norm(transformedImage - transformedImageTG) < 1e-10
     @test norm(dx - dxTG) < 1e-10
     @test norm(dy - dyTG) < 1e-10
@@ -109,21 +110,47 @@ end
 
 end
 
+@testset "Interpolation: check derivatives with target grid 1" begin
+    for interpolationScheme=[BSpline(Linear()), BSpline(Cubic(Line()))]
+
+        include("helpers/checkDerivative.jl")
+        testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
+        img = loadImage(testimage)
+
+        targetGrid = getCellCenteredGrid(img)
+        # check image derivative
+        transformedGrid = getCellCenteredGrid(img)
+        transformedGrid.data[:] = transformedGrid.data[:] + 0.1
+        Ifunc(x) = interpolateImage(img, x, targetGrid, interpolationScheme=interpolationScheme)[1][:]
+        transformedImage, dX_transformedImage, dY_transformedImage =
+            interpolateImage(img,transformedGrid,targetGrid,doDerivative=true,
+                interpolationScheme=interpolationScheme)
+        dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0, prod(size(img.data))])
+        @time errlin,errquad = checkDerivative(Ifunc,dTransformedImage,transformedGrid)
+        @test checkErrorDecay(errquad)
+    end
+end
+
 
 ##
-@testset "Interpolation: check derivatives" begin
+@testset "Interpolation: check derivatives (all interpolation types)" for
+    interpolationScheme=[InterpLinearFast, BSpline(Linear()), BSpline(Cubic(Line()))]
     include("helpers/checkDerivative.jl")
     testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"
     img = loadImage(testimage)
 
     # check image derivative
     centeredGrid = getCellCenteredGrid(img).data + 0.1
-    Ifunc(x) = interpolateImage(img,x)[:]
-    transformedImage, dX_transformedImage, dY_transformedImage = interpolateImage(img,centeredGrid,doDerivative=true)
+    Ifunc(x) = interpolateImage(img,x, interpolationScheme=interpolationScheme)[1][:]
+    @time transformedImage, dX_transformedImage, dY_transformedImage =
+        interpolateImage(img,centeredGrid,doDerivative=true,
+            interpolationScheme=interpolationScheme)
     dTransformedImage = spdiagm((dX_transformedImage[:],dY_transformedImage[:]),[0, prod(size(img.data))])
-    errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
+    @time errlin,errquad = checkDerivative(Ifunc,dTransformedImage,centeredGrid)
     @test checkErrorDecay(errquad)
 end
+
+
 ##
 @testset "Interpolation: check timing of linear interpolation" begin
     using Interpolations: BSpline, Linear
@@ -174,12 +201,12 @@ end
     centeredGrid = getCellCenteredGrid(refImg)
     affineParametersInitial = [1.2,0.0,-50,0.0,1.2,-0]
     transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
+    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)[1]
     temImg = createImage(temImg)
     ##
     targetGrid = getCellCenteredGrid(refImg)
     targetGrid.data[:] = targetGrid.data[:] - 0
-    temImg2 = interpolateImage(refImg,transformedGrid,targetGrid,interpolationScheme=BSpline(Cubic(Free())))
+    temImg2 = interpolateImage(refImg,transformedGrid,targetGrid,interpolationScheme=BSpline(Cubic(Free())))[1]
     temImg2 = createImage(temImg2)
 
 
@@ -203,10 +230,10 @@ end
     centeredGrid = getCellCenteredGrid(refImg)
     affineParametersInitial = [1.2,0.0,-50,0.0,1.2,-0]
     transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)
+    temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)[1]
     temImg = createImage(temImg)
 
-    temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Linear()))
+    temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Linear()))[1]
     temImg2 = createImage(temImg2)
 
     if Logging.LogLevel == Logging.DEBUG
@@ -227,8 +254,19 @@ end
     data = [1.0 2; 3 4]
     testimage = createImage(data)
     g = getCellCenteredGrid(testimage)
-    dataInterpolated = interpolateImage(testimage, g, interpolationScheme=scheme)
+    dataInterpolated = interpolateImage(testimage, g, interpolationScheme=scheme)[1]
     @test data ≈ dataInterpolated
+end
+
+@testset "smoothing" begin
+    for k=[3,5,7,11]
+        for x = [ones(10,11)*2, rand(63,26)]
+            x = ones(10,11)*2;
+            xnew = smoothArray(x,k, Float64(k))
+            @test sum(x[:])  == sum(xnew[:])
+        end
+    end
+
 end
 
 
