@@ -31,10 +31,10 @@ function plotGrid(transformedGrid::Array{Float64,1}, shape::Tuple{Int64,Int64}; 
     tY = reshape(transformedGrid[Int(length(transformedGrid)/2+1):end],shape)
 
     for i = convert(Array{Int}, round.(linspace(1,size(tX,2), numberOfGridLines)))
-        plot(tY[:,i], tX[:,i], "k", linewidth=1.0)
+        plot(tY[:,i], -tX[:,i], "k", linewidth=1.0)
     end
     for i = convert(Array{Int}, round.(linspace(1,size(tX,1), numberOfGridLines)))
-        plot(tY[i,:], tX[i,:],"k", linewidth=1.0)
+        plot(tY[i,:], -tX[i,:],"k", linewidth=1.0)
     end
     axis("equal")
     return tX, tY
