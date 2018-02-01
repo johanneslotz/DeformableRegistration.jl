@@ -15,8 +15,7 @@ function registerNonParametricOnTargetGrid(referenceImage, templateImage, target
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
                                      constraint = 0,
-                                     interpolationScheme=InterpLinearFast,
-                                     gradientDescentOnly=false)#BSpline(Linear()))
+                                     interpolationScheme=InterpLinearFast)#BSpline(Linear()))
 
   doConstraints = constraint != 0
 
@@ -63,9 +62,9 @@ function registerNonParametricOnTargetGrid(referenceImage, templateImage, target
     if doConstraints
         initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         c(x) = constraint(x, initialDisplacementCoarse)
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
     end
     deformedGrid = scaledArray(deformedGrid, targetGrid.dimensions, targetGrid.voxelsize, targetGrid.shift)
   end
@@ -129,29 +128,29 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
             imageWeight * measureDistance(R, T,
                 scaledArray(grid, targetGrid.dimensions,
                 targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
-                doHessian=doHessian, options=options, centeredGrid=centeredGrid)[1:3] +
+                doHessian=doHessian, options=options)[1:3] +
             patchWeight * measureDistance(referencePatch, templatePatch,
                     scaledArray(grid, targetGrid.dimensions,
                     targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
-                    doHessian=doHessian, options=options, centeredGrid=centeredGrid)[1:3] +
+                    doHessian=doHessian, options=options)[1:3] +
             options.regularizerWeight * regularizer(grid-referenceGrid.data,regularizerMatrix)
 
     fValues(grid) = [measureDistance(R, T,
                 scaledArray(grid, targetGrid.dimensions,
                 targetGrid.voxelsize, targetGrid.shift), doDerivative=false,
-                doHessian=false, options=options, centeredGrid=centeredGrid)[1:3],
+                doHessian=false, options=options)[1:3],
             patchWeight * measureDistance(referencePatch, templatePatch,
                     scaledArray(grid, targetGrid.dimensions,
                     targetGrid.voxelsize, targetGrid.shift), doDerivative=false,
-                    doHessian=false, options=options, centeredGrid=centeredGrid)[1:3],
+                    doHessian=false, options=options)[1:3],
             options.regularizerWeight , regularizer(grid-referenceGrid.data,regularizerMatrix)]
   	## gauss newton method
     if doConstraints
         initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         c(x) = constraint(x, initialDisplacementCoarse)
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
     end
     deformedGrid = scaledArray(deformedGrid, targetGrid.dimensions,
                         targetGrid.voxelsize, targetGrid.shift)

@@ -11,6 +11,8 @@ using Images
 
 plot=true
 showDeformationImage = false
+
+##
 function testTwoResolutionsRegistration(;plot=true,showDeformationImage=false)
 
 ##
