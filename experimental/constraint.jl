@@ -183,106 +183,11 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
 
 end
 
-
-function augmentedLagrangian(x, λ, μ, c::Function)
-    m = length(x)
-    cx, ∇c = c(x)
-    F = - λ' * cx + μ/2 * cx' * cx
-    ∇F = - ∇c * λ   + μ * ∇c' * cx
-    ∇2F(y) = μ * ∇c' * ∇c * y
-    return [F, ∇F, ∇2F]
-end
-
-
-
 function opt(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
                              constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false) #no constraint by default
 
-    c = constraint
-    computeConstraint = ! (c == x -> [0, 0, 0])
-
-    L(x, λ, μ; doDerivative=true, doHessian=true) = (c(y) != [0, 0, 0]) ? Jfunc(x, doDerivative=doDerivative, doHessian=doHessian) +
-        augmentedLagrangian(x, λ, μ, c) : Jfunc(x, doDerivative=doDerivative, doHessian=doHessian)
-
-    λ = spzeros(size(y)...)
-    μ = 1
-    #debug(methods(L))
-    debug(L(yReference, λ, μ)[1])
-    JRef = L(yReference, λ, μ)[1]
-    #debug(@sprintf("... JRef = %3.3e", JRef))
-    JOld = NaN
-    oldNormCy = 99 * norm(c(y)[1], Inf)
-
-
-    for iter = 1:options.maxIterGaussNewton
-        if computeConstraint
-            λ = λ - μ * c(y)[1]
-
-            "Enforce reduction of infeasability"
-            τReduction = 0.8
-            if norm(c(y)[1], Inf) >  τReduction * oldNormCy;
-                debug(@sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy))
-                debug("... updating μ = 2 * μ = ", 2*μ)
-                μ = 2 * μ;
-            end
-            oldNormCy = norm(c(y)[1], Inf)
-
-        end
-
-        J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
-
-        debug(d2J(-dJ))
-        if gradientDescentOnly
-            dy = -dJ
-            cgIterations = -1
-        else
-            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-4)[1:4]
-        end
-
-	    # check descent direction
-	    if( (dJ'*dy)[1] > 0)
-            dy = -dy
-            warn("Changing sign of computed descent direction. This is a suspicious move.")
-	    end
-
-        # armijo line search (LS) method
-        stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
-
-        if(LSfailed)
-            info("STOPPING after line search failed.")
-            break
-        end
-
-        # output
-        D, α, S = printFunction(y)
-        s = @sprintf("%03d | D %2.2e | S %2.2e | λ!=0: %d | |c(y)|= %2.2e | μ=%2.2e | LSiter: %2d | CGiter: %3d | J/Jref: %2.2e",
-            iter, D[1], S[1], sum(λ.!=0), norm(c(y)[1], Inf), μ,  LSiter, cgIterations, J[1]/JRef[1],
-            )
-        info(s)
-        debug("  λ=", λ)
-        debug("  c=", c(y)[1])
-
-
-        # update parameter y
-        y = y + stepLength .* dy
-
-        # stopping criteria
-        if (iter>1)
-            if (checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
-                    tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
-                    tolY = options.stopping["tolY"],    # tolerance: change of the variables
-                    tolG = options.stopping["tolG"],    # tolerance: change of the gradient
-                    tolQ = options.stopping["tolQ"]))   # tolerance: change of quotient)
-                break
-            end
-        end
-
-        # updating JOld
-        JOld = J[1]
-        info("\n")
-    end
-
-    return y
+    return optimizeGaussNewtonAugmentedLagrangian(Jfunc,  y, yReference, options,
+                                 constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly)
 
 end

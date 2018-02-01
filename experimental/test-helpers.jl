@@ -25,6 +25,27 @@ function constructPatches(nPatches::Tuple{Int64, Int64}, refImg::regImage, temIm
 	return(refImgs, temImgs, iDs)
 end
 
+function constructTestImagesAndPatches(;patchLevel=1, imageLevel=4)
+	refImg, temImg, options = constructTestImages()
+	refPatches=[]
+	temPatches=[]
+	refPatch = createImage(refImg.data[1:120,1:120])
+	temPatch = createImage(temImg.data[1:120,1:120])
+	refPatch = restrictResolutionToLevel(refPatch, patchLevel)
+	temPatch = restrictResolutionToLevel(temPatch, patchLevel)
+	push!(refPatches, refPatch)
+	push!(temPatches, temPatch)
+	refPatch = createImage(refImg.data[1:120,121:240], shift=[0,120])
+	temPatch = createImage(temImg.data[1:120,121:240], shift=[0,120])
+	refPatch = restrictResolutionToLevel(refPatch, patchLevel)
+	temPatch = restrictResolutionToLevel(temPatch, patchLevel)
+	push!(refPatches, refPatch)
+	push!(temPatches, temPatch)
+	refImg = restrictResolutionToLevel(refImg, imageLevel)
+	temImg = restrictResolutionToLevel(temImg, imageLevel)
+	return refPatches, temPatches, refImg, temImg, options, patchLevel, imageLevel
+end
+
 
 function constructTestImages()
     data = zeros(120,240);
@@ -44,9 +65,19 @@ function constructTestImages()
     return refImg, temImg, options
 end
 
+function stripDisplacement(d::scaledArray,idx::Tuple{UnitRange{Int64},UnitRange{Int64}})
+	dx = reshape(d.data[1:Int(end/2)],d.dimensions)[idx[1],idx[2]]
+	dy = reshape(d.data[1+Int(end/2):end],d.dimensions)[idx[1],idx[2]]
+	dims = (length(idx[1]),length(idx[2]))
+	shift = [d.shift[1], d.shift[2]+d.voxelsize[2]*(idx[2][1]-1)]
+	return scaledArray(vcat(dx[:], dy[:]), dims, d.voxelsize, shift)
+end
+
 function combineDisplacementsNaive(displacements::Array{scaledArray},nPatches)
     @assert nPatches[1]==1 "two-dimensional patching not supported"
-    finalsize = Tuple([nPatches[i]*displacements[1].dimensions[i] for i=1:2])
+	finalsizeX = displacements[1].dimensions[1]
+	finalsizeY = sum([d.dimensions[2] for d in displacements])
+    finalsize = (finalsizeX, finalsizeY)
     finalDisplacementX = hcat([reshape(d.data[1:Int(end/2)],d.dimensions) for d in displacements]...)
     finalDisplacementY = hcat([reshape(d.data[1+Int(end/2):end],d.dimensions) for d in displacements]...)
     finalDisplacement = scaledArray(vcat(finalDisplacementX[:], finalDisplacementY[:]), finalsize, displacements[1].voxelsize, displacements[1].shift)

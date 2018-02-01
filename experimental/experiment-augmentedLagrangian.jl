@@ -143,7 +143,7 @@ fX, fY = reshapeGrid(fineDisplacement)
 
 figure(); PyPlot.imshow(cY); PyPlot.colorbar()
 
-Ty = interpolateImage(temImg,getCellCenteredGrid(refImg),doDerivative=false)
+Ty = interpolateImage(temImg,getCellCenteredGrid(refImg),doDerivative=false)[1]
  figure(); PyPlot.imshow(Ty)
  norm(Ty[:]-refImg.data[:])^2
 
