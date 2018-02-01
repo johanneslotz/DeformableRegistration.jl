@@ -7,7 +7,7 @@ using Logging.debug
 using DeformableRegistration.Transformation
 using DeformableRegistration.ImageProcessing
 
-export interpolateImage,InterpLinearFast
+export interpolateImage,InterpLinearFast, interpolateArray
 export interpolateDeformationField
 
 function interpolateImage(
@@ -33,13 +33,11 @@ function interpolateImage(
     return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid, size(I.data);
                             doDerivative=doDerivative,interpolationScheme=interpolationScheme)
 end
-
+##
 function interpolateArray(
     data::Array{Float64,2}, voxelsize::Array{Float64,1},
     shift::Array{Float64,1}, transformedGrid::Array{Float64,1}, newDimensions::Tuple{Vararg{Int64}};
     doDerivative=false, interpolationScheme=InterpLinearFast)
-
-  debug("Calling interpolateArray without targetGrid will be removed in a future version.")
 
   # use faster linear interpolation as default
   if(interpolationScheme == InterpLinearFast)
@@ -56,7 +54,6 @@ function interpolateArray(
 
   imageIntTmp = extrapolate(imageIntNoScaling, 0.0)
   imageInt = scale(imageIntTmp, xRange, yRange)
-
 
   transformedImage = zeros(numberOfPoints);
   for i=1:numberOfPoints
@@ -85,7 +82,7 @@ function interpolateArray(
     end
     return reshape(transformedImage, newDimensions), dX_transformedImage, dY_transformedImage
   end
-  return reshape(transformedImage, newDimensions)
+  return reshape(transformedImage, newDimensions),0,0
 end
 ##
 function interpolateArray(
@@ -93,11 +90,6 @@ function interpolateArray(
     shift::Array{Float64,1}, transformedGrid::scaledArray,
     targetGrid::scaledArray;
     doDerivative=false, interpolationScheme=BSpline(Cubic(Line())))
-
-  # use faster linear interpolation as default (not supoported here yet)
-  # if(interpolationScheme == InterpLinearFast)
-  #   return InterpLinearFast(data, voxelsize, shift, transformedGrid, newDimensions, doDerivative=doDerivative)
-  # end
 
   # determine number of new points, pixel spacing and spatial domain of the image
   imageIntNoScaling = interpolate(data, interpolationScheme, OnCell())
@@ -108,12 +100,9 @@ function interpolateArray(
   imageIntTmp = extrapolate(imageIntNoScaling, 0.0)
   imageInt = scale(imageIntTmp, xRange, yRange)
 
-  deformationAtTargetGrid = interpolateDeformationField(
-        transformedGrid-getCellCenteredGrid(transformedGrid),
-        targetGrid) + getCellCenteredGrid(targetGrid)
+  deformationAtTargetGrid = interpolateDeformationField(transformedGrid-getCellCenteredGrid(transformedGrid), targetGrid, interpolationScheme = interpolationScheme) + getCellCenteredGrid(targetGrid)
 
   numberOfPoints::Int = prod(deformationAtTargetGrid.dimensions)
-
 
   transformedImage = zeros(numberOfPoints);
   for i=1:numberOfPoints
@@ -144,11 +133,9 @@ function interpolateArray(
 
     end
 
-    #println("<- loop over new grid (derivative).")
-
     return reshape(transformedImage, targetGrid.dimensions), dX_transformedImage, dY_transformedImage
   end
-  return reshape(transformedImage, targetGrid.dimensions)
+  return reshape(transformedImage, targetGrid.dimensions),0,0
 end
 ##
 
@@ -205,12 +192,14 @@ function InterpLinearFast(data::Array{Float64,2}, voxelsize::Array{Float64,1}, s
   if(doDerivative)
     return reshape(transformedImage,newDimensions),dY_transformedImage,dX_transformedImage
   else
-    return reshape(transformedImage,newDimensions)
+    return reshape(transformedImage,newDimensions),0,0
   end
 end
 
 
-function interpolateDeformationField(deformationField::scaledArray, newPoints::scaledArray; interpolationScheme = InterpLinearFast)# BSpline(Linear())
+function interpolateDeformationField(deformationField::scaledArray,
+        newPoints::scaledArray;
+        interpolationScheme = InterpLinearFast)# BSpline(Linear())
 
     dims = deformationField.dimensions
     deformationFieldX = reshape(deformationField.data[1:prod(dims)], dims[1], dims[2])
@@ -218,9 +207,9 @@ function interpolateDeformationField(deformationField::scaledArray, newPoints::s
 
     return scaledArray([
         interpolateArray(deformationFieldX, deformationField.voxelsize, deformationField.shift,
-            newPoints.data, (prod(newPoints.dimensions),), interpolationScheme = interpolationScheme, doDerivative=false);
+            newPoints.data, (prod(newPoints.dimensions),), interpolationScheme = interpolationScheme, doDerivative=false)[1];
         interpolateArray(deformationFieldY, deformationField.voxelsize, deformationField.shift,
-            newPoints.data, (prod(newPoints.dimensions),), interpolationScheme = interpolationScheme, doDerivative=false)
+            newPoints.data, (prod(newPoints.dimensions),), interpolationScheme = interpolationScheme, doDerivative=false)[1]
         ],newPoints.dimensions, newPoints.voxelsize, newPoints.shift)
 
 

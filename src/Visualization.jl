@@ -81,7 +81,7 @@ function visualizeResults(referenceImage,templateImage;
     title("y (def. Grid)")
 
     subplot(2,3,5)
-    transformedTemplate = interpolateImage(templateImage,transformedGrid)
+    transformedTemplate = interpolateImage(templateImage,transformedGrid)[1]
     showImage(createImage(transformedTemplate))
     title("Template[y]")
 

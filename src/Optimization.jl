@@ -64,14 +64,14 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
 
      end
 
-     @time J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
+     J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
 
      debug(d2J(-dJ))
      if gradientDescentOnly
          dy = -dJ
          cgIterations = -1
      else
-         @time dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-3)[1:4]
+         dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-3)[1:4] #2/3 of the time of this function is here
      end
 
         # check descent direction
@@ -81,7 +81,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
         end
 
      # armijo line search (LS) method
-     @time stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
+     stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
 
      if(LSfailed)
          info("STOPPING after line search failed.")
@@ -102,7 +102,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
      y = y + stepLength .* dy
 
      # stopping criteria
-     @time if (iter>1)
+     if (iter>1)
          if (checkStoppingCriteria(J, JOld, JRef, dJ, y, stepLength*dy,
                  tolJ = options.stopping["tolJ"],    # tolerance: change of the objective function
                  tolY = options.stopping["tolY"],    # tolerance: change of the variables
@@ -192,6 +192,15 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
 
 end
 
+
+function checkArmijoStepValid(Jfunc::Function, Jc::Float64, y::Array{Float64,1},
+        stepLength::Float64, dy::Array{Float64,1}, tolLS::Float64,
+        dJ::Array{Float64,1})
+
+    validStep = Jfunc(y+stepLength*dy)[1] < (Jc + (stepLength.*tolLS.*(dJ'*dy))[1])
+    return validStep
+end
+
 function ArmijoLineSearch(Jfunc::Function,         # objective function
                           Jc::Float64,             # Jc = Jfunc(y)
                           dJ::Array{Float64,1},    # gradient of the objective funtion
@@ -201,9 +210,12 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
 
     stepLength = 1.0; LSiter = 1; LSfailed = false;
 
-    while( Jfunc(y+stepLength*dy)[1] >= (Jc + (stepLength.*tolLS.*dJ'*dy)[1]) )
-
-        if(stepLength < 1e-5)
+    while( true )
+        validStep = checkArmijoStepValid(Jfunc, Jc, y, stepLength, dy, tolLS, dJ)
+        if validStep
+            break
+        end
+        if(stepLength < 1e-4)
             LSfailed = true
             break
         end

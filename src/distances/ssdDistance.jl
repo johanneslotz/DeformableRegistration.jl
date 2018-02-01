@@ -104,3 +104,65 @@ function ssdDerivativesMatrixFree(dX_transformedImage::Array{Float64,1},
   return dFunctionValue,d2FunctionValue
 
 end
+
+
+include("../helpers/smoothing.jl")
+
+function sampleArrayToGridWithSmoothing(a::scaledArray, newGrid::scaledArray)
+    # @assert (a.dimensions[1] > newGrid.dimensions[1] &&
+    #     a.dimensions[2] > newGrid.dimensions[2]) "new Grid has to be coarser then current grid"
+    width = newGrid.voxelsize[1]/a.voxelsize[1]
+    #print(width)
+    adata = reshape(a.data, a.dimensions)
+    adata = smoothArray(adata,3,width)
+    #a_int = interpolateArray((adata[1:2:end-1, 1:2:end-1]+adata[2:2:end, 2:2:end]
+    a_int = interpolateArray(adata, a.voxelsize, a.shift, newGrid.data, newGrid.dimensions)[1]
+
+    return a_int
+end
+
+
+function ssdDistanceArbitraryGrid(referenceImage::regImage,templateImage::regImage,
+                     transformedGrid::scaledArray;
+                     doDerivative::Bool=false, doHessian::Bool=false,
+                     options::regOptions=regOptions(),
+                     interpolationScheme=BSpline(Cubic(Line())))
+
+
+  parametricOnly = options.parametricOnly
+
+  targetGrid = getCellCenteredGrid(referenceImage)
+
+  # interpolation of the template image at transformed grid points
+  transformedImage, dX_transformedImage, dY_transformedImage =
+      interpolateImage(templateImage, transformedGrid, targetGrid,
+        doDerivative=doDerivative, interpolationScheme=interpolationScheme)
+
+  # measure the ssd distance
+  residual = (transformedImage .- referenceImage.data.data)[:]
+  prodh = prod(targetGrid.voxelsize)
+  functionValue = 0.5 * prodh * sum(residual.^2)
+
+
+  coarseCenteredGrid = getCellCenteredGrid(transformedGrid)
+
+  residual  = scaledArray(residual,  targetGrid.dimensions, targetGrid.voxelsize, targetGrid.shift)
+  residual = sampleArrayToGridWithSmoothing(residual , coarseCenteredGrid)[:]
+  prodH = prod(coarseCenteredGrid.voxelsize)
+
+  if doDerivative
+      dX_transformedImage  = scaledArray(dX_transformedImage, targetGrid.dimensions, targetGrid.voxelsize, targetGrid.shift)
+      dX_transformedImage  = sampleArrayToGridWithSmoothing(dX_transformedImage , coarseCenteredGrid)[:]
+      dY_transformedImage  = scaledArray(dY_transformedImage, targetGrid.dimensions, targetGrid.voxelsize, targetGrid.shift)
+      dY_transformedImage  = sampleArrayToGridWithSmoothing(dY_transformedImage , coarseCenteredGrid)[:]
+  end
+
+  if(doDerivative)
+      N = prod(coarseCenteredGrid.dimensions) # product of sizes
+      dFunctionValue,d2FunctionValue = DeformableRegistration.Distance.ssdDerivativesMatrixFree(dX_transformedImage, dY_transformedImage ,residual ,[1.0],prodH,N,false,doDerivative,doHessian)
+      return [functionValue, dFunctionValue, d2FunctionValue, (dX_transformedImage, dY_transformedImage)]
+  end
+
+  return [functionValue, 0, 0, (0, 0)]
+
+end

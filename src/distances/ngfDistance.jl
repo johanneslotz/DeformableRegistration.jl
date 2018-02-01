@@ -34,7 +34,7 @@ function ngfDistance(referenceImage::regImage,templateImage::regImage,
       dT = spdiagm((dX_transformedImage, dY_transformedImage),[0,prod(size(transformedImage))])
 
     else
-      transformedImage =
+      transformedImage, dX_transformedImage, dY_transformedImage =
           interpolateImage(templateImage,transformedGrid,doDerivative=false)
     end
 
