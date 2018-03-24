@@ -129,21 +129,21 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
             imageWeight * measureDistance(R, T,
                 scaledArray(grid, targetGrid.dimensions,
                 targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
-                doHessian=doHessian, options=options, centeredGrid=centeredGrid)[1:3] +
+                doHessian=doHessian, options=options)[1:3] +
             patchWeight * measureDistance(referencePatch, templatePatch,
                     scaledArray(grid, targetGrid.dimensions,
                     targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
-                    doHessian=doHessian, options=options, centeredGrid=centeredGrid)[1:3] +
+                    doHessian=doHessian, options=options)[1:3] +
             options.regularizerWeight * regularizer(grid-referenceGrid.data,regularizerMatrix)
 
     fValues(grid) = [measureDistance(R, T,
                 scaledArray(grid, targetGrid.dimensions,
                 targetGrid.voxelsize, targetGrid.shift), doDerivative=false,
-                doHessian=false, options=options, centeredGrid=centeredGrid)[1:3],
+                doHessian=false, options=options)[1:3],
             patchWeight * measureDistance(referencePatch, templatePatch,
                     scaledArray(grid, targetGrid.dimensions,
                     targetGrid.voxelsize, targetGrid.shift), doDerivative=false,
-                    doHessian=false, options=options, centeredGrid=centeredGrid)[1:3],
+                    doHessian=false, options=options)[1:3],
             options.regularizerWeight , regularizer(grid-referenceGrid.data,regularizerMatrix)]
   	## gauss newton method
     if doConstraints
