@@ -92,8 +92,9 @@ function visualizeResults(referenceImage,templateImage;
     title("Template[y]-Reference")
     PyPlot.suptitle(suptitle)
     setFigSize()
+    PyPlot.tight_layout()
     if filename != ""
-        savefig(filename[1:end-4]*"-A-"*filename[end-4:end])
+        savefig(filename[1:end-4]*"-A-"*filename[end-3:end])
     end
 
     if showDeformationImage && (displacement.data != zeros(2*prod(size(referenceImage.data))))
@@ -111,7 +112,7 @@ function visualizeResults(referenceImage,templateImage;
         PyPlot.suptitle(suptitle)
         setFigSize()
         if filename != ""
-            savefig(filename[1:end-4]*"-B-"*filename[end-4:end])
+            savefig(filename[1:end-4]*"-B-"*filename[end-3:end])
         end
     end
 

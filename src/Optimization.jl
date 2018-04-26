@@ -5,6 +5,7 @@ using KrylovMethods
 
 using DeformableRegistration
 include("helpers/objectiveFunctionCreation.jl")
+include("../experimental/aspin.jl")
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton, optimizeGaussNewtonAugmentedLagrangian
 
@@ -191,7 +192,6 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
     return y
 
 end
-
 
 function checkArmijoStepValid(Jfunc::Function, Jc::Float64, y::Array{Float64,1},
         stepLength::Float64, dy::Array{Float64,1}, tolLS::Float64,
