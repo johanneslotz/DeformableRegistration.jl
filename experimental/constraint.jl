@@ -169,9 +169,9 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
     elseif doConstraints
         initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         c(x) = constraint(x, initialDisplacementCoarse)
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
     end
     deformedGrid = scaledArray(deformedGrid, size(R.data), R.voxelsize, R.shift)
   end
@@ -197,6 +197,5 @@ function opt(Jfunc::Function,  # objective Function
         return optimizeGaussNewtonAugmentedLagrangian(Jfunc,  y, yReference, options,
           constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly)
     end
-
 
 end
