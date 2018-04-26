@@ -5,6 +5,7 @@ using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Di
 using DeformableRegistration.regOptions
 using Interpolations
 include("../src/helpers/objectiveFunctionCreation.jl")
+include("../experimental/aspin.jl")
 
 function matchInitialDisplacementAtIndex(x::Array{Float64,1}, initialDisplacement::scaledArray, side; β = 0.01)
     index = spzeros(initialDisplacement.dimensions...)
@@ -115,10 +116,11 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
                                      measureDistance = ssdDistance,
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
-                                     constraint = 0,
+                                     constraint = 0, subspaces = [],
                                      interpolationScheme=InterpLinearFast, gradientDescentOnly=false)#BSpline(Linear()))
 
   doConstraints = constraint != 0
+  doASPIN = size(subspaces,1) > 1
 
   affineParametersInitial = affineParameters
   options.parametricOnly = false
@@ -162,7 +164,9 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
     fValues(grid) = [measureDistance(R, T, grid, doDerivative=false, doHessian=false, options=options, centeredGrid=centeredGrid.data)[1:3],
         options.regularizerWeight , regularizer(grid-referenceGrid.data,regularizerMatrix)]
   	## gauss newton method
-    if doConstraints
+    if doASPIN
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, gradientDescentOnly=gradientDescentOnly, subspaces=subspaces)
+    elseif doConstraints
         initialDisplacementCoarse = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         c(x) = constraint(x, initialDisplacementCoarse)
         deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues, gradientDescentOnly=gradientDescentOnly)
@@ -185,9 +189,14 @@ end
 
 function opt(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false) #no constraint by default
+                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false, subspaces=[]) #no constraint by default
 
-    return optimizeGaussNewtonAugmentedLagrangian(Jfunc,  y, yReference, options,
-                                 constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly)
+    if size(subspaces,1) > 1
+        return optimizeGaussNewtonASPIN(Jfunc, subspaces, y, yReference, options)
+    else
+        return optimizeGaussNewtonAugmentedLagrangian(Jfunc,  y, yReference, options,
+          constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly)
+    end
+
 
 end

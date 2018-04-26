@@ -9,61 +9,60 @@ using Images
  include("./test-helpers.jl")
  include("./twoResolutionRegistration.jl")
 
-plot=true
-showDeformationImage = false
-
+ include("../histo/HistokatControllerImageLoader.jl")
+ using HistokatControllerImageLoader: getTile, getImageObject
+ using PyPlot
 ##
-function testTwoResolutionsRegistration(;plot=true,showDeformationImage=false)
+ filenameR = "/Users/jo/data/example-data-LL1_1_CD146-2014.tif"
+ filenameT = "/Users/jo/data/example-data-LL1_4_KL1-2014.tif"
 
-refPatches, temPatches, refImgCoarse, temImgCoarse, options, patchLevel, imageLevel =
-        constructTestImagesAndPatches(patchLevel=1, imageLevel=3)
-    targetGridSize = (16,32)
-    targetVoxelSize = size(refImgCoarse.data) .* refImgCoarse.voxelsize ./ targetGridSize
-    targetGrid = getCellCenteredGrid(targetVoxelSize, refImgCoarse.shift, targetGridSize)
-    refImgFine, temImgFine, _o = constructTestImages()
-    options.stopping["tolQ"] = 1e-12
-    options.stopping["tolJ"] = 1e-12
-    options.stopping["tolY"] = 1e-12
-    options.stopping["tolG"] = 1e-12
+ imageR = getImageObject(filenameR)
+ imageT = getImageObject(filenameT)
 
-    reg=createDiffusiveOperatorCentered
+function removeBlack!(arr::Array)
+     for i = 1:length(arr)
+         if arr[i]<5
+             arr[i]=255
+         end
+     end
+ end
 
-    interpolationScheme=BSpline(Linear())
-    #interpolationScheme=InterpLinearFast
+function normalizeImage!(arr::Array)
+    removeBlack!(arr)
+    arr[:] = arr[:] .* (arr[:] .< 200)
+end
 
-    options.interpolateToReferenceImage = true
+refImgCoarse = getTile(imageR, 9, 0,0,0)
+temImgCoarse = getTile(imageT, 9, 0,0,0)
 
-    options.maxIterCG = 10000
-    plotRefImg, plotTemImg, plotOptions = constructTestImages()
-    plotTemImg.data[13:12:end,13:12:end] = 1
-    plotTemImg.data[14:12:end,13:12:end] = 1
-    plotTemImg.data[13:12:end,14:12:end] = 1
-    plotTemImg.data[14:12:end,14:12:end] = 1
+normalizeImage!(refImgCoarse.data.data)
+normalizeImage!(temImgCoarse.data.data)
 
+targetGridSize = (16,32)
+targetVoxelSize = size(refImgCoarse.data) .* refImgCoarse.voxelsize ./ targetGridSize
+targetGrid = getCellCenteredGrid(targetVoxelSize, refImgCoarse.shift, targetGridSize)
 
-    m = getCellCenteredGrid(refImgFine).dimensions
-    B = createDiffusiveOperatorCentered([1.0,1.0],[m[1],m[2]])
-    B=B'*B
+options = getSomeStandardOptions()
+reg=createDiffusiveOperatorCentered
+interpolationScheme=BSpline(Linear())
 
-
+plot = true
 # "PRE-REG"
 plot ? close("all") : 0
-options.regularizerWeight = 1
-        options.levels = [1, 0]
+options.regularizerWeight = 1000
+        options.levels = [5,4,3,2, 1]
         preRegResult = registerNonParametricOnTargetGrid(refImgCoarse, temImgCoarse, targetGrid,
             options,regularizerOperator=reg,
-            interpolationScheme=interpolationScheme) # regularizerOperator=createDiffusiveOperatorCentered
-        tempDisplacement = interpolateDeformationField(
-            preRegResult, getCellCenteredGrid(refImgFine))
+            interpolationScheme=interpolationScheme)
+            # regularizerOperator=createDiffusiveOperatorCentered
+            tempDisplacement = interpolateDeformationField(
+            preRegResult, getCellCenteredGrid(refImgCoarse))
         plot ? (
             figure();
-            visualizeResults(refImgFine, plotTemImg,
+            visualizeResults(refImgCoarse, temImgCoarse,
                 displacement= tempDisplacement,
-                showDeformationImage=showDeformationImage,
+                showDeformationImage=false,
                 suptitle="pre registration", filename = "");) : 0
-        ssdCoarse = ssdDistance(refImgFine, temImgFine,
-            (tempDisplacement+getCellCenteredGrid(refImgFine)).data, doDerivative=true)[1]
-        regularizerCoarse = tempDisplacement.data[:]'*B*tempDisplacement.data[:]
 
 # "COARSE + PATCH COMBINED"
 options.regularizerWeight = 3

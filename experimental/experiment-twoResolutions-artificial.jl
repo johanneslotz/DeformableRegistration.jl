@@ -6,6 +6,7 @@ using Images
  using Base.Test
  Logging.configure(level=Logging.INFO)
  include("./constraint.jl")
+ include("./aspin.jl")
  include("./test-helpers.jl")
  include("./twoResolutionRegistration.jl")
 
@@ -123,6 +124,7 @@ options.regularizerWeight = 1
     plot ? (figure();  visualizeResults(refImgFine, plotTemImg, displacement= fineDisplacement, showDeformationImage=showDeformationImage, suptitle="Fine full registration", filename = "artificial-example-DDS-fine-level-$(options.levels[end]).png");) : 0
     ssdFine = ssdDistance(refImgFine, temImgFine, (fineDisplacement+getCellCenteredGrid(refImgFine)).data, doDerivative=true)[1]
     regularizerFine = fineDisplacement.data[:]'*B*fineDisplacement.data[:]
+
 
 
 @printf("\n")

@@ -56,13 +56,18 @@ function constructTestImages()
     dataR[41:80,41:80] = 1
     dataR[41:80,  161:200] = 1
     refImg = createImage(dataR)
-    options = regOptions()
+    options = getSomeStandardOptions()
+    return refImg, temImg, options
+end
+
+function getSomeStandardOptions()
+	options = regOptions()
     options.matrixFree = true;
     options.interpolateToReferenceImage = true
     options.regularizerWeight = 100
     options.stopping["tolQ"] = 1e-4
     options.maxIterCG = 4000
-    return refImg, temImg, options
+	return options
 end
 
 function stripDisplacement(d::scaledArray,idx::Tuple{UnitRange{Int64},UnitRange{Int64}})
