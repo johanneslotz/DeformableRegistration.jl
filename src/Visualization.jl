@@ -37,6 +37,7 @@ function plotGrid(transformedGrid::Array{Float64,1}, shape::Tuple{Int64,Int64}; 
         plot(tY[i,:], -tX[i,:],"k", linewidth=1.0)
     end
     axis("equal")
+    axis("off")
     return tX, tY
 end
 
@@ -78,7 +79,7 @@ function visualizeResults(referenceImage,templateImage;
     centeredGrid = getCellCenteredGrid(referenceImage)
     transformedGrid = transformGridAffine(centeredGrid,affineParameters) + displacement
     plotGrid(transformedGrid, numberOfGridLines=numberOfGridLines)
-    title("y (def. Grid)")
+    title("deformed Grid")
 
     subplot(2,3,5)
     transformedTemplate = interpolateImage(templateImage,transformedGrid)[1]
@@ -88,7 +89,7 @@ function visualizeResults(referenceImage,templateImage;
     subplot(2,3,6)
     differenceImage = abs.(Array(referenceImage.data)-Array(transformedTemplate))
     showImage(createImage(differenceImage))
-    xlabel("max: $(maximum(differenceImage[:]))")
+    @info "max difference: $(maximum(differenceImage[:]))"
     title("Template[y]-Reference")
     PyPlot.suptitle(suptitle)
     setFigSize()
