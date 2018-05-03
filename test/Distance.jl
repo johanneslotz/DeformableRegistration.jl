@@ -1,6 +1,6 @@
 using DeformableRegistration: Distance, ImageProcessing, Transformation, Interpolation, regOptions
  using Base.Test
- using Logging
+#  using Logging
 
 include("helpers/checkDerivative.jl")
 
@@ -115,7 +115,7 @@ end
         for r = refImg.data
              r = r + 0.01*rand()
         end
-        Logging.warn("Skipping ")
+        warn("Skipping ")
         @test_skip estimateNGFEpsilon(refImg,cutoffPercent=80)[1] >= 0 # seems to run forever
     end
 end

@@ -1,5 +1,5 @@
 using Images
-using Logging
+# using Logging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
@@ -79,7 +79,7 @@ function registerNonParametricFixedGridResolution(referenceImage, templateImage,
   	T = restrictResolutionToLevel(templateImage,level)
 
   	imageSize = getSize(R)
-  	Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+  	info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
 
   	# define objective function
   	Jfunc(grid;doDerivative=false,doHessian=false) =

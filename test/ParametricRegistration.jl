@@ -1,6 +1,6 @@
 using DeformableRegistration: ImageProcessing, Distance, Transformation, Interpolation, Examples, Distance, regOptions
  using Base.Test
- using Logging
+#  using Logging
 
 @testset "Parametric Registration" begin
 @testset "SSD/NGF shifted and scaled"  for D=[ssdDistance, ngfDistance]

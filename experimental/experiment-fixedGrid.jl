@@ -1,5 +1,5 @@
 using Images
- using Logging
+#  using Logging
  using DeformableRegistration: Visualization, Examples, ImageProcessing, Transformation, Interpolation, Distance
  using DeformableRegistration.Regularizer
  using DeformableRegistration.regOptions

@@ -1,5 +1,5 @@
 using Images
-using Logging
+# using Logging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
@@ -45,7 +45,7 @@ function registerNonParametricOnTargetGrid(referenceImage, templateImage, target
     centeredGrid = getCellCenteredGrid(R)
 
   	imageSize = getSize(R)
-  	Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+  	info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
 
   	# define objective function
   	Jfunc(grid;doDerivative=false,doHessian=false) =
@@ -121,7 +121,7 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
     centeredGrid = getCellCenteredGrid(R)
 
   	imageSize = getSize(R)
-  	Logging.info("imageLevel ",imageLevel,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+  	info("imageLevel ",imageLevel,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
 
   	# define objective function
   	Jfunc(grid;doDerivative=false,doHessian=false) =

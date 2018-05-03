@@ -1,8 +1,8 @@
 using DeformableRegistration: Transformation, ImageProcessing, Interpolation
  using Base.Test
  using Interpolations: BSpline, Linear, Cubic, Line, Free
- using Logging
- Logging.configure(level=INFO)
+#  using Logging
+#  Logging.configure(level=INFO)
  include("../src/helpers/smoothing.jl")
 
 @testset "Interpolation" begin
@@ -168,28 +168,28 @@ end
       interpolateImage(img,transformedGrid)
     end
     timing = toq()/5;
-    Logging.info("Interpolation: interpolateImage (InterpLinearFast) took ",timing," seconds.")
+    info("Interpolation: interpolateImage (InterpLinearFast) took ",timing," seconds.")
     # InterpLinear (Grid.jl)
     tic();
     for i=1:5
       interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()))
     end
     timingGrid = toq()/5;
-    Logging.info("Interpolation: interpolateImage (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
+    info("Interpolation: interpolateImage (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
     # InterpLinearFast with derivative
     tic();
     for i=1:5
       interpolateImage(img,transformedGrid,doDerivative=true)
     end
     timing = toq()/5;
-    Logging.info("Interpolation: interpolateImage with derivative (InterpLinearFast) took ",timing," seconds.")
+    info("Interpolation: interpolateImage with derivative (InterpLinearFast) took ",timing," seconds.")
     # InterpLinear (Grid.jl) with derivative
     tic();
     for i=1:5
       interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()),doDerivative=true)
     end
     timingGrid = toq()/5;
-    Logging.info("Interpolation: interpolateImage with derivative (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
+    info("Interpolation: interpolateImage with derivative (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
     @test timingGrid>timing
     #Logging.info("Interpolation: Own linear interpolation with derivative is faster ✔")
 end
@@ -210,10 +210,10 @@ end
     temImg2 = createImage(temImg2)
 
 
-    if Logging.LogLevel == Logging.DEBUG
-    using PyPlot
-    figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
-    end
+    # if Logging.LogLevel == Logging.DEBUG
+    # using PyPlot
+    # figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
+    # end
 
     # border pixels differe in both interpolation schemes, most likely due
     # to InterpLinearFast padding the image too far...
@@ -236,10 +236,10 @@ end
     temImg2 = interpolateImage(refImg,transformedGrid,interpolationScheme=BSpline(Linear()))[1]
     temImg2 = createImage(temImg2)
 
-    if Logging.LogLevel == Logging.DEBUG
-    #using PyPlot
-    #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
-    end
+    # if Logging.LogLevel == Logging.DEBUG
+    # #using PyPlot
+    # #figure(); PyPlot.imshow(Array(temImg2.data)-temImg.data)
+    # end
 
     # border pixels differe in both interpolation schemes, most likely due
     # to InterpLinearFast padding the image too far...

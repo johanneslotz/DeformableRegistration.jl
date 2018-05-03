@@ -58,8 +58,8 @@ end
     ssdvalue = ssdDistance(refImg,temImg,getCellCenteredGrid(refImg).data+displacement.data)[1]
 	ngfvalue = ngfDistance(refImg,temImg,getCellCenteredGrid(refImg).data+displacement.data)[1]
 
-    Logging.debug(ssdvalue)
-    Logging.debug(ngfvalue)
+    debug(ssdvalue)
+    debug(ngfvalue)
     # These results seem to depend on the current phase of the moon, your platform or something similar.
 	# This seems to be a bug in ngfDistance or at least in there and is notet in an issue in GitHub. Please
 	# make the test more specific once this is solved.
@@ -126,16 +126,16 @@ end
     options.maxIterGaussNewton = 1
     options.maxIterCG = 1
     options.levels = [5]
-    oldLoggingLevel = Logging._root.level
+    # oldLoggingLevel = Logging._root.level
     #Logging.configure(level=Logging.DEBUG)
-    Logging.debug("ssd after first reg = ", ssdvalue1)
+    debug("ssd after first reg = ", ssdvalue1)
     displacement2 = registerImagesNonParametric(referenceImage, templateImage, options, measureDistance=D, initialDisplacement=displacement)
     ssdvalue2 = ssdDistance(restrictResolutionToLevel(referenceImage, 5),
                            restrictResolutionToLevel(templateImage, 5) ,
                            getCellCenteredGrid(displacement2).data+displacement2.data)[1]
-    Logging.debug("ssd after second reg (and one more iteration) = ", ssdvalue2)
+    debug("ssd after second reg (and one more iteration) = ", ssdvalue2)
 
-    Logging.configure(level=oldLoggingLevel)
+    # Logging.configure(level=oldLoggingLevel)
 
     @test ssdvalue1 ≈ ssdvalue2 atol=5
     end

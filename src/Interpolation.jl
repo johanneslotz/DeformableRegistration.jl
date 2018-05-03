@@ -3,7 +3,7 @@ using Images
 using Interpolations
 import Interpolations.Throw # see https://github.com/JuliaMath/Interpolations.jl/issues/127
 
-using Logging.debug
+# using Logging.debug
 using DeformableRegistration.Transformation
 using DeformableRegistration.ImageProcessing
 

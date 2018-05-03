@@ -1,4 +1,4 @@
-using Logging
+# using Logging
 
 include("../../src/helpers/smoothing.jl")
 
@@ -22,7 +22,7 @@ function checkDerivative(f::Function,df,x;doPlot::Bool=false, smoothOffset::Bool
         errlin[i]  = norm(fx             - f(x+h[i]*v))
         errquad[i] = norm(fx + h[i]*df*v - f(x+h[i]*v))
         s = @sprintf(" h: %1.1e  ||f(x+h*v)||: %2.2e   elin: %2.2e   equad: %2.2e \n",h[i], norm(f(x+h[i]*v)), errlin[i],errquad[i])
-        Logging.info(s)
+        info(s)
     end
     #
     if(doPlot)
@@ -45,7 +45,7 @@ end
 function checkErrorDecay(errquad::Vector)
   errorReduction = log10.(errquad[1:end-1]./errquad[2:end])
   errorReduction[isinf.(errorReduction)]=1
-  Logging.debug("# errorReduction.>1.7 = ", sum(errorReduction.>1.7))
-  Logging.info("sum(errorReduction...) = ", sum(errorReduction[errorReduction.>1.7]), "   (needs >6)")
+  debug("# errorReduction.>1.7 = ", sum(errorReduction.>1.7))
+  info("sum(errorReduction...) = ", sum(errorReduction[errorReduction.>1.7]), "   (needs >6)")
   return sum(errorReduction[errorReduction.>1.7])>6
 end

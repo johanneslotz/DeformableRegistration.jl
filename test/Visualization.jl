@@ -1,7 +1,7 @@
 using DeformableRegistration: ImageProcessing, Transformation, Visualization
  using PyPlot
  using Base.Test
- using Logging
+#  using Logging
 
 # setup logging
 

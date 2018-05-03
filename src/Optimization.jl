@@ -1,6 +1,6 @@
 module Optimization
 
-using Logging
+using MicroLogging
 using KrylovMethods
 
 using DeformableRegistration
@@ -57,8 +57,8 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
          "Enforce reduction of infeasability"
          τReduction = 0.8
          if norm(c(y)[1], Inf) >  τReduction * oldNormCy;
-             debug(@sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy))
-             debug("... updating μ = 2 * μ = ", 2*μ)
+             @debug @sprintf("... norm(c(y)[1], Inf) >  %1.1f * oldNormCy: %3.3e > %3.3e", τReduction, norm(c(y)[1], Inf), oldNormCy)
+             @debug "... updating μ = 2 * μ = ", 2*μ
              μ = 2 * μ;
          end
          oldNormCy = norm(c(y)[1], Inf)
@@ -67,7 +67,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
 
      J, dJ, d2J = L(y, λ, μ, doDerivative=true, doHessian=true)
 
-     debug(d2J(-dJ))
+     @debug d2J(-dJ)
      if gradientDescentOnly
          dy = -dJ
          cgIterations = -1
@@ -95,8 +95,8 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
          iter, D[1], S[1], sum(λ.!=0), norm(c(y)[1], Inf), μ,  LSiter, cgIterations, J[1]/JRef[1],
          )
      info(s)
-     debug("  λ=", λ)
-     debug("  c=", c(y)[1])
+     @debug "  λ=", λ
+     @debug "  c=", c(y)[1]
 
 
      # update parameter y
@@ -196,7 +196,7 @@ end
 function checkArmijoStepValid(Jfunc::Function, Jc::Float64, y::Array{Float64,1},
         stepLength::Float64, dy::Array{Float64,1}, tolLS::Float64,
         dJ::Array{Float64,1})
-
+    @debug "Jfunc(y+stepLength*dy)[1] < (Jc + (stepLength.*tolLS.*(dJ'*dy))[1])" Jfunc(y+stepLength*dy)[1]  (Jc + (stepLength.*tolLS.*(dJ'*dy))[1])
     validStep = Jfunc(y+stepLength*dy)[1] < (Jc + (stepLength.*tolLS.*(dJ'*dy))[1])
     return validStep
 end
@@ -227,7 +227,7 @@ function ArmijoLineSearch(Jfunc::Function,         # objective function
 
     if(LSfailed)
         s = @sprintf("   Line search failed after %2d iterations.",LSiter)
-        Logging.debug(s)
+        @info s
     end
 
     return stepLength,LSiter,LSfailed
@@ -268,27 +268,27 @@ function checkStoppingCriteria(J,JOld,JRef,    # value of the current objective 
 
     if(all(STOP[1:3]))
         s = @sprintf("STOPPING CRITERIA:\n")
-        Logging.info(s)
+        @info s
         s = @sprintf("   1. |JOld-J| = %3e <= %3e (tolJ * (1 + |JOld|)) \n",abs(JOld-J), tolJ*(1+abs(JOld)) )
-        Logging.info(s)
+        @info s
         s = @sprintf("   2. ||dy||   = %3e <= %3e (tolY * (1 + ||y||))\n",norm(dy),    tolY*(1+norm(y))  )
-        Logging.info(s)
+        @info s
         s = @sprintf("   3. ||dJ||   = %3e <= %3e (tolG * (1 + |JOld|)) \n",norm(dJ),    tolG*(1+abs(JOld)) )
-        Logging.info(s)
+        @info s
     end
 
     if(STOP[4])
         s = @sprintf("STOPPING CRITERION:\n")
-        Logging.info(s)
+        @info s
         s = @sprintf("   4. ||dJ|| = %3e <= %3e (1e6*eps)\n",norm(dJ), 1e6*eps())
-        Logging.info(s)
+        @info s
     end
 
     if(STOP[5])
         s = @sprintf("STOPPING CRITERION:\n")
-        Logging.info(s)
+        @info s
         s = @sprintf("   5. |(JOld-J)/(JRef-J)|= %3e <= %3e (tolQ)\n",abs((JOld-J)/(JRef-J)), tolQ)
-        Logging.info(s)
+        @info s
     end
 
     return all(STOP[1:3]) | STOP[4] | STOP[5]

@@ -1,6 +1,6 @@
 using DeformableRegistration
 using Images
-using Logging
+# using Logging
 import DeformableRegistration.Distance.ngfDistance
 
 

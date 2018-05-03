@@ -1,5 +1,5 @@
 using Stats
-using Logging
+# using Logging
 
 function estimateNGFEpsilon(referenceImage::regImage;cutoffPercent = 80)
   m = size(referenceImage.data)

@@ -13,6 +13,7 @@ function ssdDistance(referenceImage::regImage,templateImage::regImage,
 
   # check grid
   if(checkForOddNumberOfGridPoints(referenceImage.data,transformedGrid))
+    @printf("Dimension mismatch: 2* image data: %s (%s) <-> transformed grid: %s", size(referenceImage.data),size(referenceImage.data[:]), size(transformedGrid))
     error("StaggeredGrids are not supported. Please transform to cell centered first.")
   end
 

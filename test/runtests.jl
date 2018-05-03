@@ -1,5 +1,5 @@
-using Base.Test, Logging
-Logging.configure(level = Logging.WARNING) # set to DEBUG to see error tables
+using Base.Test #, Logging
+# Logging.configure(level = Logging.WARNING) # set to DEBUG to see error tables
 
 @testset "DeformableRegistration" begin
 

@@ -1,7 +1,7 @@
 module Examples
 
 using Images
-using Logging
+# using Logging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
