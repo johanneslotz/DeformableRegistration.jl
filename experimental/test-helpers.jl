@@ -50,7 +50,8 @@ end
 function constructTestImages()
     data = zeros(120,240);
 	data[21:80,21:60] = 1
-    data[41:100, 181:220] = 1
+    # data[41:100, 181:220] = 1
+    data[41:100, 161:200] = 1
     temImg = createImage(data) 
     dataR = zeros(120,240);
     dataR[41:80,41:80] = 1
