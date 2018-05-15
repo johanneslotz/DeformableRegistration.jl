@@ -48,14 +48,14 @@ end
 
 
 function constructTestImages()
-    data = zeros(120,240);
-	data[21:80,21:60] = 1
+    dataT = zeros(120,240);
+	dataT[41:100,31:90] = 1
     # data[41:100, 181:220] = 1
-    data[41:100, 161:200] = 1
-    temImg = createImage(data) 
+    dataT[21:80, 151:210] = 1
+    temImg = createImage(dataT) 
     dataR = zeros(120,240);
-    dataR[41:80,41:80] = 1
-    dataR[41:80,  161:200] = 1
+    dataR[31:70,41:80] = 1
+    dataR[51:90,  161:200] = 1
     refImg = createImage(dataR)
     options = getSomeStandardOptions()
     return refImg, temImg, options
