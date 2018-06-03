@@ -60,20 +60,21 @@ function visualizeResults(referenceImage,templateImage;
                           affineParameters=[1,0,0,0,1,0.0],
                           numberOfGridLines = 40,
                           showDeformationImage = false,
-                          suptitle = "", cmap = "gray", filename = "")
+                          suptitle = "", cmap = "gray", filename = "", plotInitialState=true)
 
+    if plotInitialState
+        subplot(2,3,1)
+        showImage(referenceImage)
+        title("Reference")
 
-    subplot(2,3,1)
-    showImage(referenceImage)
-    title("Reference")
+        subplot(2,3,2)
+        showImage(templateImage)
+        title("Template")
 
-    subplot(2,3,2)
-    showImage(templateImage)
-    title("Template")
-
-    subplot(2,3,3)
-    showImage(createImage(abs.(Array(referenceImage.data)-Array(templateImage.data))))
-    title("Template-Reference")
+        subplot(2,3,3)
+        showImage(createImage(abs.(Array(referenceImage.data)-Array(templateImage.data))))
+        title("Template-Reference")
+    end
 
     subplot(2,3,4)
     centeredGrid = getCellCenteredGrid(referenceImage)

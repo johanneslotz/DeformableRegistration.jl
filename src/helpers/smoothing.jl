@@ -20,24 +20,30 @@ function smoothArray(a::Array{Float64,1}, kernelSize::Int, width::Float64;
     return a_smooth
 end
 
-function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64)
-    kernel = getGaussianKernel(kernelSize, width)
+function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=[])
+    if length(kernel)==0
+        kernel = getGaussianKernel(kernelSize, width)
+    else
     #kernel=[1/6, 2/3, 1/6]
-    a_smooth = zeros(size(a))
-    for i = 1:size(a,1)
-        a_smooth[i,:] = smoothArray(a[i,:], kernelSize, width, kernel=kernel)
-    end
-    for i = 1:size(a,2)
-        a_smooth[:,i] = smoothArray(a_smooth[:,i], kernelSize, width, kernel=kernel)
+        a_smooth = zeros(size(a))
+        for i = 1:size(a,1)
+            a_smooth[i,:] = smoothArray(a[i,:], kernelSize, width, kernel=kernel)
+        end
+        for i = 1:size(a,2)
+            a_smooth[:,i] = smoothArray(a_smooth[:,i], kernelSize, width, kernel=kernel)
+        end
     end
     return a_smooth
 end
 
-function smoothArray(a::scaledArray, kernelSize::Int, width::Float64)
-    x = reshape(a.data[1:Int(end/2)], a.dimensions)
-    xs = smoothArray(x, kernelSize, width)[:]
-    y = reshape(a.data[1+Int(end/2):end], a.dimensions)
-    ys = smoothArray(y, kernelSize, width)[:]
-
+function smoothArray(a::scaledArray, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=[])
+    if length(kernel)==0
+        kernel = getGaussianKernel(kernelSize, width)
+    else
+        x = reshape(a.data[1:Int(end/2)], a.dimensions)
+        xs = smoothArray(x, kernelSize, width)[:]
+        y = reshape(a.data[1+Int(end/2):end], a.dimensions)
+        ys = smoothArray(y, kernelSize, width)[:]
+    end
     return scaledArray(vcat(xs,ys), a.dimensions, a.voxelsize, a.shift)
 end

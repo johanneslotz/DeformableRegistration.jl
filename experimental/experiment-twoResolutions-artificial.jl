@@ -170,3 +170,4 @@ options.regularizerWeight = 1
 end
 
 testTwoResolutionsRegistration(plot=true, showDeformationImage=false)
+

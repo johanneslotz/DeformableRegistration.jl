@@ -1,5 +1,5 @@
 using Images
-# using Logging
+using MicroLogging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
@@ -8,14 +8,15 @@ import DeformableRegistration.Interpolation.interpolateArray
 include("../src/helpers/objectiveFunctionCreation.jl")
 include("./constraint.jl")
 
-function registerNonParametricOnTargetGrid(referenceImage, templateImage, targetGrid::scaledArray,
+function registerNonParametricOnGrid(referenceImage, templateImage, targetGrid::scaledArray,
                                      options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistanceArbitraryGrid,
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
                                      constraint = 0,
-                                     interpolationScheme=InterpLinearFast)#BSpline(Linear()))
+                                     interpolationScheme=InterpLinearFast,
+                                     displayCallback=x->x)#BSpline(Linear()))
 
   doConstraints = constraint != 0
 
@@ -45,7 +46,7 @@ function registerNonParametricOnTargetGrid(referenceImage, templateImage, target
     centeredGrid = getCellCenteredGrid(R)
 
   	imageSize = getSize(R)
-  	info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+    @info("level $level: [$(size(R.data)[1])]x[$(size(R.data)[2])]")
 
   	# define objective function
   	Jfunc(grid;doDerivative=false,doHessian=false) =
@@ -64,7 +65,7 @@ function registerNonParametricOnTargetGrid(referenceImage, templateImage, target
         c(x) = constraint(x, initialDisplacementCoarse)
         deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, displayCallback=displayCallback)
     end
     deformedGrid = scaledArray(deformedGrid, targetGrid.dimensions, targetGrid.voxelsize, targetGrid.shift)
   end
@@ -95,7 +96,9 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
                                      patchWeight = 1.0,
                                      imageWeight = 1.0,
                                      imageLevel = 4,
-                                     patchLevel = 0)#BSpline(Linear()))
+                                     patchLevel = 0, 
+                                     referenceImageMask::Array{Float64,2}=[],
+                                     displayCallback=x->x)#BSpline(Linear()))
 
   doConstraints = constraint != 0
   affineParametersInitial = affineParameters
@@ -128,7 +131,7 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
             imageWeight * measureDistance(R, T,
                 scaledArray(grid, targetGrid.dimensions,
                 targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
-                doHessian=doHessian, options=options)[1:3] +
+                doHessian=doHessian, options=options, mask=referenceImageMask)[1:3] +
             patchWeight * measureDistance(referencePatch, templatePatch,
                     scaledArray(grid, targetGrid.dimensions,
                     targetGrid.voxelsize, targetGrid.shift), doDerivative=doDerivative,
@@ -150,7 +153,7 @@ function registerInTwoResolutions(referencePatch::regImage, templatePatch::regIm
         c(x) = constraint(x, initialDisplacementCoarse)
         deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, displayCallback=displayCallback)
     end
     deformedGrid = scaledArray(deformedGrid, targetGrid.dimensions,
                         targetGrid.voxelsize, targetGrid.shift)

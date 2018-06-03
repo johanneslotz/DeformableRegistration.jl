@@ -34,7 +34,7 @@ Augmented lagrangian implementation following Nocelda & Wright, 2006, p. 515 (Fr
 """
 function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false) #no constraint by default,
+                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false, displayCallback=x->x) #no constraint by default,
 
     c = constraint
     computeConstraint = ! (c == x -> [0, 0, 0])
@@ -72,7 +72,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
          dy = -dJ
          cgIterations = -1
      else
-         dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-3)[1:4] #2/3 of the time of this function is here
+         dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4] #2/3 of the time of this function is here
      end
 
         # check descent direction
@@ -90,11 +90,16 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
      end
 
      # output
+     # is this a IJulia notebook? -> delete previous iteration's output
+     if isdefined(Main, :IJulia) && Main.IJulia.inited
+        displayCallback(true)
+        @info size(y)
+     end
      D, α, S = printFunction(y)
      s = @sprintf("%03d | D %2.2e | S %2.2e | λ!=0: %d | |c(y)|= %2.2e | μ=%2.2e | LSiter: %2d | CGiter: %3d | J/Jref: %2.2e",
          iter, D[1], S[1], sum(λ.!=0), norm(c(y)[1], Inf), μ,  LSiter, cgIterations, J[1]/JRef[1],
          )
-     info(s)
+     @info(s)
      @debug "  λ=", λ
      @debug "  c=", c(y)[1]
 
@@ -160,7 +165,7 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         if(LSfailed)
             break
         end
-
+        displayCallback()
         # output
         if(cgIterations==0)
           s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])

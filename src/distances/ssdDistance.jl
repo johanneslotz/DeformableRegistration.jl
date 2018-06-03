@@ -115,8 +115,9 @@ function sampleArrayToGridWithSmoothing(a::scaledArray, newGrid::scaledArray)
     width = newGrid.voxelsize[1]/a.voxelsize[1]
     #print(width)
     adata = reshape(a.data, a.dimensions)
-    adata = smoothArray(adata,3,width)
-    #a_int = interpolateArray((adata[1:2:end-1, 1:2:end-1]+adata[2:2:end, 2:2:end]
+    # adata = smoothArray(adata,3,width)
+    adata = smoothArray(adata,3, 3.0, kernel=1/3*ones(3))
+    #a_int = interpolateArray(0.5*adata[1:1:end-1, 1:1:end-1] + 0.5*adata[2:1:end, 2:1:end], a.voxelsize, a.shift, newGrid.data, newGrid.dimensions)[1]
     a_int = interpolateArray(adata, a.voxelsize, a.shift, newGrid.data, newGrid.dimensions)[1]
 
     return a_int
@@ -127,7 +128,7 @@ function ssdDistanceArbitraryGrid(referenceImage::regImage,templateImage::regIma
                      transformedGrid::scaledArray;
                      doDerivative::Bool=false, doHessian::Bool=false,
                      options::regOptions=regOptions(),
-                     interpolationScheme=BSpline(Cubic(Line())))
+                     interpolationScheme=BSpline(Cubic(Line())), mask::Array{Float64,2}=ones(size(referenceImage.data)))
 
 
   parametricOnly = options.parametricOnly
@@ -140,7 +141,7 @@ function ssdDistanceArbitraryGrid(referenceImage::regImage,templateImage::regIma
         doDerivative=doDerivative, interpolationScheme=interpolationScheme)
 
   # measure the ssd distance
-  residual = (transformedImage .- referenceImage.data.data)[:]
+  residual = mask[:].*(transformedImage .- referenceImage.data.data)[:]
   prodh = prod(targetGrid.voxelsize)
   functionValue = 0.5 * prodh * sum(residual.^2)
 
