@@ -54,8 +54,54 @@ function constructTestImages()
     dataT[21:80, 151:210] = 1
     temImg = createImage(dataT) 
     dataR = zeros(120,240);
-    dataR[31:70,41:80] = 1
-    dataR[51:90,  161:200] = 1
+	
+	m1 = [50, 60]
+	m2 = [70, 180]
+	r = 20
+
+	for i=1:size(dataR,1)
+		for j=1:size(dataR,2)
+			if norm([i,j] - m1) < r || norm([i,j] - m2) < r
+ 				dataR[i,j] = 1
+			end
+		end
+	end
+	
+	# dataR[31:50,39:78] = 1
+    # dataR[51:70,43:82] = 1
+    # dataR[31:40,29:78] = 1
+    # dataR[51:70,  163:202] = 1
+    # dataR[71:90,  159:198] = 1
+    # dataR[51:60,  159:210] = 1
+    refImg = createImage(dataR)
+    options = getSomeStandardOptions()
+    return refImg, temImg, options
+end
+
+function constructTestImages2()
+    dataT = zeros(120,240);
+	dataT[26:65,26:65] = 1
+	dataT[56:95,86:125] = 1
+    # data[41:100, 181:220] = 1
+    dataT[56:95, 176:215] = 1
+    temImg = createImage(dataT) 
+    dataR = zeros(120,240);
+	
+	m1 = [60, 60]
+	m2 = [55, 125]
+	m3 = [60, 180]
+	
+	r = 15
+	r2 = 20
+
+	for i=1:size(dataR,1)
+		for j=1:size(dataR,2)
+			if norm([i,j] - m1) < r  || norm([i,j] - m2) < r2 || norm([i,j] - m3) < r
+ 				dataR[i,j] = 1
+			end
+		end
+	end
+	
     refImg = createImage(dataR)
     options = getSomeStandardOptions()
     return refImg, temImg, options

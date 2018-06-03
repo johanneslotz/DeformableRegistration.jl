@@ -1,5 +1,5 @@
 using Images
-# using Logging
+using MicroLogging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
@@ -117,7 +117,8 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
                                      regularizerOperator=createCurvatureOperatorCentered,
                                      initialDisplacement=scaledArray(zeros(1),(1,),[],[]),
                                      constraint = 0, subspaces = [],
-                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false)#BSpline(Linear()))
+                                     interpolationScheme=InterpLinearFast, gradientDescentOnly=false,
+                                     displayCallback=x->x)#BSpline(Linear()))
 
   doConstraints = constraint != 0
   doASPIN = size(subspaces,1) > 1
@@ -152,7 +153,8 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
   	end
 
   	imageSize = getSize(R)
-  	Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+    @info("level $level ,$(size(R.data)[1]) x $(size(R.data)[2]) ]")
+     
 
   	# define objective function
   	regularizerMatrix = regularizerOperator(R.voxelsize, imageSize)
@@ -171,7 +173,7 @@ function registerNonParametricConstraint(referenceImage, templateImage, options:
         c(x) = constraint(x, initialDisplacementCoarse)
         deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, constraint= c, printFunction = fValues)
     else
-        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues)
+        deformedGrid = opt(Jfunc, deformedGrid.data, referenceGrid.data, options, printFunction = fValues, displayCallback= displayCallback)
     end
     deformedGrid = scaledArray(deformedGrid, size(R.data), R.voxelsize, R.shift)
   end
@@ -189,13 +191,13 @@ end
 
 function opt(Jfunc::Function,  # objective Function
                              y::Array{Float64,1}, yReference::Array{Float64,1}, options::regOptions;
-                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false, subspaces=[]) #no constraint by default
+                             constraint::Function = x -> [0, 0, 0], printFunction=x->[], gradientDescentOnly=false, subspaces=[], displayCallback=x->x) #no constraint by default
 
     if size(subspaces,1) > 1
         return optimizeGaussNewtonASPIN(Jfunc, subspaces, y, yReference, options)
     else
         return optimizeGaussNewtonAugmentedLagrangian(Jfunc,  y, yReference, options,
-          constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly)
+          constraint=constraint, printFunction=printFunction, gradientDescentOnly=gradientDescentOnly, displayCallback=displayCallback)
     end
 
 end
