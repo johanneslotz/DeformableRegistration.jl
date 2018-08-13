@@ -260,8 +260,8 @@ end
 
 @testset "smoothing" begin
     for k=[3,5,7,11]
-        for x = [ones(10,11)*2, rand(63,26)]
-            x = ones(10,11)*2;
+        for x = [ones(10,11)*2.0, rand(63,26)]
+            #x = ones(10,11)*2.0;
             xnew = smoothArray(x,k, Float64(k))
             @test sum(x[:])  == sum(xnew[:])
         end
