@@ -130,7 +130,7 @@ end
 
 
 function optimizeGaussNewton(Jfunc::Function,  # objective Function
-                             y::Array{Float64,1}, yInitial::Array{Float64,1}, options::regOptions)
+                             y::Array{Float64,1}, yInitial::Array{Float64,1}, options::regOptions; displayCallback=x->x)
 
     # Initilization of JRef: reference value of objective Function
     JRef = Jfunc(yInitial)[1]
@@ -165,7 +165,12 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         if(LSfailed)
             break
         end
-        displayCallback()
+
+        # is this a IJulia notebook? -> hand over to user provided method to delete previous iteration's output
+        if isdefined(Main, :IJulia) && Main.IJulia.inited
+           displayCallback(true)
+        end
+
         # output
         if(cgIterations==0)
           s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
