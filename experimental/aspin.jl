@@ -34,7 +34,7 @@ function optimizeGaussNewtonASPIN(Jfunc::Function, S::Array{Float64,2}, # object
                 dy,flag,resvec,cgIterations = KrylovMethods.cg(Hi,dJp,maxIter=options.maxIterCG, tol=1e-5)[1:4]
                 if( (dJp'*dy)[1] > 0)
                     dy = -dy
-                    warn("Changing sign of computed descent direction. This is a suspicious move.")
+                    @warn "Changing sign of computed descent direction. This is a suspicious move."
                 end
                 # stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,Jp,dJp,yp[iterPatch,SiXY .== 1],dy)
                 # if(LSfailed)
@@ -47,10 +47,10 @@ function optimizeGaussNewtonASPIN(Jfunc::Function, S::Array{Float64,2}, # object
                 # output
                 if(cgIterations==0)
                   s = @sprintf("PATCH: %3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iterPatchGN, Jp[1], LSiter, Jp[1]/JRef[1])
-                  info(s)
+                  @info s
                 else
                   s = @sprintf("PATCH: %3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iterPatchGN, Jp[1], LSiter,cgIterations, Jp[1]/JRef[1])
-                  info(s)
+                  @info s
                 end
 
                 # update parameter y
@@ -96,23 +96,23 @@ function optimizeGaussNewtonASPIN(Jfunc::Function, S::Array{Float64,2}, # object
 	    # check descent direction
 	    if( (dJ'*dy)[1] > 0)
             dy = -dy
-            warn("Changing sign of computed descent direction. This is a suspicious move.")
+            @warn "Changing sign of computed descent direction. This is a suspicious move."
 	    end
 
         # armijo line search (LS) method
         stepLength,LSiter,LSfailed = ArmijoLineSearch(Jfunc,J,dJ,y,dy)
         if(LSfailed)
-            info("Line search failed.")
+            @info "Line search failed."
             break
         end
 
         # output
         if(cgIterations==0)
           s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
-          info(s)
+          @info s
         else
           s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
-          info(s)
+          @info s
         end
 
         # update parameter y

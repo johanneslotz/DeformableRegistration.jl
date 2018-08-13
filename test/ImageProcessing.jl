@@ -1,6 +1,7 @@
 using DeformableRegistration.ImageProcessing
 using Images
 using Base.Test
+using MicroLogging
 
 function checkImageProperties(img::regImage)
     # check if image has two dimensions

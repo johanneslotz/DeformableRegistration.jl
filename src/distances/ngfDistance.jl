@@ -1,6 +1,6 @@
 using DeformableRegistration
 using Images
-# using Logging
+using MicroLogging
 import DeformableRegistration.Distance.ngfDistance
 
 
@@ -38,7 +38,7 @@ function ngfDistance(referenceImage::regImage,templateImage::regImage,
           interpolateImage(templateImage,transformedGrid,doDerivative=false)
     end
 
-    Logging.debug("\n\n edgeParameterR: %5e    edgeParameterT %5e \n", edgeParameterR, edgeParameterT)
+    @debug "\n\n edgeParameterR: %5e    edgeParameterT %5e \n", edgeParameterR, edgeParameterT
 
     m = size(referenceImage.data)
     h = referenceImage.voxelsize

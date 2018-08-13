@@ -78,14 +78,14 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
         # check descent direction
         if( (dJ'*dy)[1] > 0)
          dy = -dy
-         warn("Changing sign of computed descent direction. This is a suspicious move.")
+         @warn "Changing sign of computed descent direction. This is a suspicious move."
         end
 
      # armijo line search (LS) method
      stepLength,LSiter,LSfailed = ArmijoLineSearch(x -> L(x, λ, μ), J, dJ, y, dy, tolLS=1e-4)
 
      if(LSfailed)
-         info("STOPPING after line search failed.")
+         @info "STOPPING after line search failed."
          break
      end
 
@@ -99,7 +99,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
      s = @sprintf("%03d | D %2.2e | S %2.2e | λ!=0: %d | |c(y)|= %2.2e | μ=%2.2e | LSiter: %2d | CGiter: %3d | J/Jref: %2.2e",
          iter, D[1], S[1], sum(λ.!=0), norm(c(y)[1], Inf), μ,  LSiter, cgIterations, J[1]/JRef[1],
          )
-     @info(s)
+     @info s
      @debug "  λ=", λ
      @debug "  c=", c(y)[1]
 
@@ -120,7 +120,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
 
      # updating JOld
      JOld = J[1]
-     info("\n")
+     @info "\n"
     end
 
     return y
@@ -157,7 +157,7 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
 	    # check descent direction
 	    if( (dJ'*dy)[1] > 0)
             dy = -dy
-            warn("Changing sign of computed descent direction. This is a suspicious move.")
+            @warn "Changing sign of computed descent direction. This is a suspicious move."
 	    end
 
         # armijo line search (LS) method
@@ -169,10 +169,10 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         # output
         if(cgIterations==0)
           s = @sprintf("%3d: J %8.4e     LSiter: %2d    J/Jref: %1.2f \n",iter, J[1], LSiter, J[1]/JRef[1])
-          info(s)
+          @info s
         else
           s = @sprintf("%3d: J %8.4e     LSiter: %2d     CGiter: %3d     J/Jref: %1.2f \n",iter, J[1], LSiter,cgIterations, J[1]/JRef[1])
-          info(s)
+          @info s
         end
 
         # update parameter y

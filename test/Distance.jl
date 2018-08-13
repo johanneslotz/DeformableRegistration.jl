@@ -1,6 +1,6 @@
 using DeformableRegistration: Distance, ImageProcessing, Transformation, Interpolation, regOptions
  using Base.Test
-#  using Logging
+ using MicroLogging
 
 include("helpers/checkDerivative.jl")
 
@@ -156,8 +156,8 @@ end
         referenceImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
         templateImage = createImage(imageData, voxelsize = [1.0,1.0], shift = [0.0, 0.0])
         transformedGrid = getCellCenteredGrid(restrictResolutionToLevel(referenceImage,2))
-        debug("-------- transformedGrid")
-        debug(transformedGrid)
+        @debug "-------- transformedGrid"
+        @debug transformedGrid
         # voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridSize::Tuple{Int64,Int64}
         functionValue,dFunctionValue,d2FunctionValue,d_transformedImage =
             ssdDistanceArbitraryGrid(referenceImage, templateImage, transformedGrid)

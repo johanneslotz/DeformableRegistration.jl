@@ -1,7 +1,7 @@
 module Examples
 
 using Images
-# using Logging
+using MicroLogging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
@@ -25,7 +25,7 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
     T = restrictResolutionToLevel(templateImage,level)
 
     # output
-    Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+    @info "level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]"
 
     # define objective function
     Jfunc(param;doDerivative=false,doHessian=false) =
@@ -75,7 +75,7 @@ function registerImagesNonParametric(referenceImage, templateImage, options::reg
   	end
 
   	imageSize = getSize(R)
-  	Logging.info("level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]")
+  	@info "level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]"
 
   	# define objective function
   	regularizerMatrix = regularizerOperator(R.voxelsize, imageSize)
