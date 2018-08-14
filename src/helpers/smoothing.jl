@@ -6,37 +6,32 @@ function getGaussianKernel(s::Int, width::Float64)
     return k
 end
 
-function smoothArray(a::Array{Float64,1}, kernelSize::Int, width::Float64;
-        kernel::Array{Float64,1}=getGaussianKernel(kernelSize, width))
-    a_smooth = zeros(size(a))
-    halfKernelSize = Int((kernelSize-1)/2)
-    for i = 1:halfKernelSize
-        a_smooth[i] = a[i]
-        a_smooth[end-i+1] = a[end-i+1]
-    end
-    for i=halfKernelSize+1:(length(a)-halfKernelSize)
-        a_smooth[i] = (a[(i-halfKernelSize):(i+halfKernelSize)])'*kernel
-    end
-    return a_smooth
-end
-
-function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=[])
+function smoothArray(a::Array{Float64,1}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(0))
     if length(kernel)==0
         kernel = getGaussianKernel(kernelSize, width)
-    else
-    #kernel=[1/6, 2/3, 1/6]
-        a_smooth = zeros(size(a))
-        for i = 1:size(a,1)
-            a_smooth[i,:] = smoothArray(a[i,:], kernelSize, width, kernel=kernel)
-        end
-        for i = 1:size(a,2)
-            a_smooth[:,i] = smoothArray(a_smooth[:,i], kernelSize, width, kernel=kernel)
-        end
     end
+
+    halfKernelSize = Int((kernelSize-1)/2)
+    return conv(a, kernel)[halfKernelSize:end-halfKernelSize-1]
+end
+
+function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(0))
+    if length(kernel)==0
+        kernel = getGaussianKernel(kernelSize, width)
+    end
+    #kernel=[1/6, 2/3, 1/6]
+    a_smooth = zeros(size(a))
+    for i = 1:size(a,1)
+        a_smooth[i,:] = smoothArray(a[i,:], kernelSize, width, kernel=kernel)
+    end
+    for i = 1:size(a,2)
+        a_smooth[:,i] = smoothArray(a_smooth[:,i], kernelSize, width, kernel=kernel)
+    end
+
     return a_smooth
 end
 
-function smoothArray(a::scaledArray, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=[])
+function smoothArray(a::scaledArray, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(0))
     if length(kernel)==0
         kernel = getGaussianKernel(kernelSize, width)
     else
