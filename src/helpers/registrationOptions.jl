@@ -20,6 +20,7 @@ type regOptions
   # optimization
   maxIterGaussNewton::Int
   maxIterCG::Int
+  tolCG::Float64
   stopping::Dict
 
   # additional options in dict
@@ -37,6 +38,7 @@ type regOptions
     regularizerWeight = 1
     maxIterGaussNewton = 30
     maxIterCG = 2000
+    tolCG = 1e-5
     stopping = Dict(
         "tolJ" => 1e-3,    # tolerance: change of the objective function
         "tolY" => 1e-2,    # tolerance: change of the variables
@@ -47,7 +49,7 @@ type regOptions
     new(parametricOnly,matrixFree,levels, interpolateToReferenceImage,
         edgeParameterR,edgeParameterT,useEdgeParameterInNumerator,
         regularizerWeight,
-        maxIterGaussNewton,maxIterCG, stopping,
+        maxIterGaussNewton,maxIterCG, tolCG, stopping,
         additionalOptions)
   end
 

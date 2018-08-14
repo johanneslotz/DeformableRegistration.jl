@@ -73,7 +73,7 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
          dy = -dJ
          cgIterations = -1
      else
-         dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4] #2/3 of the time of this function is here
+         dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=options.tolCG)[1:4] #2/3 of the time of this function is here
      end
 
         # check descent direction
@@ -152,7 +152,7 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         if(length(y)<10 && !(typeof(d2J) <: Function))
             dy=d2J\-dJ
         else
-            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=1e-5)[1:4]
+            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=options.tolCG)[1:4]
         end
 
 	    # check descent direction
