@@ -3,7 +3,7 @@ module Visualization
 using PyPlot
 using Images
 using MicroLogging
-using DeformableRegistration: Transformation, Interpolation, ImageProcessing
+using DeformableRegistration: Transformation, Interpolation, ImageProcessing, Types
 
 export showImage, plotGrid, visualizeResults, clf, figure, suptitle
 

@@ -1,17 +1,17 @@
 module ImageProcessing
 
 using Images
+using DeformableRegistration.Types
 
 export createImage, loadImage, setImageProperties
 export restrictResolutionToLevel
 export getSize, getSpatialDomain, getPixelSpacing
-export regImage
 
-struct regImage
-           data::ImageMeta
-           voxelsize::Array{Float64, 1}
-           shift::Array{Float64, 1}
-end
+include("./helpers/smoothing.jl")
+export smoothArray
+
+
+
 
 # load image and convert it into gray image
 function loadImage(pathToFile;

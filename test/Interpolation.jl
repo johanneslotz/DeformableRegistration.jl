@@ -1,9 +1,9 @@
-using DeformableRegistration: Transformation, ImageProcessing, Interpolation
+using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Distance
  using Base.Test
  using Interpolations: BSpline, Linear, Cubic, Line, Free
 #  using Logging
 #  Logging.configure(level=INFO)
- include("../src/helpers/smoothing.jl")
+
 
 @testset "Interpolation" begin
 ##
@@ -260,10 +260,16 @@ end
 
 @testset "smoothing" begin
     for k=[3,5,7,11]
+        k_half = Int(ceil(k/2))
         for x = [ones(10,11)*2.0, rand(63,26)]
+            x[1:k_half,:] = 0
+            x[:,1:k_half] = 0
+            x[end-k_half:end,:] = 0
+            x[:,end-k_half:end] = 0
+
             #x = ones(10,11)*2.0;
             xnew = smoothArray(x,k, Float64(k))
-            @test sum(x[:])  == sum(xnew[:])
+            @test sum(x[:]) ≈ sum(xnew[:])
         end
     end
 

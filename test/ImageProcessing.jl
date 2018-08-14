@@ -1,4 +1,5 @@
 using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Types
 using Images
 using Base.Test
 using MicroLogging

@@ -107,8 +107,6 @@ function ssdDerivativesMatrixFree(dX_transformedImage::Array{Float64,1},
 end
 
 
-include("../helpers/smoothing.jl")
-
 function sampleArrayToGridWithSmoothing(a::scaledArray, newGrid::scaledArray)
     # @assert (a.dimensions[1] > newGrid.dimensions[1] &&
     #     a.dimensions[2] > newGrid.dimensions[2]) "new Grid has to be coarser then current grid"

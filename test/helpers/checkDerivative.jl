@@ -1,6 +1,5 @@
 using MicroLogging
 
-include("../../src/helpers/smoothing.jl")
 
 function checkDerivative(fullF::Function,x;doPlot::Bool=false, smoothOffset::Bool=false)
     df = fullF(x)[2]'

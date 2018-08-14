@@ -5,6 +5,8 @@ using MicroLogging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
+using DeformableRegistration.Types
+
 using Interpolations
 
 export registerImagesParametric, registerImagesNonParametric

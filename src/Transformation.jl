@@ -4,50 +4,11 @@ using Images
 using Interpolations
 
 using DeformableRegistration.ImageProcessing
+using DeformableRegistration.Types
 
 export getCellCenteredGrid, getNodalGrid, stg2cen, cen2stg, checkForOddNumberOfGridPoints, getCellCenteredGridRanges
-export transformGridAffine, transformWorldCoordinate, scaledArray, + , - , *
+export transformGridAffine, transformWorldCoordinate
 
-
-struct scaledArray
-           data::Array{Float64, 1}
-           dimensions::Tuple{Vararg{Int64}}
-           voxelsize::Array{Float64, 1}
-           shift::Array{Float64, 1}
-end
-
-import Base.+
-import Base.-
-import Base.*
-import Base.size
-
-function +(a::scaledArray, b::scaledArray)
-    @assert a.voxelsize == b.voxelsize "Array's world matrices must match"
-    @assert a.shift == b.shift "Array's world matrices must match"
-    return(scaledArray(a.data+b.data, a.dimensions, a.voxelsize, a.shift))
-end
-
-function +(a::scaledArray, b::Array{Float64,1}) # for derivative check
-    return(scaledArray(a.data+b, a.dimensions, a.voxelsize, a.shift))
-end
-
-function +(b::Number, a::scaledArray ) # for derivative check
-    return(scaledArray(a.data+b, a.dimensions, a.voxelsize, a.shift))
-end
-
-function -(a::scaledArray, b::scaledArray)
-    return(a + (-1 * b))
-end
-
-function *(s::Number, a::scaledArray)
-    b = deepcopy(a)
-    b.data[:] = s * b.data[:]
-    return b
-end
-
-function size(a::scaledArray)
-    return size(a.data)
-end
 
 function getCellCenteredGrid(I::regImage)
   return getCellCenteredGrid(I.voxelsize,I.shift,size(I.data))
