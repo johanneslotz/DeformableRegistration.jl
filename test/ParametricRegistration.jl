@@ -14,17 +14,29 @@ using DeformableRegistration: ImageProcessing, Distance, Transformation, Interpo
     temImg = interpolateImage(refImg,transformedGrid,interpolationScheme=InterpLinearFast)[1]
     temImg = createImage(temImg)
     options = regOptions()
-    options.levels = [7,6,5,4]
+    options.levels = [4,3]
     options.parametricOnly = true;
     options.matrixFree = true;
-    options.useEdgeParameterInNumerator
+    options.tolCG = 1e-3
+    options.useEdgeParameterInNumerator = true
+    edgeParameterR = 0.1
+    edgeParameterT = 0.1
+
+    @info D
 
     affineParameters = registerImagesParametric(refImg,temImg, options, measureDistance=D)
-    @test affineParameters[1] ≈ 1/affineParametersInitial[1] atol=0.1
-    @test affineParameters[2] ≈ 0  atol=0.1
-    @test affineParameters[3] ≈ -affineParametersInitial[3]/affineParametersInitial[1]  atol=2
-    @test affineParameters[4] ≈ 0  atol=0.1
-    @test affineParameters[5] ≈ 1/affineParametersInitial[5]  atol=1
-
+    if D==DeformableRegistration.Distance.ssdDistance
+        @test affineParameters[1] ≈ 1/affineParametersInitial[1] atol=0.1
+        @test affineParameters[2] ≈ 0  atol=1e-2
+        @test affineParameters[3] ≈ -affineParametersInitial[3]/affineParametersInitial[1]  atol=5
+        @test affineParameters[4] ≈ 0  atol=1e-2
+        @test affineParameters[5] ≈ 1/affineParametersInitial[5]  atol=0.1
+    else
+        @test affineParameters[1] ≈ 1/affineParametersInitial[1] atol=0.1
+        @test affineParameters[2] ≈ 0  atol=5e-2
+        @test affineParameters[3] ≈ -affineParametersInitial[3]/affineParametersInitial[1]  atol=5
+        @test affineParameters[4] ≈ 0  atol=1e-1
+        @test affineParameters[5] ≈ 1/affineParametersInitial[5]  atol=0.5
+    end
 end
 end

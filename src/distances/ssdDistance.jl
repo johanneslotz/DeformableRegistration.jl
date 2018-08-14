@@ -11,7 +11,7 @@ end
 
 function ssdDistance(referenceImage::regImage,templateImage::regImage,
                      transformedGrid::Array{Float64,1};
-                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::Array{Float64,1}=zeros(1))
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::Array{Float64,1}=zeros(1), interpolationScheme=BSpline(Cubic(Line())))
 
   # get relevant options
   parametricOnly = options.parametricOnly
@@ -32,7 +32,7 @@ function ssdDistance(referenceImage::regImage,templateImage::regImage,
 
   # interpolation of the template image at transformed grid points
   transformedImage, dX_transformedImage, dY_transformedImage =
-      interpolateImage(templateImage,transformedGrid,doDerivative=true)
+      interpolateImage(templateImage,transformedGrid,doDerivative=true, interpolationScheme=interpolationScheme)
 
   # measure the ssd distance
   N = prod(size(referenceImage.data)) # product of sizes
@@ -150,7 +150,7 @@ function ssdDistanceArbitraryGrid(referenceImage::regImage,templateImage::regIma
         doDerivative=doDerivative, interpolationScheme=interpolationScheme)
 
   # measure the ssd distance
-  residual = mask[:].*(transformedImage .- referenceImage.data.data)[:]
+  residual = mask[:].*(transformedImage .- referenceImage.data)[:]
   prodh = prod(targetGrid.voxelsize)
   functionValue = 0.5 * prodh * sum(residual.^2)
 

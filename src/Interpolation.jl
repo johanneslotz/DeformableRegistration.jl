@@ -12,7 +12,7 @@ export interpolateDeformationField
 
 function interpolateImage(
     I::regImage,transformedGrid::scaledArray;
-    doDerivative=false,interpolationScheme=InterpLinearFast)
+    doDerivative=false,interpolationScheme=interpolationScheme=BSpline(Cubic(Line())))
 
     return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid.data, transformedGrid.dimensions;
                             doDerivative=doDerivative,interpolationScheme=interpolationScheme)
@@ -28,8 +28,8 @@ end
 
 function interpolateImage(
     I::regImage,transformedGrid::Array{Float64,1};
-    doDerivative=false,interpolationScheme=InterpLinearFast)
-    @assert prod(size(I.data.data))==length(transformedGrid)/2
+    doDerivative=false,interpolationScheme=interpolationScheme=BSpline(Cubic(Line())))
+    @assert prod(size(I.data))==length(transformedGrid)/2
     return interpolateArray(Array(I.data), I.voxelsize, I.shift, transformedGrid, size(I.data);
                             doDerivative=doDerivative,interpolationScheme=interpolationScheme)
 end
@@ -37,7 +37,7 @@ end
 function interpolateArray(
     data::Array{Float64,2}, voxelsize::Array{Float64,1},
     shift::Array{Float64,1}, transformedGrid::Array{Float64,1}, newDimensions::Tuple{Vararg{Int64}};
-    doDerivative=false, interpolationScheme=InterpLinearFast)
+    doDerivative=false, interpolationScheme=BSpline(Cubic(Line())))
 
   # use faster linear interpolation as default
   if(interpolationScheme == InterpLinearFast)

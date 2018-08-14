@@ -19,7 +19,7 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Di
     deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
     transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
     transformedImageOnly,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true)
-    transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true)
+    transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true, interpolationScheme=InterpLinearFast)
     transformedImageRef,dY_transformedImageRef,dX_transformedImageRef = interpolateImage(img,transformedGrid,doDerivative=true,interpolationScheme=BSpline(Linear()))
 
     ## using PyPlot
@@ -27,15 +27,15 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Di
     #dY_transformedImageRef = reshape(dY_transformedImageRef, size(img.data))
     #imshow(dY_transformedImage-dY_transformedImageRef)
     @test norm(transformedImageOnly - transformedImageRef) < 1.0
-    @test transformedImageOnly[1:10] ≈ transformedImageRef[1:10]
+    @test transformedImageOnly[1:10] ≈ transformedImageRef[1:10] atol=1e-3
 
     @test norm(transformedImage - transformedImageRef) < 1.0
-    @test transformedImage[1:10] ≈ transformedImageRef[1:10]
+    @test transformedImage[1:10] ≈ transformedImageRef[1:10] atol=1e-3
 
-    @test norm(dY_transformedImage - dY_transformedImageRef) ≈ 0 atol=20
+    @test norm(dY_transformedImage - dY_transformedImageRef) ≈ 0 atol=0.5 #20
     @test dY_transformedImage[1:10] ≈ dY_transformedImageRef[1:10]
 
-    @test norm(dX_transformedImage - dX_transformedImageRef) ≈ 0 atol=20
+    @test norm(dX_transformedImage - dX_transformedImageRef) ≈ 0 atol=0.5 #20
     @test dX_transformedImage[1:10] ≈ dX_transformedImageRef[1:10]
 end
 
@@ -150,49 +150,6 @@ end
     @test checkErrorDecay(errquad)
 end
 
-
-##
-@testset "Interpolation: check timing of linear interpolation" begin
-    using Interpolations: BSpline, Linear
-    # check timing
-    img = createImage(rand(1024,1024))
-    centeredGrid = getCellCenteredGrid(img)
-    affineParameters = [0.5,0.4,50,0,0.5,100]
-    deformationField = zeros(prod(size(img.data))*2)
-    deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
-    deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
-    transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-    # InterpLinearFast
-    tic();
-    for i=1:5
-      interpolateImage(img,transformedGrid)
-    end
-    timing = toq()/5;
-    info("Interpolation: interpolateImage (InterpLinearFast) took ",timing," seconds.")
-    # InterpLinear (Grid.jl)
-    tic();
-    for i=1:5
-      interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()))
-    end
-    timingGrid = toq()/5;
-    info("Interpolation: interpolateImage (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
-    # InterpLinearFast with derivative
-    tic();
-    for i=1:5
-      interpolateImage(img,transformedGrid,doDerivative=true)
-    end
-    timing = toq()/5;
-    info("Interpolation: interpolateImage with derivative (InterpLinearFast) took ",timing," seconds.")
-    # InterpLinear (Grid.jl) with derivative
-    tic();
-    for i=1:5
-      interpolateImage(img,transformedGrid,interpolationScheme=BSpline(Linear()),doDerivative=true)
-    end
-    timingGrid = toq()/5;
-    info("Interpolation: interpolateImage with derivative (InterpLinear, Interpolations.jl) took ",timingGrid," seconds.")
-    @test timingGrid>timing
-    #Logging.info("Interpolation: Own linear interpolation with derivative is faster ✔")
-end
 ##
 @testset "compare different interpolation types on real data" begin
     testimage = dirname(Base.source_path()) * "/testdata/luebeck.jpg"

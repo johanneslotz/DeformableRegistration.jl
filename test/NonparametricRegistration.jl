@@ -17,7 +17,7 @@ using MicroLogging
     dataR[41:80,41:90] = 1
     refImg = createImage(dataR)
     options = DeformableRegistration.regOptions()
-    options.levels = [5,4,3,2]
+    options.levels = [3,2]
     options.matrixFree = true;
     options.interpolateToReferenceImage = true
     options.regularizerWeight = 1
@@ -28,8 +28,8 @@ using MicroLogging
     ngfvalue = ngfDistance(refImg, temImg, getCellCenteredGrid(refImg).data + displacement.data, options=options)[1]
     #visualizeResults(refImg, temImg, displacement=displacement)
 
-    @test ssdvalue ≈ 42.63 atol=1e-1
-    @test ngfvalue ≈ 365.01 atol=1e-1
+    @test ssdvalue ≈ 12.95 atol=1e-1
+    @test ngfvalue ≈ 633.26 atol=1e-1
 
 end
 
@@ -81,7 +81,7 @@ end
 	centeredGrid = getCellCenteredGrid(referenceImage)
 	affineParametersInitial = [1.0,0.0,-50,0.0,1.0,-50]
 	transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)[1]
+	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=BSpline(Cubic(Line())))[1]
 	templateImage = createImage(temImg)
 	options = regOptions()
 	options.levels = [6,5,4,3]
@@ -107,7 +107,7 @@ end
 	centeredGrid = getCellCenteredGrid(referenceImage)
 	affineParametersInitial = [1.0,0.0,-50,0.0,1.0,-50]
 	transformedGrid = transformGridAffine(centeredGrid,affineParametersInitial)
-	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=InterpLinearFast)[1]
+	temImg = interpolateImage(referenceImage,transformedGrid,interpolationScheme=BSpline(Cubic(Line())))[1]
 	templateImage = createImage(temImg)
 	options = regOptions()
 	options.levels = [6,5]

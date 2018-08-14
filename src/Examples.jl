@@ -40,11 +40,14 @@ function registerImagesParametric(referenceImage,templateImage, options::regOpti
   return affineParameters
 end
 
+
+
+
 function registerImagesNonParametric(referenceImage, templateImage, options::regOptions;
                                      affineParameters = [1.0,0,0,0,1.0,0],
                                      measureDistance = ssdDistance,
                                      regularizerOperator=createCurvatureOperatorCentered,
-                                     initialDisplacement=scaledArray(zeros(1),(1,),[],[]))
+                                     initialDisplacement=scaledArray(zeros(1),(1,),[],[]), interpolationScheme=BSpline(Cubic(Line())))
 
   affineParametersInitial = affineParameters
   options.parametricOnly = false
@@ -66,24 +69,27 @@ function registerImagesNonParametric(referenceImage, templateImage, options::reg
             deformedGrid = referenceGrid
         else
             referenceGrid = transformGridAffine(centeredGrid,affineParameters)
-    	    deformedGrid = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=InterpLinearFast) + referenceGrid
+    	    deformedGrid = interpolateDeformationField(initialDisplacement, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
         end
   	else
   	      #deformation field interpolation
   	      displacementField = deformedGrid - referenceGrid
   	      referenceGrid = transformGridAffine(centeredGrid,affineParameters)
-  	      deformedGrid = interpolateDeformationField(displacementField, referenceGrid, interpolationScheme=InterpLinearFast) + referenceGrid
+  	      deformedGrid = interpolateDeformationField(displacementField, referenceGrid, interpolationScheme=interpolationScheme) + referenceGrid
   	end
 
   	imageSize = getSize(R)
   	@info "level ",level,": [",size(R.data)[1],"]x[",size(R.data)[2],"]"
-
+    function  Jfunc(grid;doDerivative=false,doHessian=false)
+        D = measureDistance(R, T, grid, doDerivative=doDerivative, doHessian=doHessian, options=options, centeredGrid=centeredGrid.data)[1:3]
+        S = regularizer(grid-referenceGrid.data,regularizerMatrix)
+        if doDerivative
+            @info "    D = $(D[1])    S = $(S[1])."
+        end
+        return D + options.regularizerWeight * S
+    end
   	# define objective function
   	regularizerMatrix = regularizerOperator(R.voxelsize, imageSize)
-  	Jfunc(grid;doDerivative=false,doHessian=false) =
-        measureDistance(R, T, grid, doDerivative=doDerivative,
-            doHessian=doHessian, options=options, centeredGrid=centeredGrid.data)[1:3] +
-            options.regularizerWeight * regularizer(grid-referenceGrid.data,regularizerMatrix)
 
   	## gauss newton method
   	deformedGrid = optimizeGaussNewton(Jfunc, deformedGrid.data, affineParametersInitialGrid.data, options)
@@ -94,7 +100,7 @@ function registerImagesNonParametric(referenceImage, templateImage, options::reg
   displacementField = deformedGrid-referenceGrid
   if options.interpolateToReferenceImage
       referenceGrid = transformGridAffine(getCellCenteredGrid(referenceImage),affineParameters)
-      return interpolateDeformationField(displacementField, referenceGrid, interpolationScheme=BSpline(Linear()))
+      return interpolateDeformationField(displacementField, referenceGrid, interpolationScheme=BSpline(Cubic(Flat())))
   else
       return displacementField
   end
