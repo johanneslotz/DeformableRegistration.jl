@@ -5,7 +5,6 @@ import Interpolations.Throw # see https://github.com/JuliaMath/Interpolations.jl
 
 # using Logging.debug
 using DeformableRegistration.Transformation
-using DeformableRegistration.ImageProcessing
 using DeformableRegistration.Types
 
 

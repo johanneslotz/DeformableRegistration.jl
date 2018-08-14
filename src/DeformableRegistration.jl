@@ -1,15 +1,15 @@
 module DeformableRegistration
 
-# helping functions
-include("Types.jl")
+# helper functions
 include("helpers/matrixFreeHelpers.jl")
 include("helpers/registrationOptions.jl");
-#include("helpers/objectiveFunctionCreation.jl")
 
 # submodules
-include("ImageProcessing.jl")
+include("Types.jl")
 include("Transformation.jl")
 include("Interpolation.jl")
+include("ImageProcessing.jl")
+
 
 include("Distance.jl")
 include("Regularizer.jl")

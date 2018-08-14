@@ -2,7 +2,9 @@ module ImageProcessing
 
 using Images
 using DeformableRegistration.Types
-
+using DeformableRegistration.Transformation
+using DeformableRegistration.Interpolation
+using MicroLogging
 export createImage, loadImage, setImageProperties
 export restrictResolutionToLevel
 export getSize, getSpatialDomain, getPixelSpacing

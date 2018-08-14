@@ -2,9 +2,9 @@ module Transformation
 
 using Images
 using Interpolations
-
-using DeformableRegistration.ImageProcessing
 using DeformableRegistration.Types
+# using DeformableRegistration.ImageProcessing
+
 
 export getCellCenteredGrid, getNodalGrid, stg2cen, cen2stg, checkForOddNumberOfGridPoints, getCellCenteredGridRanges
 export transformGridAffine, transformWorldCoordinate
