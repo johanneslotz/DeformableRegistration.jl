@@ -1,8 +1,8 @@
 julia 0.6
-Images
+FileIO
+ColorTypes
 Interpolations
 PyCall
 PyPlot
-Stats
-ImageMagick
+MicroLogging
 KrylovMethods
