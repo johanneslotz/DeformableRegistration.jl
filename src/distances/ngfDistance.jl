@@ -1,5 +1,4 @@
 using DeformableRegistration
-using Images
 using MicroLogging
 import DeformableRegistration.Distance.ngfDistance
 

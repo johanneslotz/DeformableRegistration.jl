@@ -1,6 +1,7 @@
 module ImageProcessing
 
-using Images
+using FileIO
+using ColorTypes
 using DeformableRegistration.Types
 using DeformableRegistration.Transformation
 using DeformableRegistration.Interpolation
@@ -20,11 +21,10 @@ function loadImage(pathToFile;
                    voxelsize = [1.0,1.0], shift = [0.0, 0.0])
 
     # load image
-    image = Images.load(pathToFile)
+    image = load(pathToFile)
     #image = permutedims(image, (2,1))
 
-    # convert image to gray image
-    image = Images.Gray.(image)
+    image = convert(Array{ColorTypes.Gray},image)
 
     # convert image data to float (easier access)
     image = convert(Array{Float64,2},image)
@@ -45,29 +45,32 @@ function createImage(imageData;
 
 end
 
+function restrictRegImage(im::regImage)
+    newImage = deepcopy(im)
+    newImage.data[:] = smoothArray(newImage.data, 3, 3.0)
+    oldsize = size(im)
+    newsize = map(Int,ceil.(oldsize./2))
+    newGrid = getCellCenteredGrid(im.voxelsize*2, im.shift, newsize)
+    newImage = createImage(interpolateImage(newImage,newGrid)[1], voxelsize = newGrid.voxelsize, shift = newGrid.shift)
+    return newImage
+end
 
-function restrictResolutionToLevel(image::regImage,level)
+
+function restrictResolutionToLevel(im::regImage,level)
 
     # copy restrict image, there seems to be a bug in the image copy method, take care of the deepcopy here
-    im = deepcopy(image.data)
+    #im = deepcopy(image.data)
     maxlevel = 0;
     for l=1:level
-        if( (width(im)>2) && (height(im)>2) )
-            im = restrict(im)
+        if( (size(im.data,1)>2) && (size(im.data,2)>2) )
+            im = restrictRegImage(im)
         end
     end
-
-    voxelsizeNew = zeros(2)
-    for xy = 1:2
-        voxelsizeNew[xy] = (image.voxelsize[xy] * size(image.data,xy))/size(im,xy)
-    end
-
-    return regImage(im,voxelsizeNew,image.shift)
-
+    return im
 end
 
 function getSize(I::regImage)
-  return [height(I.data), width(I.data)]
+  return [size(I.data,1), size(I.data,2)]
 end
 
 

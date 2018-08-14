@@ -39,8 +39,8 @@ end
     img = createImage(imgdata)
     checkImageProperties(img)
     restrictedImage = restrictResolutionToLevel(img,1)
-    @test img.voxelsize[1] == restrictedImage.voxelsize[1] / (64/33)
-    @test img.voxelsize[2] == restrictedImage.voxelsize[2] / (128/65)
+    @test img.voxelsize[1] == ceil(restrictedImage.voxelsize[1] / 2)
+    @test img.voxelsize[2] == ceil(restrictedImage.voxelsize[2] / 2)
 
 
     # test restrictResolutionToLevel
@@ -48,24 +48,22 @@ end
     img = createImage(imgdata)
     # check image properties for each level of the created image
     restrictedImage = restrictResolutionToLevel(img,2)
-    @test img.voxelsize[1] == restrictedImage.voxelsize[1] / (65/17)
-    @test img.voxelsize[2] == restrictedImage.voxelsize[2] / (128/33)
+    @test img.voxelsize[1] == ceil(ceil(restrictedImage.voxelsize[1] / 2) / 2)
+    @test img.voxelsize[2] == ceil(ceil(restrictedImage.voxelsize[2] / 2) / 2)
 
 end
 
 @testset "write image" begin
-    import FileIO
-    imgdata = round.(100*rand(64,128))
-    imgdata = convert(Array{Int64,2},imgdata)
-    #imgdata = imgdata - minimum(imgdata)
-    #imgdata = imgdata / maximum(imgdata)
+    using FileIO, QuartzImageIO
+
+    imgdata = rand(64,128) # x \in [0, 1]
     img = createImage(imgdata)
     # load image, write image, load the written image and compare it
-    testimagewrite = dirname(Base.source_path()) * "/testdata/testimage_write.png"
-    FileIO.save(testimagewrite, img.data)
+    testimagewrite = dirname(Base.source_path()) * "/testdata/testimage_write.jpg"
+    save(testimagewrite, img.data)
     imgwritten = loadImage(testimagewrite)
     A = convert(Array{Float64,2},img.data)
     B = convert(Array{Float64,2},imgwritten.data)
-    @test norm(A .- B) < 0.03
+    @test norm(A .- B)/length(A) < 0.0001
 end
 end

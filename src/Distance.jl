@@ -1,7 +1,5 @@
 module Distance
 
-using Images
-
 using DeformableRegistration
 using DeformableRegistration.Transformation
 using DeformableRegistration.Interpolation

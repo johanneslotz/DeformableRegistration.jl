@@ -1,5 +1,5 @@
 module Types
-    using Images
+    #using Images
     struct scaledArray
                data::Array{Float64, 1}
                dimensions::Tuple{Vararg{Int64}}
@@ -8,7 +8,7 @@ module Types
     end
 
     struct regImage
-               data::ImageMeta
+               data::Array{Float64,2}
                voxelsize::Array{Float64, 1}
                shift::Array{Float64, 1}
     end
@@ -50,6 +50,11 @@ module Types
     function size(a::scaledArray)
         return size(a.data)
     end
+
+    function size(a::regImage)
+        return size(a.data)
+    end
+
 
 
     # helpers to make addition/multiplication of distance and regularizer possible

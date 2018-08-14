@@ -1,6 +1,5 @@
 module Examples
 
-using Images
 using MicroLogging
 
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization

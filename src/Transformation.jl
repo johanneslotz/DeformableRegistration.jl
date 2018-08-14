@@ -1,6 +1,6 @@
 module Transformation
 
-using Images
+#using Images
 using Interpolations
 using DeformableRegistration.Types
 # using DeformableRegistration.ImageProcessing
@@ -38,99 +38,7 @@ function getNodalGrid(voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridS
     return scaledArray(vcat(xgrid,ygrid), gridSize, voxelsize, shift)
 end
 
-# # staggered grid to Cellcentered grid
-# function stg2cen(staggeredGrid::Array{Float64,1},gridSize::Tuple{Int,Int})
-#     N = prod(gridSize)
-#     M = gridSize[1]*(gridSize[2]+1)
-#     centeredGrid = zeros(2*N)
-#     for j=1:gridSize[2]
-#         for i=1:gridSize[1]
-#             centeredGrid[  (j-1)*gridSize[1]+i] = (staggeredGrid[(j-1)* (gridSize[1]+1)+i]      + staggeredGrid[j*gridSize[1]+i]            ) / 2
-#             centeredGrid[N+(j-1)*gridSize[1]+i] = (staggeredGrid[M+(j-1)*(gridSize[1]+1)+i] + staggeredGrid[M+(j-1)*(gridSize[1]+1)+i+1]) / 2
-#         end
-#     end
-#     return centeredGrid
-# end
-#
-# # Cellcentered grid to staggeredGrid
-# function cen2stg(centeredGrid::Array{Float64,1},gridSize::Array{Int64,1})
-#     NX = (gridSize[2]+1)*gridSize[1]
-#     NY = (gridSize[1]+1)*gridSize[2]
-#     M = prod(gridSize)
-#     staggeredGrid = zeros(NX+NY)
-#
-#     # staggered grid in horizontal direction
-#     # inner part
-#     for i=gridSize[1]+1:M
-#         staggeredGrid[i] = ( centeredGrid[i-gridSize[1]] + centeredGrid[i] ) / 2
-#     end
-#     # outer part (edge area)
-#     for i=1:gridSize[1]
-#         staggeredGrid[i] = centeredGrid[i] / 2
-#     end
-#     for i=M+1:NX
-#         staggeredGrid[i] = centeredGrid[i-gridSize[1]] / 2
-#     end
-#
-#     # staggered grid in vertical direction
-#     # inner part
-#     for j=1:gridSize[2]
-#         staggeredGrid[NX+(j-1)*(gridSize[1]+1)+1] = centeredGrid[M+1+(j-1)*gridSize[1]] / 2
-#         for i=2:gridSize[1]
-#             staggeredGrid[NX+(j-1)*(gridSize[1]+1)+i] = (centeredGrid[M+i+(j-1)*gridSize[1]-1] + centeredGrid[M+i+(j-1)*gridSize[1]]) / 2
-#         end
-#         staggeredGrid[NX+j*(gridSize[1]+1)] = centeredGrid[M+j*gridSize[1]] / 2
-#     end
-#
-#     return staggeredGrid
-# end
-#
-# function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},Function,Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = cen2stg(distanceOutput[2],getSize(refImg))
-#   d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
-#   dTransformedImage = distanceOutput[4]
-#   return(D, dD, d2D, dTransformedImage)
-# end
-#
-# function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},Function}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = cen2stg(distanceOutput[2],getSize(refImg))
-#   d2D(grid) = cen2stg(distanceOutput[3](stg2cen(grid,getSize(refImg))),getSize(refImg))
-# 	return(D, dD, d2D)
-# end
-
-# function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64},Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = cen2stg(distanceOutput[2],getSize(refImg))
-#   d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
-#   dTransformedImage = distanceOutput[4]
-#   return(D, dD, d2D, dTransformedImage)
-# end
-#
-# function cen2stg(distanceOutput::Tuple{Number,Array{Float64,1},SparseMatrixCSC{Float64,Int64}}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = cen2stg(distanceOutput[2],getSize(refImg))
-#   d2D(grid) = cen2stg(distanceOutput[3]*stg2cen(grid,getSize(refImg)),getSize(refImg))
-#   return(D, dD, d2D)
-# end
-#
-# function cen2stg(distanceOutput::Tuple{Number,Any,Any,Tuple{Array{Float64,1},Array{Float64,1}}}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = distanceOutput[2]
-#   d2D = distanceOutput[3]
-#   dTransformedImage = distanceOutput[4]
-#   return(D, dD, d2D, dTransformedImage)
-# end
-#
-# function cen2stg(distanceOutput::Tuple{Number,Number,Number}, refImg::ImageMeta)
-#   D = distanceOutput[1]
-#   dD = distanceOutput[2]
-#   d2D = distanceOutput[3]
-#   return(D, dD, d2D)
-# end
-#
-function checkForOddNumberOfGridPoints(I::ImageMeta,grid::Array{Float64,1})
+function checkForOddNumberOfGridPoints(I::Array{Float64,2},grid::Array{Float64,1})
   if( 2*prod(size(I)) == size(grid,1) )
       return false
   else

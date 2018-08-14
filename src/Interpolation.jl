@@ -1,5 +1,4 @@
 module Interpolation
-using Images
 using Interpolations
 import Interpolations.Throw # see https://github.com/JuliaMath/Interpolations.jl/issues/127
 
