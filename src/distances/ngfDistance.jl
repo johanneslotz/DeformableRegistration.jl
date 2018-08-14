@@ -4,6 +4,16 @@ using MicroLogging
 import DeformableRegistration.Distance.ngfDistance
 
 
+function ngfDistance(referenceImage::regImage,templateImage::regImage,
+                     transformedGrid::scaledArray;
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(), centeredGrid::Array{Float64,1}=zeros(1)
+                     )
+    return ngfDistance(referenceImage::regImage, templateImage::regImage, transformedGrid.data;
+             doDerivative=doDerivative,doHessian=doHessian,options=options,centeredGrid=centeredGrid)
+
+
+end
+
 # Normalized gradient field distance
 function ngfDistance(referenceImage::regImage,templateImage::regImage,
                      transformedGrid::Array{Float64,1};

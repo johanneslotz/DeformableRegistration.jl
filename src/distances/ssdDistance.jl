@@ -1,4 +1,15 @@
 function ssdDistance(referenceImage::regImage,templateImage::regImage,
+                     transformedGrid::scaledArray;
+                     doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::Array{Float64,1}=zeros(1))
+
+    return ssdDistance(referenceImage,templateImage,
+        transformedGrid.data;
+        doDerivative=doDerivative,doHessian=doHessian,options=options,centeredGrid=centeredGrid)
+
+end
+
+
+function ssdDistance(referenceImage::regImage,templateImage::regImage,
                      transformedGrid::Array{Float64,1};
                      doDerivative::Bool=false,doHessian::Bool=false,options::regOptions=regOptions(),centeredGrid::Array{Float64,1}=zeros(1))
 
