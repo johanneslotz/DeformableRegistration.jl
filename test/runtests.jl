@@ -1,5 +1,5 @@
-using Test
-#using MicroLogging
+using Base.Test
+using MicroLogging
 
 configure_logging(min_level=:warn)
 
