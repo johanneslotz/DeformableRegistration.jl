@@ -4,7 +4,8 @@ using MicroLogging
 using KrylovMethods
 
 using DeformableRegistration
-include("helpers/objectiveFunctionCreation.jl")
+using DeformableRegistration.Types
+
 include("../experimental/aspin.jl")
 
 export checkStoppingCriteria, ArmijoLineSearch, optimizeGaussNewton, optimizeGaussNewtonAugmentedLagrangian
