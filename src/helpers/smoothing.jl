@@ -12,7 +12,7 @@ function smoothArray(a::Array{Float64,1}, kernelSize::Int, width::Float64; kerne
     end
 
     halfKernelSize = Int((kernelSize-1)/2)
-    return conv(a, kernel)[halfKernelSize:end-halfKernelSize-1]
+    return conv(a, kernel)[halfKernelSize+1:end-halfKernelSize]
 end
 
 function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(0))
