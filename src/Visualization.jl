@@ -104,7 +104,7 @@ function visualizeResults(referenceImage,templateImage;
         tX = reshape(displacement.data[1:Int(length(displacement.data)/2)],shape)
         tY = reshape(displacement.data[Int(length(displacement.data)/2+1):end],shape)
 
-        figure()
+        figure(5)
         subplot(1,2,1)
         imshow(tX, cmap=cmap)
         colorbar()
