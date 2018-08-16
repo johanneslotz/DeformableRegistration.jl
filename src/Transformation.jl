@@ -3,6 +3,7 @@ module Transformation
 #using Images
 using Interpolations
 using DeformableRegistration.Types
+using LinearAlgebra
 # using DeformableRegistration.ImageProcessing
 
 
@@ -21,8 +22,8 @@ end
 function getCellCenteredGrid(voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridSize::Tuple{Int64,Int64})
     x = Array(shift[1]+voxelsize[1]/2:voxelsize[1]:shift[1]+voxelsize[1]*(gridSize[1]))
     y = Array(shift[2]+voxelsize[2]/2:voxelsize[2]:shift[2]+voxelsize[2]*(gridSize[2]))
-    xgrid = repmat(x,1,gridSize[2])[:]
-    ygrid = repmat(y',gridSize[1],1)[:]
+    xgrid = repeat(x,1,gridSize[2])[:]
+    ygrid = repeat(y',gridSize[1],1)[:]
     return scaledArray(vcat(xgrid,ygrid), gridSize, voxelsize, shift)
 end
 
@@ -33,8 +34,8 @@ end
 function getNodalGrid(voxelsize::Array{Float64,1},shift::Array{Float64,1}, gridSize::Tuple{Int64,Int64})
     x = Array(shift[1]:voxelsize[1]:shift[1]+voxelsize[1]*(gridSize[1]))
     y = Array(shift[2]:voxelsize[2]:shift[2]+voxelsize[2]*(gridSize[2]))
-    xgrid = repmat(x,1,length(y))[:]
-    ygrid = repmat(y',length(x),1)[:]
+    xgrid = repeat(x,1,length(y))[:]
+    ygrid = repeat(y',length(x),1)[:]
     return scaledArray(vcat(xgrid,ygrid), gridSize, voxelsize, shift)
 end
 

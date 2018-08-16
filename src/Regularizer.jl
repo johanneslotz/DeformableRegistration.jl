@@ -3,6 +3,8 @@ module Regularizer
 export regularizer, createElasticOperatorCentered, createElasticOperatorStaggered, createDiffusiveOperatorCentered
 export createCurvatureOperatorCentered
 
+speye(m::Int) = sparse(1.0I, m, m)
+
 function regularizer(deformationField::Array{Float64,1}, operator)
 
     d2functionValue = operator'*operator
@@ -19,7 +21,7 @@ function createElasticOperatorCentered(h::Array{Float64,1},m::Array{Int64,1}; mu
 
   a   = sqrt(mu)
   b   = sqrt(mu+lambda)
-  dx(k) = spdiagm((-1.*ones(m[k]),ones(m[k])),0:1,m[k],m[k]+1)/h[k]
+  dx(k) = spdiagm((-1 .* ones(m[k]),ones(m[k])),0:1,m[k],m[k]+1)/h[k]
   av(k) = spdiagm((ones(m[k])/2,ones(m[k])/2),0:1,m[k],m[k]+1)
   D1   = kron(speye(m[2]+1),dx(1))
   D2   = kron(dx(2),speye(m[1]+1))
@@ -65,11 +67,15 @@ end
 
 function createDiffusiveOperatorCentered(h::Array{Float64,1},m::Array{Int64,1})
 
-  d(k) = spdiagm((-ones(m[k]-1,1),ones(m[k]-1,1)),[0 1],m[k]-1,m[k])/(h[k])
+  # d(k) = spdiagm((-ones(m[k]-1,1),ones(m[k]-1,1)),[0 1],m[k]-1,m[k])/(h[k])
+  function d(k)
+      I, J, V = SparseArrays.spdiagm_internal(0 => -ones(m[k]-1), 1 => ones(m[k]-1));
+      return sparse(I, J, V, m[k]-1,m[k])/(h[k])
+  end
   dx = d(1)
   dy = d(2)
-  D1 = kron(speye(m[2]),dx)
-  D2 = kron(dy,speye(m[1]))
+  D1 = kron(sparse(1.0I, m[2], m[2]),dx)
+  D2 = kron(dy,sparse(1.0I, m[1], m[1]))
   p1,p2 = size(D1)
   p3,p4 = size(D2)
   B = [ D1 spzeros(p1,p2);
@@ -81,11 +87,14 @@ end
 
 function createCurvatureOperatorCentered(h::Array{Float64,1},m::Array{Int64,1})
 
-  d(k) = spdiagm((-ones(m[k]-2,1),2*ones(m[k]-2,1), -ones(m[k]-2,1)),[0 1 2],m[k]-2,m[k])/(h[k])
+  function d(k)
+      I, J, V = SparseArrays.spdiagm_internal(0 => -ones(m[k]-2), 1 => 2*ones(m[k]-2), 2 => -ones(m[k]-2));
+      return sparse(I, J, V, m[k]-2,m[k])/(h[k])
+  end
   dx = d(1); #dx[1,1]=1; dx[end, end]=1
   dy = d(2); #dy[1,1]=1; dy[end, end]=1
-  D1 = kron(speye(m[2]),dx)
-  D2 = kron(dy,speye(m[1]))
+  D1 = kron(sparse(1.0I, m[2], m[2]),dx)
+  D2 = kron(dy,sparse(1.0I, m[1], m[1]))
   p1,p2 = size(D1)
   p3,p4 = size(D2)
   B = [ D1 spzeros(p1,p2);

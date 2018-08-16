@@ -1,6 +1,6 @@
 export regOptions
 
-type regOptions
+mutable struct regOptions
 
   # overall
   parametricOnly::Bool

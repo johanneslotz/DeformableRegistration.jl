@@ -1,6 +1,3 @@
-using MicroLogging
-
-
 function checkDerivative(fullF::Function,x;doPlot::Bool=false, smoothOffset::Bool=false)
     df = fullF(x)[2]'
     f(x) = fullF(x)[1]

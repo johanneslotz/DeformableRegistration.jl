@@ -70,7 +70,7 @@ function interpolateArray(
         if (xRange[1] <= transformedGrid[i] < xRange[end] + voxelsize[1]) &&
             (yRange[1] <= transformedGrid[i+numberOfPoints] < yRange[end] + voxelsize[2])
             try # zero if outside boundary (extrapolate(..., 0.0) does not work with gradient)
-                dX_transformedImage[i],dY_transformedImage[i] = gradient(imageInt,transformedGrid[i],transformedGrid[i+numberOfPoints])
+                dX_transformedImage[i],dY_transformedImage[i] = Interpolations.gradient(imageInt,transformedGrid[i],transformedGrid[i+numberOfPoints])
             catch x
                 if isa(x, BoundsError)
                     #print(".")
@@ -119,7 +119,7 @@ function interpolateArray(
         if (xRange[1] <= deformationAtTargetGrid.data[i] < xRange[end] + voxelsize[1]) &&
             (yRange[1] <= deformationAtTargetGrid.data[i+numberOfPoints] < yRange[end] + voxelsize[2])
             try # zero if outside boundary (extrapolate(..., 0.0) does not work with gradient)
-                dX_transformedImage[i],dY_transformedImage[i] = gradient(imageInt,deformationAtTargetGrid.data[i],deformationAtTargetGrid.data[i+numberOfPoints])
+                dX_transformedImage[i],dY_transformedImage[i] = Interpolations.gradient(imageInt,deformationAtTargetGrid.data[i],deformationAtTargetGrid.data[i+numberOfPoints])
             catch x
                 if isa(x, BoundsError)
                     #print(".")

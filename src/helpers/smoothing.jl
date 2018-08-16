@@ -1,6 +1,6 @@
 function getGaussianKernel(s::Int, width::Float64)
     σ = width / 4.3 # full width at tenth maximum = 4.3 * σ
-    k = 1./(σ .* sqrt(2*π)).*exp.(-0.5.*(   (0.5:s)   .-s/2).^2/(σ.^2))
+    k = 1 ./ (σ .* sqrt(2*π)).*exp.(-0.5.*(   (0.5:s)   .-s/2).^2/(σ.^2))
     #k = g(0.5:s)
     k = k ./ sum(k)
     return k
@@ -15,7 +15,7 @@ function smoothArray(a::Array{Float64,1}, kernelSize::Int, width::Float64; kerne
     return conv(a, kernel)[halfKernelSize+1:end-halfKernelSize]
 end
 
-function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(0))
+function smoothArray(a::Array{Float64,2}, kernelSize::Int, width::Float64; kernel::Array{Float64,1}=Array{Float64,1}(undef, 0))
     if length(kernel)==0
         kernel = getGaussianKernel(kernelSize, width)
     end

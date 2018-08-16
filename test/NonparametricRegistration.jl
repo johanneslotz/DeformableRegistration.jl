@@ -3,7 +3,6 @@ using DeformableRegistration: Regularizer, Examples, ImageProcessing, Transforma
  using DeformableRegistration.regOptions
  using Base.Test
 
-using MicroLogging
 #using DeformableRegistration.Visualization # does not work on travis-ci
 
 

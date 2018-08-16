@@ -1,8 +1,7 @@
 module Visualization
 
 using PyPlot
-using Images
-using MicroLogging
+#using Images
 using DeformableRegistration: Transformation, Interpolation, ImageProcessing, Types
 
 export showImage, plotGrid, visualizeResults, clf, figure, suptitle
@@ -30,10 +29,10 @@ function plotGrid(transformedGrid::Array{Float64,1}, shape::Tuple{Int64,Int64}; 
     tX = reshape(transformedGrid[1:Int(length(transformedGrid)/2)],shape)
     tY = reshape(transformedGrid[Int(length(transformedGrid)/2+1):end],shape)
 
-    for i = convert(Array{Int}, round.(linspace(1,size(tX,2), numberOfGridLines)))
+    for i = convert(Array{Int}, round.(range(1, stop=size(tX,2), length=numberOfGridLines)))
         plot(tY[:,i], -tX[:,i], "k", linewidth=1.0)
     end
-    for i = convert(Array{Int}, round.(linspace(1,size(tX,1), numberOfGridLines)))
+    for i = convert(Array{Int}, round.(range(1, stop=size(tX,1), length=numberOfGridLines)))
         plot(tY[i,:], -tX[i,:],"k", linewidth=1.0)
     end
     axis("equal")

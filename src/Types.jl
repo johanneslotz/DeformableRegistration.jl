@@ -1,4 +1,5 @@
 module Types
+    using SparseArrays
     import Base.+
     import Base.-
     import Base.*

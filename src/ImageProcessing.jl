@@ -5,10 +5,13 @@ using ColorTypes
 using DeformableRegistration.Types
 using DeformableRegistration.Transformation
 using DeformableRegistration.Interpolation
-using MicroLogging
+using DSP # conv
+using SparseArrays
+
 export createImage, loadImage, setImageProperties
 export restrictResolutionToLevel
 export getSize, getSpatialDomain, getPixelSpacing
+
 
 include("./helpers/smoothing.jl")
 export smoothArray

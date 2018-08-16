@@ -1,10 +1,13 @@
 module Optimization
 
-using MicroLogging
 using KrylovMethods
 
 using DeformableRegistration
 using DeformableRegistration.Types
+using Printf
+using LinearAlgebra
+using SparseArrays: spzeros
+
 
 # include("../experimental/aspin.jl")
 
@@ -152,7 +155,7 @@ function optimizeGaussNewton(Jfunc::Function,  # objective Function
         if(length(y)<10 && !(typeof(d2J) <: Function))
             dy=d2J\-dJ
         else
-            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=options.tolCG)[1:4]
+            dy,flag,resvec,cgIterations = KrylovMethods.cg(d2J,-dJ,maxIter=options.maxIterCG, tol=options.tolCG, out=-1)[1:4]
         end
 
 	    # check descent direction

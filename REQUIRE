@@ -1,10 +1,10 @@
 julia 0.6
 FileIO
-QuartzImageIO
 ColorTypes
 Interpolations
 PyCall
 PyPlot
-MicroLogging
 KrylovMethods
 Stats
+DSP
+

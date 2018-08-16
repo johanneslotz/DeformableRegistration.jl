@@ -1,6 +1,5 @@
-using DeformableRegistration
-using MicroLogging
-import DeformableRegistration.Distance.ngfDistance
+# using DeformableRegistration
+# import DeformableRegistration.Distance.ngfDistance
 
 
 function ngfDistance(referenceImage::regImage,templateImage::regImage,
@@ -87,7 +86,7 @@ function ngfDistance(referenceImage::regImage,templateImage::regImage,
       r1  = sum(AvgX * (gradRx.*gradTx) +
 		AvgY * (gradRy.*gradTy) ,2)    # numerator
     end
-    r2  = 1./(lengthGT.*lengthGR)             #  ... and denominator
+    r2  = 1 ./(lengthGT.*lengthGR)             #  ... and denominator
     rc  = r1 .* r2                            # combine things and finalize
 
     dFunctionValue = 0
@@ -97,7 +96,7 @@ function ngfDistance(referenceImage::regImage,templateImage::regImage,
       dr1 = (AvgX * spdiagm(gradRx[:]) * G1) + (AvgY * spdiagm(gradRy[:]) * G2) #(AvgX * gradRx) * AvgX * G1 + (AvgY * gradRy) * AvgX * G2
       dr2 = ( spdiagm(-r2.^2)
               * spdiagm(lengthGR)
-              * (spdiagm(1./(2 .* lengthGT)))
+              * (spdiagm(1 ./(2 .* lengthGT)))
               * ((2 * AvgX * spdiagm(gradTx) * G1) + (2 * AvgY * spdiagm(gradTy) * G2))
             )
 

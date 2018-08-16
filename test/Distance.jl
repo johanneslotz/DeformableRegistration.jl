@@ -1,7 +1,7 @@
 using DeformableRegistration: Distance, ImageProcessing, Transformation, Interpolation, regOptions
- using Base.Test
- using MicroLogging
+ using Test
  using Interpolations
+ using LinearAlgebra
 
 include("helpers/checkDerivative.jl")
 

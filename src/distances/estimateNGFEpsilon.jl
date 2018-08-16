@@ -1,4 +1,5 @@
 using Stats
+using Printf
 # using Logging
 
 function estimateNGFEpsilon(referenceImage::regImage;cutoffPercent = 80)

@@ -1,6 +1,7 @@
 using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Distance
- using Base.Test
+ using Test
  using Interpolations: BSpline, Linear, Cubic, Line, Free
+ using LinearAlgebra
 #  using Logging
 #  Logging.configure(level=INFO)
 

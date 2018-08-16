@@ -1,7 +1,6 @@
 using Base.Test
-using MicroLogging
 
-configure_logging(min_level=:warn)
+#configure_logging(min_level=:warn)
 
 @testset "DeformableRegistration" begin
 

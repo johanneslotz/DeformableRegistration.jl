@@ -1,7 +1,5 @@
 module Examples
 
-using MicroLogging
-
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
 using DeformableRegistration.Types

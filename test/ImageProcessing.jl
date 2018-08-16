@@ -1,8 +1,8 @@
 using DeformableRegistration.ImageProcessing
 using DeformableRegistration.Types
-using Images
-using Base.Test
-using MicroLogging
+#using Images
+using Test
+using LinearAlgebra
 
 function checkImageProperties(img::regImage)
     # check if image has two dimensions
@@ -54,7 +54,7 @@ end
 end
 
 @testset "write image" begin
-    using FileIO, QuartzImageIO
+    using FileIO
 
     imgdata = rand(64,128) # x \in [0, 1]
     img = createImage(imgdata)
