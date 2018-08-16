@@ -1,5 +1,10 @@
 module Types
-    #using Images
+    import Base.+
+    import Base.-
+    import Base.*
+    import Base.size
+    export scaledArray, regImage, + , - , *, t2a
+
     struct scaledArray
                data::Array{Float64, 1}
                dimensions::Tuple{Vararg{Int64}}
@@ -12,15 +17,6 @@ module Types
                voxelsize::Array{Float64, 1}
                shift::Array{Float64, 1}
     end
-
-
-
-    import Base.+
-    import Base.-
-    import Base.*
-    import Base.size
-
-    export scaledArray, regImage, + , - , *, t2a
 
 
     function +(a::scaledArray, b::scaledArray)
