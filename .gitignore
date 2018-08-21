@@ -1,3 +1,7 @@
 /test/testdata/testimage_write.png
 .sync
 .tags*
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+/Manifest.toml
