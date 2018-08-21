@@ -1,3 +1,4 @@
+import DeformableRegistration
 using DeformableRegistration: ImageProcessing, Distance, Transformation, Interpolation, Examples, Distance, regOptions
  using Test
 #  using Logging

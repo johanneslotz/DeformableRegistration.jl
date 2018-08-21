@@ -5,6 +5,7 @@ using DeformableRegistration.Transformation
 using DeformableRegistration.Interpolation
 using DeformableRegistration.ImageProcessing
 using DeformableRegistration.Types
+using SparseArrays
 
 using Interpolations
 

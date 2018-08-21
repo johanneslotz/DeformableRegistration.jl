@@ -1,7 +1,10 @@
 
+import DeformableRegistration
 using DeformableRegistration: Regularizer, Examples, ImageProcessing, Transformation, Interpolation, Distance
  using DeformableRegistration.regOptions
- using Base.Test
+ using Test
+ using LinearAlgebra
+ using DSP
 
 #using DeformableRegistration.Visualization # does not work on travis-ci
 
@@ -10,10 +13,10 @@ using DeformableRegistration: Regularizer, Examples, ImageProcessing, Transforma
 
 @testset "artificial data SSD" begin
     # create test images
-    data = zeros(120,120); data[31:90,21:60] = 1
+    data = zeros(120,120); data[31:90,21:60] .= 1
     temImg = createImage(data) 
     dataR = deepcopy(data)
-    dataR[41:80,41:90] = 1
+    dataR[41:80,41:90] .= 1
     refImg = createImage(dataR)
     options = DeformableRegistration.regOptions()
     options.levels = [3,2]
@@ -41,7 +44,7 @@ end
 				 0.5 1.0 0.5
 				 0.2 0.5 0.2],data)[1:120,1:120]
 	temImg = createImage(data) 
-	dataT[41:80,41:90] = 1
+	dataT[41:80,41:90] .= 1
 	dataT = conv2([0.2 0.5 0.2
 				 0.5 1.0 0.5
 				 0.2 0.5 0.2],dataT)[1:120,1:120]
@@ -65,8 +68,8 @@ end
 	# make the test more specific once this is solved.
     # visualizeResults(refImg, temImg, displacement=displacement)
 
-	@test_skip ssdvalue ≈ 498.07 atol=2e2
-	@test_skip ngfvalue ≈ 399.403 atol=2e2
+	@test ssdvalue ≈ 498.07 atol=2e2
+	@test ngfvalue ≈ 399.403 atol=2e2
 ##
 end
 

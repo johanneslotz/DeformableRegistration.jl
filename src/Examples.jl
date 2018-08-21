@@ -3,6 +3,7 @@ module Examples
 using DeformableRegistration: ImageProcessing, Transformation, Interpolation, Distance, Regularizer, Optimization
 using DeformableRegistration.regOptions
 using DeformableRegistration.Types
+using LinearAlgebra
 
 using Interpolations
 

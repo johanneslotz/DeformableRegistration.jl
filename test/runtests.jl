@@ -1,6 +1,7 @@
 using Test
+using Logging 
 
-#configure_logging(min_level=:warn)
+disable_logging(Logging.Info)
 
 @testset "DeformableRegistration" begin
 

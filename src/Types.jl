@@ -1,5 +1,6 @@
 module Types
     using SparseArrays
+    using LinearAlgebra
     import Base.+
     import Base.-
     import Base.*

@@ -3,6 +3,7 @@ module Visualization
 using PyPlot
 #using Images
 using DeformableRegistration: Transformation, Interpolation, ImageProcessing, Types
+using LinearAlgebra
 
 export showImage, plotGrid, visualizeResults, clf, figure, suptitle
 
