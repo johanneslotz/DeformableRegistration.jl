@@ -19,7 +19,7 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Di
     deformationField[prod(size(img.data))+1:end] = 10*sin.(0.01*centeredGrid.data[1:prod(size(img.data))])
     deformationField = scaledArray(deformationField, size(img.data), [1, 1.0], [0.0, 0])
     transformedGrid = transformGridAffine(centeredGrid,affineParameters) + deformationField
-    transformedImageOnly,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true)
+    transformedImageOnly,dx,dy = interpolateImage(img,transformedGrid,doDerivative=true, interpolationScheme=BSpline(Cubic(Line())))
     transformedImage,dY_transformedImage,dX_transformedImage = interpolateImage(img,transformedGrid,doDerivative=true, interpolationScheme=InterpLinearFast)
     transformedImageRef,dY_transformedImageRef,dX_transformedImageRef = interpolateImage(img,transformedGrid,doDerivative=true,interpolationScheme=BSpline(Linear()))
 
@@ -27,10 +27,10 @@ using DeformableRegistration: Transformation, ImageProcessing, Interpolation, Di
     #dY_transformedImage = reshape(dY_transformedImage, size(img.data))
     #dY_transformedImageRef = reshape(dY_transformedImageRef, size(img.data))
     #imshow(dY_transformedImage-dY_transformedImageRef)
-    @test norm(transformedImageOnly - transformedImageRef) < 1.0
+    @test norm(transformedImageOnly - transformedImageRef) < 2.0
     @test transformedImageOnly[1:10] ≈ transformedImageRef[1:10] atol=1e-3
 
-    @test norm(transformedImage - transformedImageRef) < 1.0
+    @test norm(transformedImage - transformedImageRef) < 8.0
     @test transformedImage[1:10] ≈ transformedImageRef[1:10] atol=1e-3
 
     @test norm(dY_transformedImage - dY_transformedImageRef) ≈ 0 atol=0.5 #20
@@ -97,7 +97,7 @@ end
     # imshow(reshape(dx[1:200*200],transformedGrid.dimensions))
 
     targetGrid = getCellCenteredGrid(img.voxelsize*6, img.shift, (100,100))
-    @time transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true)
+    @time transformedImageTG,dxTG,dyTG = interpolateImage(img,transformedGrid,targetGrid, doDerivative=true, interpolationScheme=BSpline(Linear()))
     # subplot(223)
     # imshow(transformedImageTG)
     # subplot(224)

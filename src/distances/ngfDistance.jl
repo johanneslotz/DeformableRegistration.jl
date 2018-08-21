@@ -53,16 +53,26 @@ function ngfDistance(referenceImage::regImage,templateImage::regImage,
     Rc = Array(referenceImage.data)
     shift = referenceImage.shift
 
-    shortFiniteDiffX = spdiagm((-ones(m[1]-1,1),ones(m[1]-2,1)),[0, 1],m[1]-1,m[1])/(2*h[1])
+    I, J, V = SparseArrays.spdiagm_internal(0 => -ones(m[1]-1), 1 => ones(m[1]-2));
+    shortFiniteDiffX = sparse(I, J, V, m[1]-1,m[1])/(2*h[1])
+      
     #shortFiniteDiffX[1] = shortFiniteDiffX[2]
     #shortFiniteDiffX[end] = shortFiniteDiffX[end-1]
+    I, J, V = SparseArrays.spdiagm_internal(0 => -ones(m[2]-1), 1 => ones(m[2]-2));
+    shortFiniteDiffY = sparse(I, J, V, m[2]-1,m[2])/(2*h[2])
 
-    shortFiniteDiffY = spdiagm((-ones(m[2]-1,1),ones(m[2]-2,1)),[0, 1],m[2]-1,m[2])/(2*h[2])
+    #shortFiniteDiffY = spdiagm((-ones(m[2]-1,1),ones(m[2]-2,1)),[0, 1],m[2]-1,m[2])/(2*h[2])
     #shortFiniteDiffY[1] = shortFiniteDiffY[2]
     #shortFiniteDiffY[end] = shortFiniteDiffY[end-1]
 
-    averageX = spdiagm((0.5*ones(m[1]-2,1),0.5*ones(m[1]-1,1)),[-1, 0],m[1],m[1]-1)
-    averageY = spdiagm((ones(m[2]-2,1)*0.5,ones(m[2]-1,1)*0.5),[-1, 0],m[2],m[2]-1)
+    I, J, V = SparseArrays.spdiagm_internal(-1 => 0.5*ones(m[1]-2), 0 => 0.5*ones(m[1]-1));
+    averageX = sparse(I, J, V, m[1],m[1]-1)
+
+    I, J, V = SparseArrays.spdiagm_internal(-1 => 0.5*ones(m[2]-2), 0 => 0.5*ones(m[2]-1));
+    averageY = sparse(I, J, V, m[2],m[2]-1)
+
+    # averageX = spdiagm((0.5*ones(m[1]-2,1),0.5*ones(m[1]-1,1)),[-1, 0],m[1],m[1]-1)
+    # averageY = spdiagm((ones(m[2]-2,1)*0.5,ones(m[2]-1,1)*0.5),[-1, 0],m[2],m[2]-1)
 
     G1 = sparse(kron(speye(m[2]),shortFiniteDiffX));
     G2 = sparse(kron(shortFiniteDiffY,speye(m[1])));

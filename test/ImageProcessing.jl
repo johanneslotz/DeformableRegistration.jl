@@ -10,8 +10,8 @@ function checkImageProperties(img::regImage)
     @test ndims(img.data) == 2
 
     # check if image values are between 0 and 1
-    @test float64(minfinite(img.data))>=0.0
-    @test float64(maxfinite(img.data))<=1.0
+    @test minimum(img.data)>=0.0
+    @test maximum(img.data)<=1.0
     # check if colorspace is float
     @test eltype(img.data) <: Float64
 end
@@ -56,15 +56,16 @@ end
 
 @testset "write image" begin
     using FileIO
+    using ColorTypes
 
     imgdata = rand(64,128) # x \in [0, 1]
     img = createImage(imgdata)
     # load image, write image, load the written image and compare it
     testimagewrite = dirname(Base.source_path()) * "/testdata/testimage_write.jpg"
-    save(testimagewrite, img.data)
+    save(testimagewrite, convert(Array{Gray},img.data))
     imgwritten = loadImage(testimagewrite)
     A = convert(Array{Float64,2},img.data)
     B = convert(Array{Float64,2},imgwritten.data)
-    @test norm(A .- B)/length(A) < 0.0001
+    @test norm(A .- B)/length(A) < 0.0002
 end
 end
