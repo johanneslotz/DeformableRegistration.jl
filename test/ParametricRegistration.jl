@@ -1,5 +1,5 @@
 using DeformableRegistration: ImageProcessing, Distance, Transformation, Interpolation, Examples, Distance, regOptions
- using Base.Test
+ using Test
 #  using Logging
 
 @testset "Parametric Registration" begin

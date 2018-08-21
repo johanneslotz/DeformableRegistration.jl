@@ -1,6 +1,6 @@
 using DeformableRegistration.Transformation
  using DeformableRegistration.ImageProcessing
- using Base.Test
+ using Test
 
 @testset "Transformation" begin
 @testset "grid creation" begin

@@ -100,7 +100,7 @@ function interpolateArray(
   imageIntTmp = extrapolate(imageIntNoScaling, 0.0)
   imageInt = scale(imageIntTmp, xRange, yRange)
 
-  deformationAtTargetGrid = interpolateDeformationField(transformedGrid-getCellCenteredGrid(transformedGrid), targetGrid, interpolationScheme = interpolationScheme) + getCellCenteredGrid(targetGrid)
+  deformationAtTargetGrid = interpolateDeformationField(transformedGrid-getCellCenteredGrid(transformedGrid), targetGrid, interpolationScheme = BSpline(Linear())) + getCellCenteredGrid(targetGrid)
 
   numberOfPoints::Int = prod(deformationAtTargetGrid.dimensions)
 
@@ -199,7 +199,7 @@ end
 
 function interpolateDeformationField(deformationField::scaledArray,
         newPoints::scaledArray;
-        interpolationScheme = InterpLinearFast)# BSpline(Linear())
+        interpolationScheme = BSpline(Cubic(Line())))# BSpline(Linear())
 
     dims = deformationField.dimensions
     deformationFieldX = reshape(deformationField.data[1:prod(dims)], dims[1], dims[2])

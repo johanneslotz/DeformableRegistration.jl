@@ -1,6 +1,6 @@
 #using DeformableRegistration.ImageProcessing
 using DeformableRegistration: Regularizer, Transformation
- using Base.Test
+ using Test
 
 
 # @testset "check if constant deformation yields zero" begin

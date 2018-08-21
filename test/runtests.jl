@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 
 #configure_logging(min_level=:warn)
 

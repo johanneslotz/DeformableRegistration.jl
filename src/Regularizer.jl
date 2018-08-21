@@ -1,7 +1,10 @@
 module Regularizer
 
+using SparseArrays
+using LinearAlgebra
 export regularizer, createElasticOperatorCentered, createElasticOperatorStaggered, createDiffusiveOperatorCentered
 export createCurvatureOperatorCentered
+
 
 speye(m::Int) = sparse(1.0I, m, m)
 

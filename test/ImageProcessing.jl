@@ -3,6 +3,7 @@ using DeformableRegistration.Types
 #using Images
 using Test
 using LinearAlgebra
+using FileIO
 
 function checkImageProperties(img::regImage)
     # check if image has two dimensions

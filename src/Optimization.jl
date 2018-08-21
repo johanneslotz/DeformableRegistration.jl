@@ -97,7 +97,6 @@ function optimizeGaussNewtonAugmentedLagrangian(Jfunc::Function,  # objective Fu
      # is this a IJulia notebook? -> delete previous iteration's output
      if isdefined(Main, :IJulia) && Main.IJulia.inited
         displayCallback(true)
-        @info size(y)
      end
      D, α, S = printFunction(y)
      s = @sprintf("%03d | D %2.2e | S %2.2e | λ!=0: %d | |c(y)|= %2.2e | μ=%2.2e | LSiter: %2d | CGiter: %3d | J/Jref: %2.2e",
